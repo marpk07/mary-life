@@ -37,3 +37,4 @@ mary-life/
 ```
 
 Cada módulo conserva **toda** su funcionalidad original (Firebase, botones, filtros, etc.).
+.
