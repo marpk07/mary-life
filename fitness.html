@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MARPK · Professional Poker & Nutrition Dashboard</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <link rel="apple-touch-icon" href="https://emojicdn.elk.sh/♠️?style=apple">
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      --font-main: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    * { box-sizing: border-box; font-family: var(--font-main); }
+    
+    body {
+      background: 
+        radial-gradient(circle at 10% 10%, rgba(247, 217, 224, 0.8) 0%, transparent 40%),
+        radial-gradient(circle at 90% 90%, rgba(198, 183, 204, 0.7) 0%, transparent 45%),
+        linear-gradient(135deg, #fcf5f8 0%, #f4e8f1 50%, #ebdff5 100%);
+      color: #3b3238;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      background-attachment: fixed;
+    }
+
+    .hidden { display: none !important; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f7edea; }
+    ::-webkit-scrollbar-thumb { background: #c6b7cc; border-radius: 999px; }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(247, 217, 224, 0.8);
+      box-shadow: 0 15px 35px rgba(180, 140, 160, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    .glass-card-solid {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(230, 205, 220, 0.9);
+      box-shadow: 0 20px 40px rgba(180, 140, 160, 0.16), inset 0 1px 0 rgba(255, 255, 255, 1);
+    }
+
+    .nav-btn {
+      transition: all 0.25s ease;
+      cursor: pointer;
+    }
+    .nav-btn.active {
+      background: linear-gradient(135deg, #c97b84 0%, #b86b72) !important;
+      color: #ffffff !important;
+      font-weight: 800;
+      box-shadow: 0 6px 20px rgba(201, 123, 132, 0.4), inset 0 1px 0 rgba(255,255,255,0.4);
+    }
+
+    .modal-overlay {
+      background-color: rgba(59, 50, 56, 0.5);
+      backdrop-filter: blur(6px);
+      z-index: 99999 !important;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-[#f7d9e0] selection:text-[#3b3238]">
+
+  <!-- HEADER -->
+  <header class="bg-[#5E4B6E] text-white sticky top-0 z-40 shadow-xl border-b border-[#7B658D]">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#c97b84] to-[#c6b7cc] flex items-center justify-center font-black text-white text-lg shadow-lg">♠️</div>
+        <div>
+          <h1 class="text-base font-black tracking-wider uppercase text-white leading-none flex items-center gap-2">
+            MARPK <span class="text-[#f7d9e0] text-xs font-bold">♠️ ♥️ ♣️ ♦️</span>
+          </h1>
+          <p class="text-[11px] font-medium text-[#f0e4eb] italic mt-0.5">"No elijo las cartas, pero sí cómo jugarlas."</p>
+        </div>
+      </div>
+
+      <nav class="flex flex-wrap items-center justify-center gap-1.5 bg-[#4D3B5C] p-1.5 rounded-2xl border border-[#6D587E]">
+        <button onclick="switchTab('resumen')" id="tab-btn-resumen" class="nav-btn active px-3 py-1.5 rounded-xl font-bold text-xs text-stone-200 hover:text-white">📊 Resumen</button>
+        <button onclick="switchTab('grind')" id="tab-btn-grind" class="nav-btn px-3 py-1.5 rounded-xl font-bold text-xs text-stone-200 hover:text-white">🃏 Sesiones</button>
+        <button onclick="switchTab('estudio')" id="tab-btn-estudio" class="nav-btn px-3 py-1.5 rounded-xl font-bold text-xs text-stone-200 hover:text-white">📚 Estudio</button>
+        <button onclick="switchTab('leaks')" id="tab-btn-leaks" class="nav-btn px-3 py-1.5 rounded-xl font-bold text-xs text-stone-200 hover:text-white">🎯 Leaks</button>
+        <button onclick="switchTab('tridents')" id="tab-btn-tridents" class="nav-btn px-3 py-1.5 rounded-xl font-bold text-xs text-stone-200 hover:text-white">⚡ Tridents</button>
+        <button onclick="switchTab('nutricion')" id="tab-btn-nutricion" class="nav-btn px-3 py-1.5 rounded-xl font-bold text-xs text-stone-200 hover:text-white">🥗 Nutrición</button>
+        <button onclick="switchTab('reportes')" id="tab-btn-reportes" class="nav-btn px-3 py-1.5 rounded-xl font-bold text-xs text-stone-200 hover:text-white">📈 Reportes</button>
+      </nav>
+
+      <div class="flex items-center space-x-2">
+        <span id="cloud-badge" class="text-[9px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-900/80 text-emerald-200 border border-emerald-700">☁️ Sincronizado</span>
+        <button onclick="downloadBackup()" class="p-2 rounded-xl bg-[#4D3B5C] text-stone-200 hover:text-white text-xs font-bold border border-[#6D587E]" title="Backup JSON">💾</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 space-y-6">
+
+    <!-- SELECTOR DE FECHA GLOBAL -->
+    <div class="glass-card rounded-3xl p-4 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <span class="text-xs font-black uppercase text-stone-700 tracking-wider">📅 Día Seleccionado:</span>
+        <input type="date" id="global-date" onchange="handleGlobalDateChange(this.value)" class="bg-white border border-[#e8d2dc] rounded-xl px-3 py-1.5 text-xs font-black text-stone-800 focus:outline-none">
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="openModalGrind()" class="px-4 py-2 bg-[#c97b84] hover:bg-[#b86b72] text-white font-extrabold text-xs rounded-xl shadow-md transition cursor-pointer">+ Registrar / Editar Sesión</button>
+      </div>
+    </div>
+
+    <!-- PANE 1: RESUMEN -->
+    <section id="pane-resumen" class="tab-pane space-y-6">
+      <div class="glass-card-solid rounded-3xl p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#e8d2dc]">
+          <div>
+            <h3 class="text-base font-black text-stone-800">🎯 Metas Principales de Póker ♠️</h3>
+            <p class="text-xs text-stone-500">Progreso automático en tiempo real</p>
+          </div>
+          <button onclick="openModalGoalsConfig()" class="text-xs font-extrabold text-[#c97b84] hover:underline cursor-pointer">⚙️ Configurar Metas Base</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="daily-goals-progress"></div>
+      </div>
+
+      <div class="glass-card-solid rounded-3xl p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#e8d2dc]">
+          <div>
+            <h3 class="text-base font-black text-stone-800">✨ Hábitos & Metas (Habit Tracker Semanal)</h3>
+            <p class="text-xs text-stone-500">Seguimiento estricto de Lunes a Domingo</p>
+          </div>
+          <button onclick="openModalCustomGoal()" class="px-4 py-2 bg-[#c97b84] hover:bg-[#b86b72] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer">+ Añadir Meta o Hábito</button>
+        </div>
+        <div class="space-y-4" id="custom-goals-container"></div>
+        <p id="custom-goals-empty" class="text-xs text-stone-400 text-center py-4">No hay metas o hábitos creados aún.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="daily-ritual-view"></div>
+    </section>
+
+    <!-- PANE 2: SESIONES -->
+    <section id="pane-grind" class="tab-pane space-y-6 hidden">
+      <div class="glass-card-solid rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-black text-stone-800">Historial de Sesiones & Gráficas</h2>
+          <p class="text-xs text-stone-500 mt-0.5">Todas tus jornadas registradas con sus capturas</p>
+        </div>
+        <button onclick="openModalGrind()" class="px-4 py-2 bg-[#c97b84] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer">+ Nueva Sesión</button>
+      </div>
+      <div class="glass-card-solid rounded-3xl p-6">
+        <div id="grind-sessions-list" class="space-y-4"></div>
+        <p id="grind-empty" class="text-xs text-stone-400 text-center py-6">No hay sesiones registradas.</p>
+      </div>
+    </section>
+
+    <!-- PANE 3: ESTUDIO -->
+    <section id="pane-estudio" class="tab-pane space-y-6 hidden">
+      <div class="glass-card-solid rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-black text-stone-800">Bitácora de Estudio & Manos Marcadas</h2>
+          <p class="text-xs text-stone-500">Tus revisiones en GTO Wizard / Solvers</p>
+        </div>
+        <button onclick="openModalStudy()" class="px-4 py-2 bg-[#c97b84] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer">+ Nueva Entrada de Estudio</button>
+      </div>
+      <div class="glass-card-solid rounded-3xl p-6">
+        <div id="study-logs-container" class="space-y-4"></div>
+        <p id="study-empty" class="text-xs text-stone-400 text-center py-6">Sin registros de estudio.</p>
+      </div>
+    </section>
+
+    <!-- PANE 4: LEAKS -->
+    <section id="pane-leaks" class="tab-pane space-y-6 hidden">
+      <div class="glass-card-solid rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-black text-stone-800">Tracker de Leaks & Correcciones</h2>
+          <p class="text-xs text-stone-500">Audita tus estadísticas y evalúa tu progreso numérico</p>
+        </div>
+        <button onclick="openModalLeak()" class="px-4 py-2 bg-[#c97b84] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer">+ Nuevo Leak a Corregir</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="leaks-container"></div>
+      <p id="leaks-empty" class="text-xs text-stone-400 text-center py-6">No hay leaks registrados.</p>
+    </section>
+
+    <!-- PANE 5: TRIDENTS -->
+    <section id="pane-tridents" class="tab-pane space-y-6 hidden">
+      <div class="glass-card-solid rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-black text-stone-800">Control de Tridents & Extras</h2>
+          <p class="text-xs text-stone-500">Audita la rentabilidad de formatos especiales</p>
+        </div>
+        <button onclick="openModalTrident()" class="px-4 py-2 bg-[#c97b84] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer">+ Registrar Tridents</button>
+      </div>
+      <div class="glass-card-solid rounded-3xl p-6">
+        <div id="tridents-list" class="space-y-3"></div>
+        <p id="tridents-empty" class="text-xs text-stone-400 text-center py-6">Sin registros de tridents.</p>
+      </div>
+    </section>
+
+    <!-- PANE 6: NUTRICIÓN & MACROS (CON PROMEDIOS DIARIOS) -->
+    <section id="pane-nutricion" class="tab-pane space-y-6 hidden">
+      <div class="glass-card-solid rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-black text-stone-800">🥗 Control de Alimentación & Promedios</h2>
+          <p class="text-xs text-stone-500">Seguimiento detallado con media diaria de consumo</p>
+        </div>
+        <button onclick="openModalFood()" class="px-5 py-2.5 bg-gradient-to-r from-[#c97b84] to-[#b86b72] text-white font-extrabold text-xs rounded-xl shadow-lg transition cursor-pointer">+ Registrar Comida / Día</button>
+      </div>
+
+      <!-- FILTROS DE FECHA -->
+      <div class="glass-card p-4 rounded-2xl flex flex-wrap items-center gap-3 text-xs">
+        <span class="font-bold text-stone-700">🔍 Desde:</span>
+        <input type="date" id="food-from" onchange="renderNutritionView()" class="bg-white border border-[#e8d2dc] rounded-xl px-3 py-1.5 font-bold text-stone-800 focus:outline-none">
+        <span class="font-bold text-stone-700">Hasta:</span>
+        <input type="date" id="food-to" onchange="renderNutritionView()" class="bg-white border border-[#e8d2dc] rounded-xl px-3 py-1.5 font-bold text-stone-800 focus:outline-none">
+      </div>
+
+      <!-- PANEL DE PROMEDIOS DIARIOS DEL RANGO -->
+      <div class="glass-card-solid p-6 rounded-3xl space-y-3">
+        <h3 class="font-black text-stone-800 text-sm uppercase tracking-wider">📊 Promedio Diario del Rango Seleccionado</h3>
+        <div id="nutrition-averages-container" class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs"></div>
+      </div>
+
+      <!-- HISTORIAL DE REGISTROS -->
+      <div class="space-y-4">
+        <h3 class="font-black text-stone-800 text-base">✨ Registros Diarios</h3>
+        <div id="food-history-list" class="space-y-4"></div>
+      </div>
+    </section>
+
+    <!-- PANE 7: REPORTES & GRÁFICAS -->
+    <section id="pane-reportes" class="tab-pane space-y-6 hidden">
+      <div class="glass-card-solid rounded-3xl p-6 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#e8d2dc]">
+          <div>
+            <h2 class="text-xl font-black text-stone-800">Panel de Métricas & Bóveda de Gráficas</h2>
+            <p class="text-xs text-stone-500">Filtra tus números o guarda tus gráficas semanales y mensuales</p>
+          </div>
+          <button onclick="copyWeeklyReport()" class="px-4 py-2 bg-stone-800 text-white font-bold text-xs rounded-xl shadow-md hover:bg-stone-900 cursor-pointer">📋 Copiar Reporte General</button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 bg-white/60 p-4 rounded-2xl border border-[#e8d2dc]">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold text-stone-700">Desde:</span>
+            <input type="date" id="report-from" class="bg-white border border-[#e8d2dc] rounded-xl px-3 py-1.5 text-xs font-bold text-stone-800">
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold text-stone-700">Hasta:</span>
+            <input type="date" id="report-to" class="bg-white border border-[#e8d2dc] rounded-xl px-3 py-1.5 text-xs font-bold text-stone-800">
+          </div>
+          <button onclick="applyReportFilters()" class="px-5 py-2 bg-[#c97b84] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer">🔍 Filtrar</button>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+          <div class="glass-card rounded-2xl p-4 text-center">
+            <span class="text-[10px] font-bold text-stone-500 uppercase">Horas de Grind</span>
+            <p class="text-xl font-black text-stone-800 mt-1" id="kpi-grind-hours">0.0 h</p>
+          </div>
+          <div class="glass-card rounded-2xl p-4 text-center">
+            <span class="text-[10px] font-bold text-stone-500 uppercase">Horas de Estudio</span>
+            <p class="text-xl font-black text-[#c97b84] mt-1" id="kpi-study-hours">0.0 h</p>
+          </div>
+          <div class="glass-card rounded-2xl p-4 text-center">
+            <span class="text-[10px] font-bold text-stone-500 uppercase">Total Games</span>
+            <p class="text-xl font-black text-stone-800 mt-1" id="kpi-total-games">0</p>
+          </div>
+          <div class="glass-card rounded-2xl p-4 text-center">
+            <span class="text-[10px] font-bold text-stone-500 uppercase">cEV Ponderado</span>
+            <p class="text-xl font-black text-emerald-600 mt-1" id="kpi-avg-cev">0.0</p>
+          </div>
+        </div>
+
+        <div class="pt-6 border-t border-[#e8d2dc] space-y-4">
+          <div class="flex justify-between items-center">
+            <h3 class="text-base font-black text-stone-800">📈 Bóveda de Gráficas (Semanal / Mensual)</h3>
+            <button onclick="openModalPeriodicPhoto()" class="px-4 py-2 bg-[#c97b84] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer">+ Subir Gráfica Periódica</button>
+          </div>
+          <div id="periodic-photos-gallery" class="grid grid-cols-2 sm:grid-cols-3 gap-4"></div>
+          <p id="periodic-photos-empty" class="text-xs text-stone-400 text-center py-4">No hay gráficas semanales o mensuales adjuntas.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL NUTRICIÓN / COMIDA -->
+  <div id="modal-food" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
+    <div class="glass-card-solid rounded-3xl max-w-md w-full p-6 space-y-4 border border-[#e8d2dc]">
+      <div class="flex items-center justify-between pb-2 border-b border-[#e8d2dc]">
+        <h3 class="text-base font-black text-stone-800">🥗 Registrar Nutrición Diaria</h3>
+        <button onclick="closeModal('modal-food')" class="text-stone-400 font-bold cursor-pointer">✕</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <input type="hidden" id="food-edit-id">
+        <div><label class="font-bold text-stone-600 block mb-1">Fecha</label><input type="date" id="food-date" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+        <div><label class="font-bold text-stone-600 block mb-1">Título / Nota</label><input type="text" id="food-title" value="Toda la alimentación" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="font-bold text-stone-600 block mb-1">Calorías (kcal)</label><input type="number" id="food-cal" placeholder="1650" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Proteínas (g)</label><input type="number" id="food-prot" placeholder="120" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="font-bold text-stone-600 block mb-1">Carbohidratos (g)</label><input type="number" id="food-carb" placeholder="180" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Grasas (g)</label><input type="number" id="food-fat" placeholder="55" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+        </div>
+      </div>
+      <div class="pt-2 flex justify-end space-x-2">
+        <button onclick="closeModal('modal-food')" class="px-4 py-2 border border-[#e8d2dc] rounded-xl text-xs font-bold text-stone-700 cursor-pointer">Cancelar</button>
+        <button onclick="saveFoodLog()" class="px-5 py-2 bg-[#c97b84] text-white rounded-xl text-xs font-black shadow-md cursor-pointer">Guardar Registro</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIGURAR METAS -->
+  <div id="modal-goals-config" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
+    <div class="glass-card-solid rounded-3xl max-w-sm w-full p-6 space-y-4 border border-[#e8d2dc]">
+      <div class="flex items-center justify-between pb-2 border-b border-[#e8d2dc]">
+        <h3 class="text-base font-black text-stone-800">⚙️ Configurar Metas Póker</h3>
+        <button onclick="closeModal('modal-goals-config')" class="text-stone-400 font-bold cursor-pointer">✕</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div class="grid grid-cols-3 gap-2">
+          <div><label class="font-bold text-stone-500 block mb-1">Horas Grind</label><input type="number" step="0.5" id="cfg-target-hours" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-center text-stone-800"></div>
+          <div><label class="font-bold text-stone-500 block mb-1">Horas Estudio</label><input type="number" step="0.5" id="cfg-target-study" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-center text-stone-800"></div>
+          <div><label class="font-bold text-stone-500 block mb-1">Games</label><input type="number" id="cfg-target-games" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-center text-stone-800"></div>
+        </div>
+      </div>
+      <div class="pt-2 flex justify-end space-x-2">
+        <button onclick="closeModal('modal-goals-config')" class="px-4 py-2 border border-[#e8d2dc] rounded-xl text-xs font-bold text-stone-700 cursor-pointer">Cancelar</button>
+        <button onclick="saveGoalsConfig()" class="px-4 py-2 bg-[#c97b84] text-white rounded-xl text-xs font-black cursor-pointer">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL AÑADIR META O HÁBITO -->
+  <div id="modal-custom-goal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
+    <div class="glass-card-solid rounded-3xl max-w-md w-full p-6 space-y-4 border border-[#e8d2dc]">
+      <div class="flex items-center justify-between pb-2 border-b border-[#e8d2dc]">
+        <h3 class="text-base font-black text-stone-800">✨ Añadir Meta o Hábito</h3>
+        <button onclick="closeModal('modal-custom-goal')" class="text-stone-400 font-bold cursor-pointer">✕</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-stone-500 block mb-1">Título de la Meta / Hábito</label>
+          <input type="text" id="cg-title" placeholder="Ej. Meta Semanal de Grind" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="font-bold text-stone-500 block mb-1">Tipo de Métrica</label>
+            <select id="cg-type" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+              <option value="grind_hours">⏱️ Horas de Grind</option>
+              <option value="study_hours">📚 Horas de Estudio</option>
+              <option value="games">🎮 Total Games</option>
+              <option value="custom">✍️ Hábito / Otro Libre</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-bold text-stone-500 block mb-1">Frecuencia</label>
+            <select id="cg-freq" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+              <option value="Diaria">Diaria</option>
+              <option value="Semanal">Semanal</option>
+              <option value="Quincenal">Quincenal</option>
+              <option value="Mensual">Mensual</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="font-bold text-stone-500 block mb-1">Valor Objetivo</label>
+          <input type="number" step="0.5" id="cg-target" placeholder="Ej. 30" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+        </div>
+      </div>
+      <div class="pt-2 flex justify-end space-x-2">
+        <button onclick="closeModal('modal-custom-goal')" class="px-4 py-2 border border-[#e8d2dc] rounded-xl text-xs font-bold text-stone-700 cursor-pointer">Cancelar</button>
+        <button onclick="saveCustomGoal()" class="px-4 py-2 bg-[#c97b84] text-white rounded-xl text-xs font-black cursor-pointer">Crear Meta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL GRIND / SESIÓN -->
+  <div id="modal-grind" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
+    <div class="glass-card-solid rounded-3xl max-w-xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto border border-[#e8d2dc]">
+      <div class="flex items-center justify-between pb-2 border-b border-[#e8d2dc]">
+        <h3 class="text-base font-black text-stone-800">♠️ Registro Diario Completo con Gráfica</h3>
+        <button onclick="closeModal('modal-grind')" class="text-stone-400 font-bold cursor-pointer">✕</button>
+      </div>
+      <div class="space-y-4 text-xs">
+        <input type="hidden" id="grind-edit-id">
+        <div><label class="font-bold text-stone-500 block mb-1">Fecha</label><input type="date" id="grind-date" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+
+        <div class="bg-[#f5ecf0] p-4 rounded-2xl border border-[#e8d2dc] space-y-3">
+          <h4 class="font-black text-[#b86b72] text-xs uppercase tracking-wider">☀️ Warm-up</h4>
+          <div class="space-y-2">
+            <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" id="modal-wu-env" class="accent-[#c97b84] w-4 h-4 rounded"><span class="font-bold text-stone-700">Espacio ordenado y programas abiertos</span></label>
+            <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" id="modal-wu-mind" class="accent-[#c97b84] w-4 h-4 rounded"><span class="font-bold text-stone-700">Activación realizada</span></label>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="font-bold text-stone-500 block mb-1">Energía (1-10)</label><input type="number" min="1" max="10" id="modal-wu-energy" value="8" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-center text-stone-800"></div>
+            <div><label class="font-bold text-stone-500 block mb-1">Enfoque (1-10)</label><input type="number" min="1" max="10" id="modal-wu-focus" value="8" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-center text-stone-800"></div>
+          </div>
+          <input type="text" id="modal-wu-intention" placeholder="Intención del día..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-medium text-stone-800">
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-[#e8d2dc] space-y-3">
+          <h4 class="font-black text-stone-800 text-xs uppercase tracking-wider">🃏 Métricas</h4>
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="font-bold text-stone-500 block mb-1">Horas Grind</label><input type="number" step="0.1" id="grind-hours" placeholder="4.5" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+            <div><label class="font-bold text-stone-500 block mb-1">Total Games</label><input type="number" id="grind-games" placeholder="100" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <div><label class="font-bold text-stone-500 block mb-1">cEV</label><input type="number" step="0.1" id="grind-cev" placeholder="65.0" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-stone-800"></div>
+            <div><label class="font-bold text-stone-500 block mb-1">Focus</label><input type="number" min="1" max="10" id="grind-focus" value="8" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-stone-800"></div>
+            <div><label class="font-bold text-stone-500 block mb-1">Mindset</label><input type="number" min="1" max="10" id="grind-mindset" value="8" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-stone-800"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="font-bold text-stone-500 block mb-1">Horas Estudio</label><input type="number" step="0.1" id="grind-study" placeholder="1.5" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+            <div><label class="font-bold text-stone-500 block mb-1">Manos</label><input type="number" id="grind-hands" placeholder="12" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+          </div>
+        </div>
+
+        <div class="bg-[#f5ecf0] p-4 rounded-2xl border border-[#e8d2dc] space-y-3">
+          <h4 class="font-black text-[#b86b72] text-xs uppercase tracking-wider">🌙 Cool-down & Gráfica</h4>
+          <div><label class="font-bold text-stone-500 block mb-1">Sensaciones</label><textarea id="modal-cd-sensations" rows="2" placeholder="¿Cómo te sentiste..." class="w-full bg-white border border-[#e8d2dc] rounded-xl p-2 font-medium text-stone-800"></textarea></div>
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="font-bold text-stone-500 block mb-1">Alertas de tilt</label><input type="text" id="modal-cd-tilt" placeholder="Spots automáticos..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-medium text-stone-800"></div>
+            <div><label class="font-bold text-stone-500 block mb-1">Ganancias / EV</label><input type="text" id="grind-notes" placeholder="Financiero..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-medium text-stone-800"></div>
+          </div>
+          <div><label class="font-bold text-stone-500 block mb-1">📸 Adjuntar Imagen</label><input type="file" id="grind-image-input" accept="image/*" class="w-full text-xs font-bold bg-white p-2 rounded-xl border border-[#e8d2dc]"></div>
+        </div>
+      </div>
+      <div class="pt-2 flex justify-end space-x-2">
+        <button onclick="closeModal('modal-grind')" class="px-4 py-2 border border-[#e8d2dc] rounded-xl text-xs font-bold text-stone-700 cursor-pointer">Cancelar</button>
+        <button onclick="saveGrindSession()" class="px-4 py-2 bg-[#c97b84] text-white rounded-xl text-xs font-black cursor-pointer">Guardar Sesión</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ESTUDIO -->
+  <div id="modal-study" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
+    <div class="glass-card-solid rounded-3xl max-w-md w-full p-6 space-y-4 border border-[#e8d2dc]">
+      <div class="flex items-center justify-between pb-2 border-b border-[#e8d2dc]">
+        <h3 class="text-base font-black text-stone-800">Registrar Bitácora de Estudio</h3>
+        <button onclick="closeModal('modal-study')" class="text-stone-400 font-bold cursor-pointer">✕</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <input type="hidden" id="study-edit-id">
+        <input type="date" id="study-date" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+        <input type="text" id="study-topic" placeholder="Enfoque de estudio..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+        <textarea id="study-hands" rows="3" placeholder="Manos anotadas..." class="w-full bg-white border border-[#e8d2dc] rounded-xl p-3 text-stone-800"></textarea>
+        <textarea id="study-conclusion" rows="3" placeholder="Conclusión GTO..." class="w-full bg-white border border-[#e8d2dc] rounded-xl p-3 text-stone-800"></textarea>
+      </div>
+      <div class="pt-2 flex justify-end space-x-2">
+        <button onclick="closeModal('modal-study')" class="px-4 py-2 border border-[#e8d2dc] rounded-xl text-xs font-bold text-stone-700 cursor-pointer">Cancelar</button>
+        <button onclick="saveStudyLog()" class="px-4 py-2 bg-[#c97b84] text-white rounded-xl text-xs font-black cursor-pointer">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL LEAK -->
+  <div id="modal-leak" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
+    <div class="glass-card-solid rounded-3xl max-w-sm w-full p-6 space-y-4 border border-[#e8d2dc]">
+      <div class="flex items-center justify-between pb-2 border-b border-[#e8d2dc]">
+        <h3 class="text-base font-black text-stone-800">Nuevo Leak / Corrección</h3>
+        <button onclick="closeModal('modal-leak')" class="text-stone-400 font-bold cursor-pointer">✕</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <input type="text" id="leak-title" placeholder="Título..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+        <input type="text" id="leak-initial" placeholder="Dato inicial..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+        <textarea id="leak-action" rows="2" placeholder="Plan de acción..." class="w-full bg-white border border-[#e8d2dc] rounded-xl p-3 text-stone-800"></textarea>
+      </div>
+      <div class="pt-2 flex justify-end space-x-2">
+        <button onclick="closeModal('modal-leak')" class="px-4 py-2 border border-[#e8d2dc] rounded-xl text-xs font-bold text-stone-700 cursor-pointer">Cancelar</button>
+        <button onclick="saveLeakItem()" class="px-4 py-2 bg-[#c97b84] text-white rounded-xl text-xs font-black cursor-pointer">Crear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PROGRESS LEAK -->
+  <div id="modal-leak-progress" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
+    <div class="glass-card-solid rounded-3xl max-w-sm w-full p-6 space-y-4 border border-[#e8d2dc]">
+      <div class="flex items-center justify-between pb-2 border-b border-[#e8d2dc]">
+        <h3 class="text-base font-black text-stone-800">Medición de Progreso</h3>
+        <button onclick="closeModal('modal-leak-progress')" class="text-stone-400 font-bold cursor-pointer">✕</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <input type="hidden" id="progress-leak-id">
+        <input type="date" id="progress-date" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+        <input type="text" id="progress-stat" placeholder="Nuevo valor..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+      </div>
+      <div class="pt-2 flex justify-end space-x-2">
+        <button onclick="closeModal('modal-leak-progress')" class="px-4 py-2 border border-[#e8d2dc] rounded-xl text-xs font-bold text-stone-700 cursor-pointer">Cancelar</button>
+        <button onclick="saveLeakProgress()" class="px-4 py-2 bg-[#c97b84] text-white rounded-xl text-xs font-black cursor-pointer">Registrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL TRIDENT -->
+  <div id="modal-trident" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
+    <div class="glass-card-solid rounded-3xl max-w-sm w-full p-6 space-y-4 border border-[#e8d2dc]">
+      <div class="flex items-center justify-between pb-2 border-b border-[#e8d2dc]">
+        <h3 class="text-base font-black text-stone-800">Registrar Tridents</h3>
+        <button onclick="closeModal('modal-trident')" class="text-stone-400 font-bold cursor-pointer">✕</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <input type="date" id="trident-date" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+        <input type="number" id="trident-count" placeholder="Cantidad" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+        <input type="number" step="0.01" id="trident-profit" placeholder="Resultado" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+      </div>
+      <div class="pt-2 flex justify-end space-x-2">
+        <button onclick="closeModal('modal-trident')" class="px-4 py-2 border border-[#e8d2dc] rounded-xl text-xs font-bold text-stone-700 cursor-pointer">Cancelar</button>
+        <button onclick="saveTridentItem()" class="px-4 py-2 bg-[#c97b84] text-white rounded-xl text-xs font-black cursor-pointer">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PERIODIC PHOTO -->
+  <div id="modal-periodic-photo" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
+    <div class="glass-card-solid rounded-3xl max-w-sm w-full p-6 space-y-4 border border-[#e8d2dc]">
+      <div class="flex items-center justify-between pb-2 border-b border-[#e8d2dc]">
+        <h3 class="text-base font-black text-stone-800">Subir Gráfica Semanal/Mensual</h3>
+        <button onclick="closeModal('modal-periodic-photo')" class="text-stone-400 font-bold cursor-pointer">✕</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <input type="date" id="periodic-photo-date" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+        <select id="periodic-photo-type" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+          <option value="Semanal">Gráfica Semanal</option>
+          <option value="Mensual">Gráfica Mensual</option>
+        </select>
+        <input type="file" id="periodic-photo-file" accept="image/*" class="w-full text-xs font-bold">
+        <input type="text" id="periodic-photo-title" placeholder="Título..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+      </div>
+      <div class="pt-2 flex justify-end space-x-2">
+        <button onclick="closeModal('modal-periodic-photo')" class="px-4 py-2 border border-[#e8d2dc] rounded-xl text-xs font-bold text-stone-700 cursor-pointer">Cancelar</button>
+        <button onclick="savePeriodicPhoto()" class="px-4 py-2 bg-[#c97b84] text-white rounded-xl text-xs font-black cursor-pointer">Subir</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed bottom-5 right-5 z-50 bg-[#3b3238] text-white px-4 py-2.5 rounded-2xl shadow-xl text-xs font-bold flex items-center space-x-2 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none border border-white/20">
+    <span>✨</span>
+    <span id="toast-text">Acción completada</span>
+  </div>
+
+  <!-- SCRIPT -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCnhvfyXpwJdYOQFCvsyHDhgw9F3X7ARR4",
+      authDomain: "marpk-816dd.firebaseapp.com",
+      projectId: "marpk-816dd",
+      storageBucket: "marpk-816dd.firebasestorage.app",
+      messagingSenderId: "189644122232",
+      appId: "1:189644122232:web:ed7894f1510a373d44658d",
+      measurementId: "G-G1948VXPT6"
+    };
+
+    let db = null;
+    let isCloudReady = false;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      isCloudReady = true;
+    } catch (e) { console.warn("Firebase:", e); }
+
+    const STORAGE_KEY = 'MARPK_POKER_DATA_V16';
+
+    let appData = {
+      grindSessions: [],
+      studyLogs: [],
+      leaks: [],
+      tridents: [],
+      periodicPhotos: [],
+      customGoals: [],
+      foodLogs: [],
+      goalsConfig: { hours: 4.0, study: 1.0, games: 85 },
+      _updatedAt: 0
+    };
+
+    let activeTabId = 'resumen';
+    let currentDate = new Date().toISOString().slice(0, 10);
+
+    function getTodayString() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    }
+
+    async function initApp() {
+      currentDate = getTodayString();
+      document.getElementById('global-date').value = currentDate;
+      
+      const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      document.getElementById('report-from').value = thirtyDaysAgo.toISOString().slice(0,10);
+      document.getElementById('report-to').value = currentDate;
+
+      const foodFrom = document.getElementById('food-from');
+      const foodTo = document.getElementById('food-to');
+      if(foodFrom) foodFrom.value = thirtyDaysAgo.toISOString().slice(0,10);
+      if(foodTo) foodTo.value = currentDate;
+      const foodDate = document.getElementById('food-date');
+      if(foodDate) foodDate.value = currentDate;
+
+      await loadDatabase();
+      renderAllViews();
+    }
+
+    async function loadDatabase() {
+      loadDatabaseLocal();
+      const localTimestamp = appData._updatedAt || 0;
+
+      try {
+        if (isCloudReady && db) {
+          const doc = await db.collection("mapkr").doc("poker_data").get();
+          if (doc.exists) {
+            const cloudData = doc.data();
+            const cloudTimestamp = cloudData._updatedAt || 0;
+            if (cloudTimestamp >= localTimestamp) {
+              appData = Object.assign({}, appData, cloudData);
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            } else {
+              db.collection("mapkr").doc("poker_data").set(appData).catch(e => console.warn(e));
+            }
+          }
+        }
+      } catch (e) { console.warn(e); }
+
+      if (!Array.isArray(appData.periodicPhotos)) appData.periodicPhotos = [];
+      if (!Array.isArray(appData.customGoals)) appData.customGoals = [];
+      if (!Array.isArray(appData.foodLogs)) appData.foodLogs = [];
+    }
+
+    function loadDatabaseLocal() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) appData = Object.assign({}, appData, JSON.parse(raw));
+      } catch (e) { console.warn(e); }
+    }
+
+    function saveDatabase() {
+      try {
+        appData._updatedAt = Date.now();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        if (isCloudReady && db) {
+          const cloudPayload = {
+            ...appData,
+            grindSessions: appData.grindSessions.map(s => ({ ...s, imageUrl: '' })),
+            periodicPhotos: []
+          };
+          db.collection("mapkr").doc("poker_data").set(cloudPayload).catch(e => console.warn(e));
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    function downloadBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData));
+      const dlAnchorElem = document.createElement('a');
+      dlAnchorElem.setAttribute("href", dataStr);
+      dlAnchorElem.setAttribute("download", `MARPK_Backup_${currentDate}.json`);
+      dlAnchorElem.click();
+    }
+
+    function openModal(id) { const m = document.getElementById(id); if (m) { m.classList.remove('hidden'); m.style.display = 'flex'; } }
+    function closeModal(id) { const m = document.getElementById(id); if (m) { m.classList.add('hidden'); m.style.display = 'none'; } }
+    
+    function showToast(msg) {
+      const t = document.getElementById('toast'), txt = document.getElementById('toast-text');
+      if (!t || !txt) return;
+      txt.innerText = msg;
+      t.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 2500);
+    }
+
+    function switchTab(tabId) {
+      activeTabId = tabId;
+      ['resumen', 'grind', 'estudio', 'leaks', 'tridents', 'nutricion', 'reportes'].forEach(id => {
+        const pane = document.getElementById(`pane-${id}`);
+        const btn = document.getElementById(`tab-btn-${id}`);
+        if (pane) { if (id === tabId) pane.classList.remove('hidden'); else pane.classList.add('hidden'); }
+        if (btn) { if (id === tabId) btn.classList.add('active'); else btn.classList.remove('active'); }
+      });
+      renderAllViews();
+    }
+
+    function handleGlobalDateChange(val) {
+      currentDate = val;
+      renderAllViews();
+    }
+
+    // Funciones de metas, grind, estudio, leaks, tridents, fotos
+    function openModalGoalsConfig() {
+      const gc = appData.goalsConfig || { hours: 4.0, study: 1.0, games: 85 };
+      document.getElementById('cfg-target-hours').value = gc.hours;
+      document.getElementById('cfg-target-study').value = gc.study;
+      document.getElementById('cfg-target-games').value = gc.games;
+      openModal('modal-goals-config');
+    }
+
+    function saveGoalsConfig() {
+      appData.goalsConfig = {
+        hours: parseFloat(document.getElementById('cfg-target-hours').value || 4),
+        study: parseFloat(document.getElementById('cfg-target-study').value || 1),
+        games: parseInt(document.getElementById('cfg-target-games').value || 85)
+      };
+      saveDatabase(); closeModal('modal-goals-config'); renderAllViews(); showToast('Metas actualizadas');
+    }
+
+    function openModalCustomGoal() {
+      document.getElementById('cg-title').value = '';
+      document.getElementById('cg-type').value = 'grind_hours';
+      document.getElementById('cg-freq').value = 'Semanal';
+      document.getElementById('cg-target').value = '30';
+      openModal('modal-custom-goal');
+    }
+
+    function saveCustomGoal() {
+      const title = document.getElementById('cg-title').value;
+      if (!title) { showToast('Escribe un título'); return; }
+      appData.customGoals.push({
+        id: Date.now(),
+        title,
+        metricType: document.getElementById('cg-type').value,
+        frequency: document.getElementById('cg-freq').value,
+        targetValue: parseFloat(document.getElementById('cg-target').value || 1),
+        createdAt: currentDate
+      });
+      saveDatabase(); closeModal('modal-custom-goal'); renderAllViews(); showToast('Meta creada');
+    }
+
+    function deleteCustomGoal(id) {
+      appData.customGoals = appData.customGoals.filter(x => x.id !== id);
+      saveDatabase(); renderAllViews();
+    }
+
+    function openModalGrind() {
+      const existing = appData.grindSessions.find(s => s.date === currentDate) || {};
+      document.getElementById('grind-edit-id').value = existing.id || '';
+      document.getElementById('grind-date').value = currentDate;
+      document.getElementById('modal-wu-env').checked = !!existing.wuEnv;
+      document.getElementById('modal-wu-mind').checked = !!existing.wuMind;
+      document.getElementById('modal-wu-energy').value = existing.wuEnergy || 8;
+      document.getElementById('modal-wu-focus').value = existing.wuFocus || 8;
+      document.getElementById('modal-wu-intention').value = existing.wuIntention || '';
+      document.getElementById('grind-hours').value = existing.hours || '';
+      document.getElementById('grind-games').value = existing.games || '';
+      document.getElementById('grind-cev').value = existing.cev || '';
+      document.getElementById('grind-focus').value = existing.focus || 8;
+      document.getElementById('grind-mindset').value = existing.mindset || 8;
+      document.getElementById('grind-study').value = existing.studyHours || '';
+      document.getElementById('grind-hands').value = existing.hands || '';
+      document.getElementById('grind-notes').value = existing.notes || '';
+      document.getElementById('modal-cd-sensations').value = existing.cdSensations || '';
+      document.getElementById('modal-cd-tilt').value = existing.cdTilt || '';
+      document.getElementById('grind-image-input').value = '';
+      openModal('modal-grind');
+    }
+
+    function editGrindSession(id) {
+      const s = appData.grindSessions.find(x => x.id === id);
+      if (!s) return;
+      currentDate = s.date;
+      document.getElementById('global-date').value = currentDate;
+      openModalGrind();
+    }
+
+    function saveGrindSession() {
+      const editId = document.getElementById('grind-edit-id').value;
+      const targetDate = document.getElementById('grind-date').value || currentDate;
+      const fileInput = document.getElementById('grind-image-input');
+      const existing = appData.grindSessions.find(x => x.id === parseInt(editId) || x.date === targetDate) || {};
+      let imageDataUrl = existing.imageUrl || '';
+
+      const processSave = (imgUrl) => {
+        const session = {
+          id: editId ? parseInt(editId) : Date.now(),
+          date: targetDate,
+          wuEnv: document.getElementById('modal-wu-env').checked,
+          wuMind: document.getElementById('modal-wu-mind').checked,
+          wuEnergy: parseInt(document.getElementById('modal-wu-energy').value || 8),
+          wuFocus: parseInt(document.getElementById('modal-wu-focus').value || 8),
+          wuIntention: document.getElementById('modal-wu-intention').value,
+          hours: parseFloat(document.getElementById('grind-hours').value || 0),
+          games: parseInt(document.getElementById('grind-games').value || 0),
+          cev: parseFloat(document.getElementById('grind-cev').value || 0),
+          focus: parseInt(document.getElementById('grind-focus').value || 8),
+          mindset: parseInt(document.getElementById('grind-mindset').value || 8),
+          studyHours: parseFloat(document.getElementById('grind-study').value || 0),
+          hands: parseInt(document.getElementById('grind-hands').value || 0),
+          notes: document.getElementById('grind-notes').value,
+          cdSensations: document.getElementById('modal-cd-sensations').value,
+          cdTilt: document.getElementById('modal-cd-tilt').value,
+          imageUrl: imgUrl
+        };
+        appData.grindSessions = appData.grindSessions.filter(x => x.id !== session.id && x.date !== targetDate);
+        appData.grindSessions.push(session);
+        saveDatabase(); closeModal('modal-grind'); renderAllViews(); showToast('Sesión guardada');
+      };
+
+      if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.readAsDataURL(fileInput.files[0]);
+        reader.onload = e => processSave(e.target.result);
+      } else {
+        processSave(imageDataUrl);
+      }
+    }
+
+    function deleteGrindSession(id) {
+      appData.grindSessions = appData.grindSessions.filter(x => x.id !== id);
+      saveDatabase(); renderAllViews(); showToast('Sesión eliminada');
+    }
+
+    function openModalFood() {
+      document.getElementById('food-edit-id').value = '';
+      document.getElementById('food-date').value = currentDate;
+      document.getElementById('food-title').value = 'Toda la alimentación';
+      document.getElementById('food-cal').value = '';
+      document.getElementById('food-prot').value = '';
+      document.getElementById('food-carb').value = '';
+      document.getElementById('food-fat').value = '';
+      openModal('modal-food');
+    }
+
+    function saveFoodLog() {
+      const editId = document.getElementById('food-edit-id').value;
+      const item = {
+        id: editId ? parseInt(editId) : Date.now(),
+        date: document.getElementById('food-date').value || currentDate,
+        title: document.getElementById('food-title').value || 'Alimentación',
+        calories: parseFloat(document.getElementById('food-cal').value || 0),
+        protein: parseFloat(document.getElementById('food-prot').value || 0),
+        carbs: parseFloat(document.getElementById('food-carb').value || 0),
+        fat: parseFloat(document.getElementById('food-fat').value || 0)
+      };
+      if (editId) {
+        appData.foodLogs = appData.foodLogs.map(x => x.id === parseInt(editId) ? item : x);
+      } else {
+        appData.foodLogs.push(item);
+      }
+      saveDatabase(); closeModal('modal-food'); renderNutritionView(); showToast('🥗 Registro nutricional guardado');
+    }
+
+    function editFoodLog(id) {
+      const item = appData.foodLogs.find(x => x.id === id);
+      if(!item) return;
+      document.getElementById('food-edit-id').value = item.id;
+      document.getElementById('food-date').value = item.date;
+      document.getElementById('food-title').value = item.title;
+      document.getElementById('food-cal').value = item.calories;
+      document.getElementById('food-prot').value = item.protein;
+      document.getElementById('food-carb').value = item.carbs;
+      document.getElementById('food-fat').value = item.fat;
+      openModal('modal-food');
+    }
+
+    function deleteFoodLog(id) {
+      appData.foodLogs = appData.foodLogs.filter(x => x.id !== id);
+      saveDatabase(); renderNutritionView(); showToast('Registro eliminado');
+    }
+
+    function openModalPeriodicPhoto() {
+      document.getElementById('periodic-photo-date').value = currentDate;
+      document.getElementById('periodic-photo-title').value = '';
+      document.getElementById('periodic-photo-file').value = '';
+      openModal('modal-periodic-photo');
+    }
+
+    function savePeriodicPhoto() {
+      const fileInput = document.getElementById('periodic-photo-file');
+      if (!fileInput.files || fileInput.files.length === 0) { showToast('Selecciona imagen'); return; }
+      const reader = new FileReader();
+      reader.readAsDataURL(fileInput.files[0]);
+      reader.onload = e => {
+        appData.periodicPhotos.push({
+          id: Date.now(),
+          date: document.getElementById('periodic-photo-date').value || currentDate,
+          type: document.getElementById('periodic-photo-type').value,
+          title: document.getElementById('periodic-photo-title').value || 'Gráfica',
+          dataUrl: e.target.result
+        });
+        saveDatabase(); closeModal('modal-periodic-photo'); renderAllViews(); showToast('Gráfica guardada');
+      };
+    }
+
+    function deletePeriodicPhoto(id) {
+      appData.periodicPhotos = appData.periodicPhotos.filter(x => x.id !== id);
+      saveDatabase(); renderAllViews();
+    }
+
+    function openModalStudy() {
+      document.getElementById('study-edit-id').value = '';
+      document.getElementById('study-date').value = currentDate;
+      document.getElementById('study-topic').value = '';
+      document.getElementById('study-hands').value = '';
+      document.getElementById('study-conclusion').value = '';
+      openModal('modal-study');
+    }
+
+    function saveStudyLog() {
+      const editId = document.getElementById('study-edit-id').value;
+      const log = {
+        id: editId ? parseInt(editId) : Date.now(),
+        date: document.getElementById('study-date').value || currentDate,
+        topic: document.getElementById('study-topic').value || 'Estudio',
+        hands: document.getElementById('study-hands').value,
+        conclusion: document.getElementById('study-conclusion').value
+      };
+      if (editId) {
+        appData.studyLogs = appData.studyLogs.map(x => x.id === log.id ? log : x);
+      } else {
+        appData.studyLogs.push(log);
+      }
+      saveDatabase(); closeModal('modal-study'); renderAllViews(); showToast('Bitácora guardada');
+    }
+
+    function deleteStudyLog(id) {
+      appData.studyLogs = appData.studyLogs.filter(x => x.id !== id);
+      saveDatabase(); renderAllViews();
+    }
+
+    function openModalLeak() {
+      document.getElementById('leak-title').value = '';
+      document.getElementById('leak-initial').value = '';
+      document.getElementById('leak-action').value = '';
+      openModal('modal-leak');
+    }
+
+    function saveLeakItem() {
+      const title = document.getElementById('leak-title').value;
+      if (!title) return;
+      appData.leaks.push({
+        id: Date.now(),
+        title,
+        initial: document.getElementById('leak-initial').value,
+        action: document.getElementById('leak-action').value,
+        progress: [{ date: currentDate, stat: document.getElementById('leak-initial'].value }]
+      });
+      saveDatabase(); closeModal('modal-leak'); renderAllViews(); showToast('Leak creado');
+    }
+
+    function openModalLeakProgress(leakId) {
+      document.getElementById('progress-leak-id').value = leakId;
+      document.getElementById('progress-date').value = currentDate;
+      document.getElementById('progress-stat').value = '';
+      openModal('modal-leak-progress');
+    }
+
+    function saveLeakProgress() {
+      const id = parseInt(document.getElementById('progress-leak-id').value);
+      const leak = appData.leaks.find(x => x.id === id);
+      if (leak) {
+        leak.progress.push({
+          date: document.getElementById('progress-date').value || currentDate,
+          stat: document.getElementById('progress-stat').value || 'Revisado'
+        });
+        saveDatabase(); closeModal('modal-leak-progress'); renderAllViews(); showToast('Progreso registrado');
+      }
+    }
+
+    function deleteLeak(id) {
+      appData.leaks = appData.leaks.filter(x => x.id !== id);
+      saveDatabase(); renderAllViews();
+    }
+
+    function openModalTrident() {
+      document.getElementById('trident-date').value = currentDate;
+      document.getElementById('trident-count').value = '';
+      document.getElementById('trident-profit').value = '';
+      openModal('modal-trident');
+    }
+
+    function saveTridentItem() {
+      appData.tridents.push({
+        id: Date.now(),
+        date: document.getElementById('trident-date').value || currentDate,
+        count: parseInt(document.getElementById('trident-count').value || 0),
+        profit: parseFloat(document.getElementById('trident-profit').value || 0)
+      });
+      saveDatabase(); closeModal('modal-trident'); renderAllViews(); showToast('Tridents guardados');
+    }
+
+    function deleteTrident(id) {
+      appData.tridents = appData.tridents.filter(x => x.id !== id);
+      saveDatabase(); renderAllViews();
+    }
+
+    function renderAllViews() {
+      renderDailyGoalsProgress();
+      renderCustomGoalsAutoProgress();
+      renderDailyRitualView();
+      renderGrindView();
+      renderStudyView();
+      renderLeaksView();
+      renderTridentsView();
+      renderPeriodicPhotos();
+      renderNutritionView();
+      applyReportFilters();
+    }
+
+    function renderDailyGoalsProgress() {
+      const container = document.getElementById('daily-goals-progress');
+      if (!container) return;
+      const gc = appData.goalsConfig || { hours: 4.0, study: 1.0, games: 85 };
+      const todaySession = appData.grindSessions.find(s => s.date === currentDate) || { hours: 0, studyHours: 0, games: 0 };
+      const hPct = Math.min(100, Math.round((todaySession.hours / gc.hours) * 100));
+      const sPct = Math.min(100, Math.round((todaySession.studyHours / gc.study) * 100));
+      const gPct = Math.min(100, Math.round((todaySession.games / gc.games) * 100));
+
+      container.innerHTML = `
+        <div class="glass-card p-4 rounded-2xl space-y-2">
+          <div class="flex justify-between items-center text-xs font-black"><span class="text-stone-700">⏱️ Grind Hours</span><span class="${hPct >= 100 ? 'text-emerald-600' : 'text-[#c97b84]'}">${todaySession.hours} / ${gc.hours} h (${hPct}%)</span></div>
+          <div class="w-full bg-[#f0e4eb] h-2 rounded-full overflow-hidden border border-[#e8d2dc]"><div class="bg-gradient-to-r from-[#c97b84] to-[#b86b72] h-full rounded-full transition-all duration-300" style="width: ${hPct}%"></div></div>
+        </div>
+        <div class="glass-card p-4 rounded-2xl space-y-2">
+          <div class="flex justify-between items-center text-xs font-black"><span class="text-stone-700">📚 Study Hours</span><span class="${sPct >= 100 ? 'text-emerald-600' : 'text-[#c97b84]'}">${todaySession.studyHours} / ${gc.study} h (${sPct}%)</span></div>
+          <div class="w-full bg-[#f0e4eb] h-2 rounded-full overflow-hidden border border-[#e8d2dc]"><div class="bg-gradient-to-r from-[#c97b84] to-[#b86b72] h-full rounded-full transition-all duration-300" style="width: ${sPct}%"></div></div>
+        </div>
+        <div class="glass-card p-4 rounded-2xl space-y-2">
+          <div class="flex justify-between items-center text-xs font-black"><span class="text-stone-700">🎮 Total Games</span><span class="${gPct >= 100 ? 'text-emerald-600' : 'text-[#c97b84]'}">${todaySession.games} / ${gc.games} (${gPct}%)</span></div>
+          <div class="w-full bg-[#f0e4eb] h-2 rounded-full overflow-hidden border border-[#e8d2dc]"><div class="bg-gradient-to-r from-[#c97b84] to-[#b86b72] h-full rounded-full transition-all duration-300" style="width: ${gPct}%"></div></div>
+        </div>`;
+    }
+
+    function renderCustomGoalsAutoProgress() {
+      const container = document.getElementById('custom-goals-container');
+      const empty = document.getElementById('custom-goals-empty');
+      if (!container) return;
+      container.innerHTML = '';
+      if (!appData.customGoals || appData.customGoals.length === 0) { empty?.classList.remove('hidden'); return; }
+      empty?.classList.add('hidden');
+
+      const currDate = new Date(currentDate + 'T00:00:00');
+      const dayOfWeek = (currDate.getDay() + 6) % 7;
+      const monday = new Date(currDate);
+      monday.setDate(currDate.getDate() - dayOfWeek);
+
+      const weekDays = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        weekDays.push({ dateStr: `${yyyy}-${mm}-${dd}`, dayName: ['L', 'M', 'X', 'J', 'V', 'S', 'D'][i] });
+      }
+
+      appData.customGoals.forEach(g => {
+        let accumulated = 0;
+        let trackerDaysHtml = '';
+        weekDays.forEach(w => {
+          const daySession = appData.grindSessions.find(s => s.date === w.dateStr) || { hours: 0, studyHours: 0, games: 0 };
+          let fulfilled = false;
+          if (g.metricType === 'grind_hours') fulfilled = (daySession.hours >= (g.targetValue / 7));
+          else if (g.metricType === 'study_hours') fulfilled = (daySession.studyHours >= (g.targetValue / 7));
+          else if (g.metricType === 'games') fulfilled = (daySession.games >= (g.targetValue / 7));
+          else fulfilled = (daySession.hours > 0);
+
+          trackerDaysHtml += `
+            <div class="flex flex-col items-center">
+              <span class="text-[9px] font-extrabold text-stone-500 mb-1">${w.dayName}</span>
+              <div class="w-7 h-7 rounded-xl border flex items-center justify-center text-xs ${fulfilled ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-700 font-black' : 'bg-white border-[#e8d2dc] text-stone-400'}">${fulfilled ? '✓' : '·'}</div>
+            </div>`;
+        });
+
+        appData.grindSessions.forEach(s => {
+          const sDate = new Date(s.date + 'T00:00:00');
+          let inRange = false;
+          if (g.frequency === 'Diaria') inRange = (s.date === currentDate);
+          else if (g.frequency === 'Semanal') { const diffDays = (currDate - sDate) / (1000 * 60 * 60 * 24); inRange = (diffDays >= 0 && diffDays < 7); }
+          else if (g.frequency === 'Quincenal') { const diffDays = (currDate - sDate) / (1000 * 60 * 60 * 24); inRange = (diffDays >= 0 && diffDays < 15); }
+          else if (g.frequency === 'Mensual') inRange = (sDate.getFullYear() === currDate.getFullYear() && sDate.getMonth() === currDate.getMonth());
+
+          if (inRange) {
+            if (g.metricType === 'grind_hours') accumulated += (s.hours || 0);
+            else if (g.metricType === 'study_hours') accumulated += (s.studyHours || 0);
+            else if (g.metricType === 'games') accumulated += (s.games || 0);
+            else accumulated += 1;
+          }
+        });
+
+        const target = g.targetValue || 1;
+        const pct = Math.min(100, Math.round((accumulated / target) * 100));
+        let unit = g.metricType.includes('hours') ? 'h' : (g.metricType === 'games' ? ' games' : '');
+
+        container.innerHTML += `
+          <div class="glass-card p-4 rounded-2xl space-y-3">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div><span class="text-[9px] font-black bg-[#f5ecf0] px-2 py-0.5 rounded-md text-[#c97b84] uppercase border border-[#e8d2dc]">${g.frequency}</span><h4 class="font-black text-stone-800 text-sm mt-1">${g.title}</h4></div>
+              <div class="flex items-center space-x-2"><div class="flex space-x-1.5">${trackerDaysHtml}</div><button onclick="deleteCustomGoal(${g.id})" class="text-stone-400 hover:text-red-500 font-bold px-2">✕</button></div>
+            </div>
+            <div class="space-y-1">
+              <div class="flex justify-between items-center text-xs font-black"><span class="text-stone-500">Progreso</span><span class="${pct >= 100 ? 'text-emerald-600' : 'text-[#c97b84]'}">${accumulated.toFixed(1)}${unit} / ${target}${unit} (${pct}%)</span></div>
+              <div class="w-full bg-[#f0e4eb] h-2.5 rounded-full overflow-hidden border border-[#e8d2dc]"><div class="bg-gradient-to-r from-[#c97b84] to-[#b86b72] h-full rounded-full transition-all duration-300" style="width: ${pct}%"></div></div>
+            </div>
+          </div>`;
+      });
+    }
+
+    function renderDailyRitualView() {
+      const container = document.getElementById('daily-ritual-view');
+      if (!container) return;
+      const session = appData.grindSessions.find(s => s.date === currentDate);
+      if (!session) {
+        container.innerHTML = `<div class="col-span-2 glass-card rounded-3xl p-8 text-center space-y-3"><p class="text-stone-500 text-xs font-bold">No hay sesión registrada para hoy (${currentDate}).</p><button onclick="openModalGrind()" class="px-5 py-2.5 bg-[#c97b84] text-white rounded-xl text-xs font-black shadow-md cursor-pointer">+ Registrar Sesión</button></div>`;
+        return;
+      }
+      let img = session.imageUrl ? `<div class="mt-3"><img src="${session.imageUrl}" class="w-full h-40 object-cover rounded-xl border border-[#e8d2dc]"></div>` : '';
+      container.innerHTML = `
+        <div class="glass-card-solid rounded-3xl p-6 space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-[#e8d2dc]"><h3 class="text-base font-black text-stone-800">☀️ Warm-up</h3><button onclick="openModalGrind()" class="text-xs font-bold text-[#c97b84]">✏️ Editar</button></div>
+          <div class="space-y-2 text-xs text-stone-700 font-bold"><p>${session.wuEnv ? '✅' : '❌'} Espacio ordenado</p><p>${session.wuMind ? '✅' : '❌'} Activación mental</p><p>⚡ Energía: <span class="text-[#c97b84]">${session.wuEnergy}/10</span> | Enfoque: <span class="text-[#c97b84]">${session.wuFocus}/10</span></p><p class="font-normal italic text-stone-500">🎯 Intención: "${session.wuIntention || ''}"</p></div>
+          ${img}
+        </div>
+        <div class="glass-card-solid rounded-3xl p-6 space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-[#e8d2dc]"><h3 class="text-base font-black text-stone-800">🌙 Cool-down</h3><button onclick="openModalGrind()" class="text-xs font-bold text-[#c97b84]">✏️ Editar</button></div>
+          <div class="space-y-2 text-xs text-stone-700"><p><strong>Sensaciones:</strong> ${session.cdSensations || '--'}</p><p><strong>Alertas de tilt:</strong> ${session.cdTilt || '--'}</p><p><strong>Ganancias/EV:</strong> ${session.notes || '--'}</p></div>
+        </div>`;
+    }
+
+    function renderGrindView() {
+      const list = document.getElementById('grind-sessions-list');
+      const empty = document.getElementById('grind-empty');
+      if (!list) return;
+      list.innerHTML = '';
+      if (appData.grindSessions.length === 0) { empty?.classList.remove('hidden'); return; }
+      empty?.classList.add('hidden');
+      ([...appData.grindSessions]).sort((a,b) => b.date.localeCompare(a.date)).forEach(s => {
+        list.innerHTML += `<div class="p-4 glass-card rounded-2xl flex justify-between items-center text-xs"><div><strong>📅 ${s.date}</strong> — 🎮 ${s.games} games | ⏱️ Grind: ${s.hours}h | cEV: ${s.cev}</div><div class="flex gap-2"><button onclick="editGrindSession(${s.id})" class="px-3 py-1 bg-white border rounded-xl font-bold">Editar</button><button onclick="deleteGrindSession(${s.id})" class="px-3 py-1 bg-red-50 text-red-600 rounded-xl font-bold">✕</button></div></div>`;
+      });
+    }
+
+    function renderPeriodicPhotos() {
+      const gallery = document.getElementById('periodic-photos-gallery');
+      const empty = document.getElementById('periodic-photos-empty');
+      if (!gallery) return;
+      gallery.innerHTML = '';
+      if (appData.periodicPhotos.length === 0) { empty?.classList.remove('hidden'); return; }
+      empty?.classList.add('hidden');
+      appData.periodicPhotos.forEach(p => {
+        gallery.innerHTML += `<div class="glass-card rounded-2xl p-2 space-y-2 relative"><span class="absolute top-3 left-3 bg-[#c97b84] text-white text-[9px] font-bold px-2 py-0.5 rounded">${p.type}</span><img src="${p.dataUrl}" class="w-full h-32 object-cover rounded-xl"><div class="flex justify-between items-center text-xs font-bold"><span>${p.title}</span><button onclick="deletePeriodicPhoto(${p.id})" class="text-red-500">✕</button></div></div>`;
+      });
+    }
+
+    function renderStudyView() {
+      const container = document.getElementById('study-logs-container');
+      const empty = document.getElementById('study-empty');
+      if (!container) return;
+      container.innerHTML = '';
+      if (appData.studyLogs.length === 0) { empty?.classList.remove('hidden'); return; }
+      empty?.classList.add('hidden');
+      appData.studyLogs.forEach(l => {
+        container.innerHTML += `<div class="p-4 glass-card rounded-2xl space-y-1 text-xs"><div class="flex justify-between font-black"><span>📚 ${l.date} · ${l.topic}</span><button onclick="deleteStudyLog(${l.id})" class="text-red-500">✕</button></div><p>${l.hands || ''}</p><p class="text-[#c97b84] font-bold">${l.conclusion || ''}</p></div>`;
+      });
+    }
+
+    function renderLeaksView() {
+      const container = document.getElementById('leaks-container');
+      const empty = document.getElementById('leaks-empty');
+      if (!container) return;
+      container.innerHTML = '';
+      if (appData.leaks.length === 0) { empty?.classList.remove('hidden'); return; }
+      empty?.classList.add('hidden');
+      appData.leaks.forEach(leak => {
+        let prog = leak.progress.map(p => `<span class="bg-white px-2 py-1 rounded border text-[10px] font-bold">📅 ${p.date}: ${p.stat}</span>`).join('');
+        container.innerHTML += `<div class="p-4 glass-card rounded-3xl space-y-2 text-xs"><div class="flex justify-between font-black"><span>🎯 ${leak.title}</span><button onclick="deleteLeak(${leak.id})" class="text-red-500">✕</button></div><p><strong>Plan:</strong> ${leak.action}</p><div class="flex flex-wrap gap-1">${prog}</div><button onclick="openModalLeakProgress(${leak.id})" class="px-3 py-1 bg-[#c97b84] text-white font-bold rounded-xl mt-2">+ Medición</button></div>`;
+      });
+    }
+
+    function renderTridentsView() {
+      const list = document.getElementById('tridents-list');
+      const empty = document.getElementById('tridents-empty');
+      if (!list) return;
+      list.innerHTML = '';
+      if (appData.tridents.length === 0) { empty?.classList.remove('hidden'); return; }
+      empty?.classList.add('hidden');
+      appData.tridents.forEach(t => {
+        list.innerHTML += `<div class="p-3 glass-card rounded-2xl flex justify-between items-center text-xs"><span>⚡ ${t.date} — Cantidad: ${t.count} | Res: <strong class="${t.profit >= 0 ? 'text-emerald-600' : 'text-red-600'}">${t.profit}€</strong></span><button onclick="deleteTrident(${t.id})" class="text-red-500 font-bold">✕</button></div>`;
+      });
+    }
+
+    // NUTRICIÓN CON PROMEDIOS DIARIOS EXCLUSIVOS
+    function renderNutritionView() {
+      const container = document.getElementById('food-history-list');
+      const avgContainer = document.getElementById('nutrition-averages-container');
+      if(!container || !avgContainer) return;
+      container.innerHTML = '';
+
+      const from = document.getElementById('food-from').value;
+      const to = document.getElementById('food-to').value;
+
+      const filtered = [...appData.foodLogs]
+        .filter(f => (!from || f.date >= from) && (!to || f.date <= to))
+        .sort((a,b)=>b.date.localeCompare(a.date));
+
+      const count = filtered.length;
+      let avgCal = 0, avgProt = 0, avgCarb = 0, avgFat = 0;
+      if (count > 0) {
+        avgCal = Math.round(filtered.reduce((acc, x) => acc + (x.calories || 0), 0) / count);
+        avgProt = Math.round(filtered.reduce((acc, x) => acc + (x.protein || 0), 0) / count);
+        avgCarb = Math.round(filtered.reduce((acc, x) => acc + (x.carbs || 0), 0) / count);
+        avgFat = Math.round(filtered.reduce((acc, x) => acc + (x.fat || 0), 0) / count);
+      }
+
+      avgContainer.innerHTML = `
+        <div class="glass-card p-3 rounded-2xl text-center bg-white/70">
+          <span class="text-[10px] font-extrabold text-stone-500 block uppercase">Promedio Calorías</span>
+          <p class="text-base font-black text-stone-800 mt-0.5">🔥 ${avgCal} kcal</p>
+        </div>
+        <div class="glass-card p-3 rounded-2xl text-center bg-white/70">
+          <span class="text-[10px] font-extrabold text-stone-500 block uppercase">Promedio Proteína</span>
+          <p class="text-base font-black text-stone-800 mt-0.5">🥩 ${avgProt}g</p>
+        </div>
+        <div class="glass-card p-3 rounded-2xl text-center bg-white/70">
+          <span class="text-[10px] font-extrabold text-stone-500 block uppercase">Promedio Carbs</span>
+          <p class="text-base font-black text-stone-800 mt-0.5">🥔 ${avgCarb}g</p>
+        </div>
+        <div class="glass-card p-3 rounded-2xl text-center bg-white/70">
+          <span class="text-[10px] font-extrabold text-stone-500 block uppercase">Promedio Grasa</span>
+          <p class="text-base font-black text-stone-800 mt-0.5">🥑 ${avgFat}g</p>
+        </div>
+      `;
+
+      if(filtered.length === 0) {
+        container.innerHTML = `<p class="text-xs text-stone-400 text-center py-6 glass-card rounded-2xl">No hay registros de nutrición en este rango.</p>`;
+        return;
+      }
+
+      filtered.forEach(f => {
+        container.innerHTML += `
+          <div class="glass-card p-4 rounded-3xl flex justify-between items-center text-xs shadow-md">
+            <div>
+              <strong class="text-sm font-black text-stone-800">🥗 ${f.date} · ${f.title}</strong>
+              <p class="text-stone-600 mt-1">🔥 ${f.calories} kcal | 🥩 Prot: ${f.protein}g | 🥔 Carb: ${f.carbs}g | 🥑 Grasa: ${f.fat}g</p>
+            </div>
+            <div class="flex gap-1">
+              <button onclick="editFoodLog(${f.id})" class="px-2.5 py-1 bg-white border rounded-lg font-bold">Editar</button>
+              <button onclick="deleteFoodLog(${f.id})" class="px-2.5 py-1 bg-red-50 text-red-600 border rounded-lg font-bold">✕</button>
+            </div>
+          </div>`;
+      });
+    }
+
+    function applyReportFilters() {
+      const from = document.getElementById('report-from').value;
+      const to = document.getElementById('report-to').value;
+      const filteredSessions = appData.grindSessions.filter(s => s.date >= from && s.date <= to);
+      const totalGrindHours = filteredSessions.reduce((acc, s) => acc + (s.hours || 0), 0);
+      const totalStudyHours = filteredSessions.reduce((acc, s) => acc + (s.studyHours || 0), 0);
+      const totalGames = filteredSessions.reduce((acc, s) => acc + (s.games || 0), 0);
+      const avgCev = totalGames > 0 ? filteredSessions.reduce((acc, s) => acc + ((s.cev || 0) * (s.games || 0)), 0) / totalGames : 0;
+
+      document.getElementById('kpi-grind-hours').innerText = `${totalGrindHours.toFixed(1)} h`;
+      document.getElementById('kpi-study-hours').innerText = `${totalStudyHours.toFixed(1)} h`;
+      document.getElementById('kpi-total-games').innerText = totalGames;
+      document.getElementById('kpi-avg-cev').innerText = avgCev.toFixed(1);
+    }
+
+    function copyWeeklyReport() {
+      const from = document.getElementById('report-from').value;
+      const to = document.getElementById('report-to').value;
+      const gH = document.getElementById('kpi-grind-hours').innerText;
+      const sH = document.getElementById('kpi-study-hours').innerText;
+      const games = document.getElementById('kpi-total-games').innerText;
+      const cev = document.getElementById('kpi-avg-cev').innerText;
+      const report = `♠️ *REPORTE MARPK (${from} al ${to})* ♠️\n\n⏱️ Grind: ${gH}\n📚 Estudio: ${sH}\n🎮 Games: ${games}\n📈 cEV: ${cev}\n`;
+      navigator.clipboard.writeText(report).then(() => showToast('¡Reporte copiado!'));
+    }
+
+    document.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>

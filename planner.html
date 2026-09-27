@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MARY · Daily Planner & Journal</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDKs (Firestore) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <link rel="apple-touch-icon" href="https://emojicdn.elk.sh/🌸?style=apple">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      background: 
+        radial-gradient(circle at 10% 15%, rgba(217, 167, 199, 0.25) 0%, transparent 40%),
+        radial-gradient(circle at 90% 85%, rgba(180, 146, 205, 0.25) 0%, transparent 45%),
+        linear-gradient(135deg, #fcf8fa 0%, #f7f1f5 50%, #f3ecf5 100%);
+      color: #3d2c3d;
+      min-height: 100vh;
+      margin: 0;
+      padding-bottom: 50px;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(217, 167, 199, 0.4);
+      box-shadow: 0 10px 30px rgba(120, 80, 100, 0.06);
+    }
+
+    .nav-btn {
+      transition: all 0.25s ease;
+      cursor: pointer;
+    }
+    .nav-btn.active {
+      background: linear-gradient(135deg, #b492cd 0%, #c879a8) !important;
+      color: #ffffff !important;
+      font-weight: 800;
+      box-shadow: 0 4px 15px rgba(180, 146, 205, 0.4);
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f0e6ed; }
+    ::-webkit-scrollbar-thumb { background: #d9a7c7; border-radius: 999px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-[#d9a7c7] selection:text-white">
+
+  <!-- HEADER -->
+  <header class="bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b border-[#ebd7e3] shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#b492cd] to-[#d9a7c7] flex items-center justify-center font-black text-white text-base shadow-md">🌸</div>
+        <div>
+          <h1 class="text-sm font-black tracking-widest uppercase text-stone-800">MARY <span class="text-[#c879a8]">DAILY PLANNER</span></h1>
+          <p class="text-[10px] font-medium text-stone-500 italic">"Discipline today, success tomorrow."</p>
+        </div>
+      </div>
+
+      <nav class="flex items-center gap-2 bg-[#f7f0f4] p-1 rounded-2xl border border-[#ebd7e3]">
+        <button onclick="switchTab('planner')" id="btn-planner" class="nav-btn active px-4 py-1.5 rounded-xl font-bold text-xs text-stone-600">📅 Planner Diario</button>
+        <button onclick="switchTab('search')" id="btn-search" class="nav-btn px-4 py-1.5 rounded-xl font-bold text-xs text-stone-600">📊 Reportes & Patrones</button>
+      </nav>
+
+      <div class="flex items-center space-x-3">
+        <input type="date" id="global-date" onchange="changeDate(this.value)" class="bg-white border border-[#ebd7e3] rounded-xl px-3 py-1.5 text-xs font-black text-stone-700 focus:outline-none shadow-xs">
+        <button onclick="saveDayManual()" class="px-4 py-1.5 bg-[#b492cd] hover:bg-[#a37fb8] text-white font-black text-xs rounded-xl shadow-md transition cursor-pointer">💾 Guardar Día</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 space-y-6">
+
+    <!-- VISTA PLANNER DIARIO -->
+    <div id="view-planner" class="space-y-6">
+
+      <!-- BLOQUE SUPERIOR: VERSÍCULO, INTENCIÓN Y GRATITUD -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="glass-card rounded-3xl p-5 space-y-2 border-l-4 border-l-[#b492cd]">
+          <span class="text-[10px] font-black uppercase text-[#b492cd] tracking-wider">✝️ Versículo del Día</span>
+          <p class="text-xs font-semibold text-stone-700 italic">"Todo lo puedo en Cristo que me fortalece."</p>
+          <p class="text-[10px] text-stone-400 font-bold">Filipenses 4:13</p>
+        </div>
+
+        <div class="glass-card rounded-3xl p-5 space-y-2 border-l-4 border-l-[#c879a8]">
+          <span class="text-[10px] font-black uppercase text-[#c879a8] tracking-wider">✨ Intención del Día</span>
+          <textarea id="field-intention" oninput="autoSaveField('intention', this.value)" rows="2" placeholder="¿Cuál es tu enfoque o energía principal hoy?" class="w-full bg-white/60 border border-[#ebd7e3] rounded-xl p-2 text-xs font-medium text-stone-800 focus:outline-none resize-none"></textarea>
+        </div>
+
+        <div class="glass-card rounded-3xl p-5 space-y-2 border-l-4 border-l-[#d9a7c7]">
+          <span class="text-[10px] font-black uppercase text-[#b492cd] tracking-wider">💖 Estoy Agradecida Por</span>
+          <div class="space-y-1.5" id="gratitude-container">
+            <input type="text" placeholder="1. " class="gratitude-input w-full bg-white/60 border border-[#ebd7e3] rounded-lg px-2 py-1 text-xs font-medium text-stone-800 focus:outline-none" oninput="saveGratitude()">
+            <input type="text" placeholder="2. " class="gratitude-input w-full bg-white/60 border border-[#ebd7e3] rounded-lg px-2 py-1 text-xs font-medium text-stone-800 focus:outline-none" oninput="saveGratitude()">
+            <input type="text" placeholder="3. " class="gratitude-input w-full bg-white/60 border border-[#ebd7e3] rounded-lg px-2 py-1 text-xs font-medium text-stone-800 focus:outline-none" oninput="saveGratitude()">
+          </div>
+        </div>
+      </div>
+
+      <!-- FILA CENTRAL: SCHEDULE (5 AM A 5 AM) Y PRIORIDADES/TODO -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <div class="lg:col-span-5 glass-card rounded-3xl p-5 space-y-3">
+          <div class="flex justify-between items-center pb-2 border-b border-[#ebd7e3]">
+            <h3 class="text-xs font-black uppercase tracking-wider text-stone-800">⏰ Schedule (5:00 AM - 5:00 AM)</h3>
+            <button onclick="clearSchedule()" class="text-[10px] font-bold text-red-400 hover:underline">Limpiar Horario</button>
+          </div>
+          <div id="schedule-container" class="space-y-1.5 max-h-[600px] overflow-y-auto pr-2"></div>
+        </div>
+
+        <div class="lg:col-span-7 space-y-6">
+          <div class="glass-card rounded-3xl p-5 space-y-3">
+            <h3 class="text-xs font-black uppercase tracking-wider text-stone-800 pb-2 border-b border-[#ebd7e3]">🎯 Top 3 Goals</h3>
+            <div id="top-goals-container" class="space-y-2"></div>
+          </div>
+
+          <div class="glass-card rounded-3xl p-5 space-y-3">
+            <div class="flex justify-between items-center pb-2 border-b border-[#ebd7e3]">
+              <h3 class="text-xs font-black uppercase tracking-wider text-stone-800">📝 To-Do List</h3>
+              <button onclick="addToDoItem()" class="px-2.5 py-1 bg-[#b492cd] text-white font-bold text-[10px] rounded-lg shadow-xs">+ Añadir Tarea</button>
+            </div>
+            <div id="todo-container" class="space-y-2 max-h-[250px] overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILA HABIT TRACKER Y RUTINAS -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <div class="lg:col-span-7 glass-card rounded-3xl p-5 space-y-3">
+          <div class="flex justify-between items-center pb-2 border-b border-[#ebd7e3]">
+            <div>
+              <h3 class="text-xs font-black uppercase tracking-wider text-stone-800">✨ Daily Habit Tracker</h3>
+              <p class="text-[10px] text-stone-400">Haz clic en el estado: ✓ Hecho | ✗ No hecho | ➖ Descanso</p>
+            </div>
+            <button onclick="addHabitRow()" class="px-2.5 py-1 bg-[#c879a8] text-white font-bold text-[10px] rounded-lg shadow-xs">+ Nuevo Hábito</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left">
+              <thead>
+                <tr class="text-[10px] font-black uppercase text-stone-400 border-b border-[#ebd7e3]">
+                  <th class="pb-2">Hábito</th>
+                  <th class="pb-2">Condición</th>
+                  <th class="pb-2">Área</th>
+                  <th class="pb-2 text-center">Estado (Clic)</th>
+                  <th class="pb-2 text-right">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="habit-table-body" class="divide-y divide-[#ebd7e3]/50"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 space-y-6">
+          <div class="glass-card rounded-3xl p-5 space-y-3">
+            <div class="flex justify-between items-center pb-2 border-b border-[#ebd7e3]">
+              <h3 class="text-xs font-black uppercase tracking-wider text-stone-800">🌅 Morning Routine</h3>
+              <button onclick="addRoutineItem('morning')" class="text-[10px] font-bold text-[#b492cd]">+ Añadir</button>
+            </div>
+            <div id="morning-routine-container" class="space-y-1.5 max-h-[180px] overflow-y-auto pr-1"></div>
+          </div>
+
+          <div class="glass-card rounded-3xl p-5 space-y-3">
+            <div class="flex justify-between items-center pb-2 border-b border-[#ebd7e3]">
+              <h3 class="text-xs font-black uppercase tracking-wider text-stone-800">🌙 Night Routine</h3>
+              <button onclick="addRoutineItem('night')" class="text-[10px] font-bold text-[#b492cd]">+ Añadir</button>
+            </div>
+            <div id="night-routine-container" class="space-y-1.5 max-h-[180px] overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FILA SALUD, MEAL PLAN Y PRODUCTIVIDAD -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <div class="glass-card rounded-3xl p-5 space-y-3">
+          <div class="flex justify-between items-center pb-2 border-b border-[#ebd7e3]">
+            <h3 class="text-xs font-black uppercase tracking-wider text-stone-800">🍽️ Meal Plan & Macros</h3>
+            <span id="meal-total-macros" class="text-[10px] font-extrabold text-[#b492cd]">🔥 0 kcal</span>
+          </div>
+          <div class="space-y-3 text-xs max-h-[400px] overflow-y-auto pr-1">
+            <div class="bg-white/50 p-2.5 rounded-2xl border border-[#ebd7e3] space-y-1.5">
+              <span class="font-bold text-stone-700 text-[11px]">Breakfast</span>
+              <input type="text" id="meal-breakfast" placeholder="Alimentos..." oninput="autoSaveMeal('breakfast', 'text', this.value)" class="w-full bg-white border border-[#ebd7e3] rounded-lg px-2 py-1 font-medium">
+              <div class="grid grid-cols-4 gap-1">
+                <input type="number" placeholder="kcal" id="b-cal" oninput="autoSaveMeal('breakfast', 'cal', this.value)" class="bg-white border border-[#ebd7e3] rounded p-1 text-[11px] font-bold">
+                <input type="number" placeholder="Prot" id="b-prot" oninput="autoSaveMeal('breakfast', 'prot', this.value)" class="bg-white border border-[#ebd7e3] rounded p-1 text-[11px] font-bold">
+                <input type="number" placeholder="Carb" id="b-carb" oninput="autoSaveMeal('breakfast', 'carb', this.value)" class="bg-white border border-[#ebd7e3] rounded p-1 text-[11px] font-bold">
+                <input type="number" placeholder="Grasa" id="b-fat" oninput="autoSaveMeal('breakfast', 'fat', this.value)" class="bg-white border border-[#ebd7e3] rounded p-1 text-[11px] font-bold">
+              </div>
+            </div>
+
+            <div class="bg-white/50 p-2.5 rounded-2xl border border-[#ebd7e3] space-y-1.5">
+              <span class="font-bold text-stone-700 text-[11px]">Lunch</span>
+              <input type="text" id="meal-lunch" placeholder="Alimentos..." oninput="autoSaveMeal('lunch', 'text', this.value)" class="w-full bg-white border border-[#ebd7e3] rounded-lg px-2 py-1 font-medium">
+              <div class="grid grid-cols-4 gap-1">
+                <input type="number" placeholder="kcal" id="l-cal" oninput="autoSaveMeal('lunch', 'cal', this.value)" class="bg-white border border-[#ebd7e3] rounded p-1 text-[11px] font-bold">
+                <input type="number" placeholder="Prot" id="l-prot" oninput="autoSaveMeal('lunch', 'prot', this.value)" class="bg-white border border-[#ebd7e3] rounded p-1 text-[11px] font-bold">
+                <input type="number" placeholder="Carb" id="l-carb" oninput="autoSaveMeal('lunch', 'carb', this.value)" class="bg-white border border-[#ebd7e3] rounded p-1 text-[11px] font-bold">
+                <input type="number" placeholder="Grasa" id="l-fat" oninput="autoSaveMeal('lunch', 'fat', this.value)" class="bg-white border border-[#ebd7e3] rounded p-1 text-[11px] font-bold">
+              </div>
+            </div>
+
+            <div class="bg-white/50 p-2.5 rounded-2xl border border-[#ebd7e3] space-y-1.5">
+              <span class="font-bold text-stone-700 text-[11px]">Dinner</span>
+              <input type="text" id="meal-dinner" placeholder="Alimentos..." oninput="autoSaveMeal('dinner', 'text', this.value)" class="w-full bg-white border border-[#ebd7e3] rounded-lg px-2 py-1 font-medium">
+              <div class="grid grid-cols-4 gap-1">
+                <input type="number" placeholder="kcal" id="d-cal" oninput="autoSaveMeal('dinner', 'cal', this.value)" class="bg-white border border-[#ebd7e3] rounded p-1 text-[11px] font-bold">
+                <input type="number" placeholder="Prot" id="d-prot" oninput="autoSaveMeal('dinner', 'prot', this.value)" class="bg-white border border-[#ebd7e3] rounded p-1 text-[11px] font-bold">
+                <input type="number" placeholder="Carb" id="d-carb" oninput="autoSaveMeal('dinner', 'carb', this.value)" class="bg-white border border-[#ebd7e3] rounded p-1 text-[11px] font-bold">
+                <input type="number" placeholder="Grasa" id="d-fat" oninput="autoSaveMeal('dinner', 'fat', this.value)" class="bg-white border border-[#ebd7e3] rounded p-1 text-[11px] font-bold">
+              </div>
+            </div>
+
+            <div class="bg-white/50 p-2.5 rounded-2xl border border-[#ebd7e3] space-y-1.5">
+              <span class="font-bold text-stone-700 text-[11px]">Snacks</span>
+              <input type="text" id="meal-snacks" placeholder="Snacks..." oninput="autoSaveMeal('snacks', 'text', this.value)" class="w-full bg-white border border-[#ebd7e3] rounded-lg px-2 py-1 font-medium">
+              <div class="grid grid-cols-4 gap-1">
+                <input type="number" placeholder="kcal" id="s-cal" oninput="autoSaveMeal('snacks', 'cal', this.value)" class="bg-white border border-[#ebd7e3] rounded p-1 text-[11px] font-bold">
+                <input type="number" placeholder="Prot" id="s-prot" oninput="autoSaveMeal('snacks', 'prot', this.value)" class="bg-white border border-[#ebd7e3] rounded p-1 text-[11px] font-bold">
+                <input type="number" placeholder="Carb" id="s-carb" oninput="autoSaveMeal('snacks', 'carb', this.value)" class="bg-white border border-[#ebd7e3] rounded p-1 text-[11px] font-bold">
+                <input type="number" placeholder="Grasa" id="s-fat" oninput="autoSaveMeal('snacks', 'fat', this.value)" class="bg-white border border-[#ebd7e3] rounded p-1 text-[11px] font-bold">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-3xl p-5 space-y-3">
+          <h3 class="text-xs font-black uppercase tracking-wider text-stone-800 pb-2 border-b border-[#ebd7e3]">💧 Health, Cycle & Symptoms</h3>
+          
+          <div class="space-y-1">
+            <span class="text-[10px] font-bold text-stone-500 uppercase">Water Tracker (8 vasos)</span>
+            <div id="water-drops-container" class="flex flex-wrap gap-2 pt-1"></div>
+          </div>
+
+          <div class="space-y-1">
+            <span class="text-[10px] font-bold text-stone-500 uppercase">Fase Ciclo / Hormonal</span>
+            <select id="health-cycle" onchange="autoSaveHealth('cycle', this.value)" class="w-full bg-white/60 border border-[#ebd7e3] rounded-xl p-1.5 text-xs font-bold text-stone-700">
+              <option value="">Selecciona fase...</option>
+              <option value="Menstruación activa 🩸">Menstruación activa 🩸</option>
+              <option value="Manchado / Spotting">Manchado / Spotting</option>
+              <option value="Ovulación ✨">Ovulación ✨</option>
+              <option value="Fase Lútea">Fase Lútea</option>
+              <option value="Pre-menstrual (PMS)">Pre-menstrual (PMS)</option>
+            </select>
+          </div>
+
+          <div class="space-y-1">
+            <span class="text-[10px] font-bold text-stone-500 uppercase">Síntomas de hoy</span>
+            <div id="symptoms-checkboxes" class="grid grid-cols-2 gap-1.5 text-[11px] font-medium text-stone-700"></div>
+          </div>
+
+          <div class="space-y-1">
+            <span class="text-[10px] font-bold text-stone-500 uppercase">Estados de Ánimo (Varios)</span>
+            <div id="moods-checkboxes" class="grid grid-cols-2 gap-1.5 text-[11px] font-medium text-stone-700 max-h-[100px] overflow-y-auto pr-1"></div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 text-xs">
+            <div>
+              <label class="font-bold text-stone-500 text-[10px]">Energía</label>
+              <select id="health-energy" onchange="autoSaveHealth('energy', this.value)" class="w-full bg-white/60 border border-[#ebd7e3] rounded-xl p-1 font-bold text-stone-700">
+                <option value="">Nivel...</option>
+                <option value="⚡ Alta">⚡ Alta</option>
+                <option value="🔋 Media">🔋 Media</option>
+                <option value="🪫 Baja">🪫 Baja</option>
+                <option value="💤 Fatiga">💤 Fatiga</option>
+              </select>
+            </div>
+            <div>
+              <label class="font-bold text-stone-500 text-[10px]">Sueño (hrs)</label>
+              <input type="number" step="0.5" id="health-sleep" oninput="autoSaveHealth('sleep', this.value)" class="w-full bg-white/60 border border-[#ebd7e3] rounded-xl p-1 font-bold">
+            </div>
+            <div>
+              <label class="font-bold text-stone-500 text-[10px]">Pasos</label>
+              <input type="number" id="health-steps" oninput="autoSaveHealth('steps', this.value)" class="w-full bg-white/60 border border-[#ebd7e3] rounded-xl p-1 font-bold">
+            </div>
+          </div>
+
+          <div class="space-y-1.5 pt-1 border-t border-[#ebd7e3]">
+            <div class="flex justify-between items-center">
+              <span class="text-[10px] font-black uppercase text-stone-500">Ejercicios del Día</span>
+              <button onclick="addExerciseRow()" class="px-2 py-0.5 bg-[#b492cd] text-white font-bold text-[10px] rounded-lg">+ Añadir</button>
+            </div>
+            <div id="exercises-list-container" class="space-y-1.5 max-h-[100px] overflow-y-auto"></div>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-3xl p-5 space-y-4">
+          <h3 class="text-xs font-black uppercase tracking-wider text-stone-800 pb-2 border-b border-[#ebd7e3]">⚡ Área Productividad</h3>
+          
+          <div class="space-y-3 text-xs">
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="font-bold text-stone-500 text-[10px]">Grind (hrs)</label>
+                <input type="number" step="0.5" id="prod-grind" oninput="autoSaveProd('grind', this.value)" class="w-full bg-white/60 border border-[#ebd7e3] rounded-xl p-1.5 font-bold">
+              </div>
+              <div>
+                <label class="font-bold text-stone-500 text-[10px]">Estudio (hrs)</label>
+                <input type="number" step="0.5" id="prod-study" oninput="autoSaveProd('study', this.value)" class="w-full bg-white/60 border border-[#ebd7e3] rounded-xl p-1.5 font-bold">
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between bg-white/60 p-2 rounded-xl border border-[#ebd7e3]">
+              <span class="font-bold text-stone-700">📖 ¿Leí hoy?</span>
+              <input type="checkbox" id="prod-read" onchange="autoSaveProd('read', this.checked)" class="accent-[#b492cd] w-4 h-4 rounded">
+            </div>
+
+            <div class="space-y-1">
+              <span class="text-[10px] font-bold text-stone-500 uppercase">Productividad del Día (1 al 5)</span>
+              <div id="star-rating" class="flex gap-1.5 text-xl cursor-pointer text-amber-400"></div>
+            </div>
+
+            <div>
+              <label class="font-bold text-stone-500 text-[10px]">🔔 Recordatorio para el Día Siguiente</label>
+              <textarea id="prod-reminder" oninput="autoSaveProd('reminder', this.value)" rows="2" placeholder="Nota importante..." class="w-full bg-white/60 border border-[#ebd7e3] rounded-xl p-2 text-xs font-medium resize-none"></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- JOURNAL & REFLEXIÓN PROFUNDA -->
+      <div class="glass-card rounded-3xl p-6 space-y-4">
+        <h3 class="text-xs font-black uppercase tracking-wider text-stone-800 pb-2 border-b border-[#ebd7e3]">✍️ Journal & Reflexión del Día</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div class="space-y-1">
+            <label class="font-bold text-stone-700">1. ¿Qué hice bien hoy?</label>
+            <textarea id="ref-1" oninput="autoSaveRef(1, this.value)" rows="2" class="w-full bg-white/60 border border-[#ebd7e3] rounded-xl p-2 font-medium"></textarea>
+          </div>
+          <div class="space-y-1">
+            <label class="font-bold text-stone-700">2. ¿Qué pude hacer mejor?</label>
+            <textarea id="ref-2" oninput="autoSaveRef(2, this.value)" rows="2" class="w-full bg-white/60 border border-[#ebd7e3] rounded-xl p-2 font-medium"></textarea>
+          </div>
+          <div class="space-y-1">
+            <label class="font-bold text-stone-700">3. ¿Qué patrón detectas en tu comportamiento?</label>
+            <textarea id="ref-3" oninput="autoSaveRef(3, this.value)" rows="2" class="w-full bg-white/60 border border-[#ebd7e3] rounded-xl p-2 font-medium"></textarea>
+          </div>
+          <div class="space-y-1">
+            <label class="font-bold text-stone-700">4. ¿Qué aprendí hoy?</label>
+            <textarea id="ref-4" oninput="autoSaveRef(4, this.value)" rows="2" class="w-full bg-white/60 border border-[#ebd7e3] rounded-xl p-2 font-medium"></textarea>
+          </div>
+          <div class="space-y-1">
+            <label class="font-bold text-stone-700">5. ¿Qué haría una versión más madura de mí?</label>
+            <textarea id="ref-5" oninput="autoSaveRef(5, this.value)" rows="2" class="w-full bg-white/60 border border-[#ebd7e3] rounded-xl p-2 font-medium"></textarea>
+          </div>
+          <div class="space-y-1">
+            <label class="font-bold text-stone-700">6. ¿Qué acción concreta puedo aplicar mañana?</label>
+            <textarea id="ref-6" oninput="autoSaveRef(6, this.value)" rows="2" class="w-full bg-white/60 border border-[#ebd7e3] rounded-xl p-2 font-medium"></textarea>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- VISTA REPORTES Y ANÁLISIS DE PATRONES -->
+    <div id="view-search" class="glass-card rounded-3xl p-6 space-y-6 hidden">
+      <div>
+        <h3 class="text-base font-black text-stone-800">📊 Reporte Semanal & Análisis de Patrones</h3>
+        <p class="text-xs text-stone-500">Selecciona el rango de fechas para ver el resumen automático de productividad, energía, hábitos y síntomas.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div>
+          <label class="font-bold text-stone-600 block mb-1">Desde</label>
+          <input type="date" id="search-from" onchange="executeSearch()" class="w-full bg-white border border-[#ebd7e3] rounded-xl px-3 py-2 font-bold">
+        </div>
+        <div>
+          <label class="font-bold text-stone-600 block mb-1">Hasta</label>
+          <input type="date" id="search-to" onchange="executeSearch()" class="w-full bg-white border border-[#ebd7e3] rounded-xl px-3 py-2 font-bold">
+        </div>
+      </div>
+
+      <div id="search-stats" class="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-2"></div>
+      <div id="pattern-insights" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+      <div id="search-results" class="space-y-3 pt-4 border-t border-[#ebd7e3]">
+        <p class="text-xs text-stone-400 text-center py-4">Selecciona un rango de fechas para generar el reporte automático.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- TOAST -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 bg-[#3d2c3d] text-white px-4 py-2.5 rounded-2xl shadow-xl text-xs font-bold transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    ✨ ¡Día guardado con éxito!
+  </div>
+
+  <!-- SCRIPT -->
+  <script>
+    // Configuración Firebase Firestore con tus credenciales reales
+    const firebaseConfig = {
+      apiKey: "AIzaSyCnhvfyXpwJdYOQFCvsyHDhgW9F3X7ARR4",
+      authDomain: "marpk-816dd.firebaseapp.com",
+      databaseURL: "https://marpk-816dd-default-rtdb.firebaseio.com",
+      projectId: "marpk-816dd",
+      storageBucket: "marpk-816dd.firebasestorage.app",
+      messagingSenderId: "189644122232",
+      appId: "1:189644122232:web:ed7894f1510a373d44658d"
+    };
+
+    let db = null;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+    } catch(e) { console.warn("Firebase error:", e); }
+
+    const STORAGE_PREFIX = 'MARY_DAILY_PLANNER_FIRESTORE_';
+    let currentDate = new Date().toISOString().slice(0, 10);
+
+    const defaultMorning = [
+      "Pesarme", "Tomar agua con sal", "Sacar a Moka", "Tomar el sol", 
+      "Café", "Cepillarme", "Caminar", "Gratitud", "Devocional", 
+      "Revisión de pendientes", "Alistarme"
+    ];
+
+    const defaultNight = [
+      "Desmaquillarme", "Cepillarme", "Tomar agua", "Sacar a Moka", 
+      "Trackers - app", "Devocional", "Gratitud", "Ordenar entorno", 
+      "Tomar creatina", "Pendientes", "Orar"
+    ];
+
+    const defaultHabits = [
+      { id: 1, name: "Meditar", condition: "10 min", area: "Spiritual", status: "none" },
+      { id: 2, name: "Leer la Biblia / Devocional", condition: "1 capítulo", area: "Spiritual", status: "none" },
+      { id: 3, name: "Entrenamiento de Moka", condition: "Paseo activo", area: "Health", status: "none" },
+      { id: 4, name: "Skincare", condition: "AM/PM", area: "Self-Care", status: "none" },
+      { id: 5, name: "Espacio espiritual", condition: "Oración", area: "Spiritual", status: "none" },
+      { id: 6, name: "Ejercicio", condition: "Pesas o Cardio", area: "Fitness", status: "none" }
+    ];
+
+    const availableMoods = [
+      "Motivada 🔥", "Tranquila 🧘‍♀️", "Feliz 😊", "Ansiosa ⚡", "Cansada 🥱", 
+      "Agradecida 💖", "Enfocada 🎯", "Sensible 🌧️", "Estresada 🌀", "Bendecida ✨", 
+      "Apatía 🌫️", "Insomnio 🌙", "Desmotivada 💤", "Rumiación 🌀", "Tristeza 💧"
+    ];
+
+    const availableSymptoms = [
+      "Insomnio 🌙", "Cansancio extremo 🥱", "Dolor de cabeza 🤕", 
+      "Dolor menstrual / Cólicos 🩸", "Ansiedad ⚡", "Hinchazón / Retención 💧", 
+      "Antojos intensos 🍫", "Irritabilidad 🌪️"
+    ];
+
+    function getStorageKey(date) {
+      return STORAGE_PREFIX + date;
+    }
+
+    function loadDayData(date) {
+      try {
+        const raw = localStorage.getItem(getStorageKey(date));
+        if (raw) return JSON.parse(raw);
+      } catch(e) {}
+
+      return {
+        intention: "",
+        gratitude: ["", "", ""],
+        schedule: {},
+        topGoals: [
+          { text: "", completed: false },
+          { text: "", completed: false },
+          { text: "", completed: false }
+        ],
+        todoList: [],
+        habits: JSON.parse(JSON.stringify(defaultHabits)),
+        morningRoutine: defaultMorning.map((t, idx) => ({ id: idx, text: t, checked: false })),
+        nightRoutine: defaultNight.map((t, idx) => ({ id: idx, text: t, checked: false })),
+        meals: {
+          breakfast: { text: "", cal: "", prot: "", carb: "", fat: "" },
+          lunch: { text: "", cal: "", prot: "", carb: "", fat: "" },
+          dinner: { text: "", cal: "", prot: "", carb: "", fat: "" },
+          snacks: { text: "", cal: "", prot: "", carb: "", fat: "" }
+        },
+        waterGlasses: 0,
+        health: { moods: [], symptoms: [], cycle: "", energy: "", sleep: "", steps: "" },
+        exercises: [],
+        prod: { grind: "", study: "", read: false, rating: 0, reminder: "" },
+        reflection: { 1: "", 2: "", 3: "", 4: "", 5: "", 6: "" }
+      };
+    }
+
+    let currentData = loadDayData(currentDate);
+
+    function saveCurrentDay() {
+      localStorage.setItem(getStorageKey(currentDate), JSON.stringify(currentData));
+      if (db) {
+        db.collection('mary_planner').doc(currentDate).set(currentData)
+          .catch(err => console.log("Error en Firestore:", err));
+      }
+    }
+
+    function saveDayManual() {
+      saveCurrentDay();
+      showToast("💾 ¡Día guardado con éxito!");
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 2000);
+    }
+
+    function changeDate(val) {
+      currentDate = val;
+      currentData = loadDayData(currentDate);
+      renderAllUI();
+      listenFirestoreForDate(currentDate);
+    }
+
+    function switchTab(tab) {
+      if (tab === 'planner') {
+        document.getElementById('view-planner').classList.remove('hidden');
+        document.getElementById('view-search').classList.add('hidden');
+        document.getElementById('btn-planner').classList.add('active');
+        document.getElementById('btn-search').classList.remove('active');
+      } else {
+        document.getElementById('view-planner').classList.add('hidden');
+        document.getElementById('view-search').classList.remove('hidden');
+        document.getElementById('btn-search').classList.add('active');
+        document.getElementById('btn-planner').classList.remove('active');
+        executeSearch();
+      }
+    }
+
+    let unsubscribeFirestore = null;
+
+    function listenFirestoreForDate(date) {
+      if (db) {
+        if (unsubscribeFirestore) unsubscribeFirestore();
+        unsubscribeFirestore = db.collection('mary_planner').doc(date).onSnapshot((doc) => {
+          // Si el cambio viene de nuestra propia escritura local, lo ignoramos para no interrumpir el tipeo
+          if (doc.metadata.hasPendingWrites) return;
+
+          if (doc.exists) {
+            const val = doc.data();
+            if (val) {
+              currentData = val;
+              localStorage.setItem(getStorageKey(date), JSON.stringify(currentData));
+              renderAllUI();
+            }
+          }
+        });
+      }
+    }
+
+    function initApp() {
+      currentDate = new Date().toISOString().slice(0, 10);
+      document.getElementById('global-date').value = currentDate;
+      
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const diffToMonday = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const monday = new Date(today.setDate(diffToMonday)).toISOString().slice(0, 10);
+      document.getElementById('search-from').value = monday;
+      document.getElementById('search-to').value = new Date().toISOString().slice(0, 10);
+
+      currentData = loadDayData(currentDate);
+      renderAllUI();
+      listenFirestoreForDate(currentDate);
+    }
+
+    function renderAllUI() {
+      document.getElementById('global-date').value = currentDate;
+      document.getElementById('field-intention').value = currentData.intention || "";
+
+      const gInputs = document.querySelectorAll('.gratitude-input');
+      gInputs.forEach((inp, idx) => {
+        inp.value = currentData.gratitude[idx] || "";
+      });
+
+      renderSchedule();
+      renderTopGoals();
+      renderTodoList();
+      renderHabits();
+      renderRoutines();
+      renderMeals();
+      renderWater();
+      renderHealth();
+      renderExercises();
+      renderProd();
+      renderReflection();
+    }
+
+    // Schedule
+    function renderSchedule() {
+      const container = document.getElementById('schedule-container');
+      container.innerHTML = '';
+      
+      const hours = [
+        "5:00 AM", "6:00 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM", "11:00 AM",
+        "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM",
+        "7:00 PM", "8:00 PM", "9:00 PM", "10:00 PM", "11:00 PM",
+        "12:00 AM", "1:00 AM", "2:00 AM", "3:00 AM", "4:00 AM"
+      ];
+
+      hours.forEach(h => {
+        const val = currentData.schedule[h] || "";
+        container.innerHTML += `
+          <div class="flex items-center gap-2 text-xs">
+            <span class="font-black text-stone-400 w-16 text-right">${h}</span>
+            <input type="text" value="${val}" oninput="saveScheduleHour('${h}', this.value)" placeholder="..." class="flex-1 bg-white/60 border border-[#ebd7e3] rounded-lg px-2.5 py-1 font-medium text-stone-800 focus:outline-none">
+          </div>`;
+      });
+    }
+
+    function saveScheduleHour(hour, val) {
+      currentData.schedule[hour] = val;
+      saveCurrentDay();
+    }
+
+    function clearSchedule() {
+      if(confirm("¿Limpiar todo el horario?")) {
+        currentData.schedule = {};
+        saveCurrentDay();
+        renderSchedule();
+      }
+    }
+
+    // Top 3 Goals
+    function renderTopGoals() {
+      const container = document.getElementById('top-goals-container');
+      container.innerHTML = '';
+      
+      if(!Array.isArray(currentData.topGoals)) {
+        currentData.topGoals = [{text:"", completed:false},{text:"", completed:false},{text:"", completed:false}];
+      }
+
+      currentData.topGoals.forEach((g, idx) => {
+        container.innerHTML += `
+          <div class="flex items-center gap-2 text-xs bg-white/50 p-2 rounded-xl border border-[#ebd7e3]">
+            <input type="checkbox" ${g.completed ? 'checked' : ''} onchange="toggleTopGoal(${idx})" class="accent-[#b492cd] w-4 h-4 rounded">
+            <input type="text" value="${g.text}" oninput="updateTopGoalText(${idx}, this.value)" placeholder="Meta prioritaria ${idx+1}..." class="flex-1 bg-transparent font-bold ${g.completed ? 'line-through text-stone-400' : 'text-stone-800'} focus:outline-none">
+            <button onclick="clearTopGoal(${idx})" class="text-red-400 font-bold px-1 text-xs">✕</button>
+          </div>`;
+      });
+    }
+
+    function toggleTopGoal(idx) {
+      currentData.topGoals[idx].completed = !currentData.topGoals[idx].completed;
+      saveCurrentDay();
+      renderTopGoals();
+    }
+
+    function updateTopGoalText(idx, val) {
+      currentData.topGoals[idx].text = val;
+      saveCurrentDay();
+    }
+
+    function clearTopGoal(idx) {
+      currentData.topGoals[idx].text = "";
+      currentData.topGoals[idx].completed = false;
+      saveCurrentDay();
+      renderTopGoals();
+    }
+
+    // To Do List
+    function renderTodoList() {
+      const container = document.getElementById('todo-container');
+      container.innerHTML = '';
+      if(currentData.todoList.length === 0) {
+        container.innerHTML = `<p class="text-[11px] text-stone-400 text-center py-2">No hay tareas pendientes.</p>`;
+        return;
+      }
+
+      currentData.todoList.forEach((item, idx) => {
+        container.innerHTML += `
+          <div class="flex items-center gap-2 text-xs bg-white/50 p-2 rounded-xl border border-[#ebd7e3]">
+            <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="toggleTodo(${idx})" class="accent-[#b492cd] w-4 h-4 rounded">
+            <input type="text" value="${item.text}" oninput="updateTodoText(${idx}, this.value)" class="flex-1 bg-transparent font-medium ${item.completed ? 'line-through text-stone-400' : 'text-stone-800'} focus:outline-none">
+            <button onclick="deleteTodo(${idx})" class="text-red-400 font-bold px-1 text-xs">✕</button>
+          </div>`;
+      });
+    }
+
+    function addToDoItem() {
+      currentData.todoList.push({ id: Date.now(), text: "", completed: false });
+      saveCurrentDay();
+      renderTodoList();
+    }
+
+    function toggleTodo(idx) {
+      currentData.todoList[idx].completed = !currentData.todoList[idx].completed;
+      saveCurrentDay();
+      renderTodoList();
+    }
+
+    function updateTodoText(idx, val) {
+      currentData.todoList[idx].text = val;
+      saveCurrentDay();
+    }
+
+    function deleteTodo(idx) {
+      currentData.todoList.splice(idx, 1);
+      saveCurrentDay();
+      renderTodoList();
+    }
+
+    // Habits
+    function renderHabits() {
+      const tbody = document.getElementById('habit-table-body');
+      tbody.innerHTML = '';
+      if(currentData.habits.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-stone-400">No hay hábitos agregados.</td></tr>`;
+        return;
+      }
+
+      currentData.habits.forEach((h, idx) => {
+        let statusBadge = '';
+        if (h.status === 'done') statusBadge = '<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-lg font-black">✓ Hecho</span>';
+        else if (h.status === 'fail') statusBadge = '<span class="px-2.5 py-1 bg-red-100 text-red-800 rounded-lg font-black">✗ No hecho</span>';
+        else if (h.status === 'rest') statusBadge = '<span class="px-2.5 py-1 bg-purple-100 text-purple-800 rounded-lg font-black">➖ Descanso</span>';
+        else statusBadge = '<span class="px-2.5 py-1 bg-stone-100 text-stone-500 rounded-lg font-bold">· Pendiente</span>';
+
+        tbody.innerHTML += `
+          <tr>
+            <td class="py-2 pr-2">
+              <input type="text" value="${h.name}" oninput="updateHabit(${idx}, 'name', this.value)" placeholder="Hábito..." class="w-full bg-white/60 border border-[#ebd7e3] rounded-lg px-2 py-1 font-bold text-stone-800">
+            </td>
+            <td class="py-2 pr-2">
+              <input type="text" value="${h.condition}" oninput="updateHabit(${idx}, 'condition', this.value)" placeholder="Condición..." class="w-full bg-white/60 border border-[#ebd7e3] rounded-lg px-2 py-1 font-medium text-stone-600">
+            </td>
+            <td class="py-2 pr-2">
+              <input type="text" value="${h.area}" oninput="updateHabit(${idx}, 'area', this.value)" placeholder="Área" class="w-full bg-white/60 border border-[#ebd7e3] rounded-lg px-2 py-1 font-medium text-stone-600">
+            </td>
+            <td class="py-2 text-center cursor-pointer" onclick="cycleHabitStatus(${idx})">
+              ${statusBadge}
+            </td>
+            <td class="py-2 text-right">
+              <button onclick="deleteHabit(${idx})" class="text-red-400 font-bold px-2 py-1">✕</button>
+            </td>
+          </tr>`;
+      });
+    }
+
+    function addHabitRow() {
+      currentData.habits.push({ id: Date.now(), name: "", condition: "", area: "", status: "none" });
+      saveCurrentDay();
+      renderHabits();
+    }
+
+    function updateHabit(idx, field, val) {
+      currentData.habits[idx][field] = val;
+      saveCurrentDay();
+    }
+
+    function cycleHabitStatus(idx) {
+      const current = currentData.habits[idx].status || 'none';
+      if (current === 'none' || current === 'rest') currentData.habits[idx].status = 'done';
+      else if (current === 'done') currentData.habits[idx].status = 'fail';
+      else if (current === 'fail') currentData.habits[idx].status = 'rest';
+      saveCurrentDay();
+      renderHabits();
+    }
+
+    function deleteHabit(idx) {
+      currentData.habits.splice(idx, 1);
+      saveCurrentDay();
+      renderHabits();
+    }
+
+    // Routines
+    function renderRoutines() {
+      renderRoutineList('morning', currentData.morningRoutine, 'morning-routine-container');
+      renderRoutineList('night', currentData.nightRoutine, 'night-routine-container');
+    }
+
+    function renderRoutineList(type, list, containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      list.forEach((item, idx) => {
+        container.innerHTML += `
+          <div class="flex items-center gap-2 text-xs bg-white/50 p-2 rounded-xl border border-[#ebd7e3]">
+            <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleRoutine('${type}', ${idx})" class="accent-[#b492cd] w-4 h-4 rounded">
+            <input type="text" value="${item.text}" oninput="updateRoutineText('${type}', ${idx}, this.value)" class="flex-1 bg-transparent font-medium ${item.checked ? 'line-through text-stone-400' : 'text-stone-800'} focus:outline-none">
+            <button onclick="deleteRoutine('${type}', ${idx})" class="text-red-400 font-bold px-1 text-xs">✕</button>
+          </div>`;
+      });
+    }
+
+    function addRoutineItem(type) {
+      const list = type === 'morning' ? currentData.morningRoutine : currentData.nightRoutine;
+      list.push({ id: Date.now(), text: "Nueva actividad", checked: false });
+      saveCurrentDay();
+      renderRoutines();
+    }
+
+    function toggleRoutine(type, idx) {
+      const list = type === 'morning' ? currentData.morningRoutine : currentData.nightRoutine;
+      list[idx].checked = !list[idx].checked;
+      saveCurrentDay();
+      renderRoutines();
+    }
+
+    function updateRoutineText(type, idx, val) {
+      const list = type === 'morning' ? currentData.morningRoutine : currentData.nightRoutine;
+      list[idx].text = val;
+      saveCurrentDay();
+    }
+
+    function deleteRoutine(type, idx) {
+      const list = type === 'morning' ? currentData.morningRoutine : currentData.nightRoutine;
+      list.splice(idx, 1);
+      saveCurrentDay();
+      renderRoutines();
+    }
+
+    // Meals
+    function renderMeals() {
+      ['breakfast', 'lunch', 'dinner', 'snacks'].forEach(m => {
+        const mealObj = currentData.meals[m] || { text: "", cal: "", prot: "", carb: "", fat: "" };
+        const prefix = m[0];
+        document.getElementById(`meal-${m}`).value = mealObj.text || '';
+        document.getElementById(`${prefix}-cal`).value = mealObj.cal || '';
+        document.getElementById(`${prefix}-prot`).value = mealObj.prot || '';
+        document.getElementById(`${prefix}-carb`).value = mealObj.carb || '';
+        document.getElementById(`${prefix}-fat`).value = mealObj.fat || '';
+      });
+      calculateTotalMacros();
+    }
+
+    function autoSaveMeal(mealName, field, val) {
+      if(!currentData.meals[mealName]) currentData.meals[mealName] = { text: "", cal: "", prot: "", carb: "", fat: "" };
+      currentData.meals[mealName][field] = val;
+      saveCurrentDay();
+      calculateTotalMacros();
+    }
+
+    function calculateTotalMacros() {
+      let tCal = 0, tProt = 0, tCarb = 0, tFat = 0;
+      ['breakfast', 'lunch', 'dinner', 'snacks'].forEach(m => {
+        const obj = currentData.meals[m];
+        if(obj) {
+          tCal += parseFloat(obj.cal || 0);
+          tProt += parseFloat(obj.prot || 0);
+          tCarb += parseFloat(obj.carb || 0);
+          tFat += parseFloat(obj.fat || 0);
+        }
+      });
+      document.getElementById('meal-total-macros').innerText = `🔥 ${tCal} kcal | P:${tProt}g C:${tCarb}g G:${tFat}g`;
+    }
+
+    // Water
+    function renderWater() {
+      const container = document.getElementById('water-drops-container');
+      container.innerHTML = '';
+      for(let i=1; i<=8; i++) {
+        const filled = i <= currentData.waterGlasses;
+        container.innerHTML += `
+          <button onclick="setWater(${i})" class="text-xl transition transform hover:scale-110 focus:outline-none" title="Vaso ${i}">
+            ${filled ? '💧' : '🫙'}
+          </button>`;
+      }
+    }
+
+    function setWater(count) {
+      if(currentData.waterGlasses === count) {
+        currentData.waterGlasses = count - 1;
+      } else {
+        currentData.waterGlasses = count;
+      }
+      saveCurrentDay();
+      renderWater();
+    }
+
+    // Health
+    function renderHealth() {
+      document.getElementById('health-cycle').value = currentData.health.cycle || '';
+      document.getElementById('health-energy').value = currentData.health.energy || '';
+      document.getElementById('health-sleep').value = currentData.health.sleep || '';
+      document.getElementById('health-steps').value = currentData.health.steps || '';
+
+      const symContainer = document.getElementById('symptoms-checkboxes');
+      symContainer.innerHTML = '';
+      availableSymptoms.forEach(sym => {
+        const checked = (currentData.health.symptoms || []).includes(sym);
+        symContainer.innerHTML += `
+          <label class="flex items-center space-x-1.5 cursor-pointer bg-white/60 p-1.5 rounded-lg border border-[#ebd7e3]">
+            <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleSymptom('${sym}')" class="accent-[#b492cd] w-3.5 h-3.5 rounded">
+            <span>${sym}</span>
+          </label>`;
+      });
+
+      const moodContainer = document.getElementById('moods-checkboxes');
+      moodContainer.innerHTML = '';
+      availableMoods.forEach(mood => {
+        const checked = (currentData.health.moods || []).includes(mood);
+        moodContainer.innerHTML += `
+          <label class="flex items-center space-x-1.5 cursor-pointer bg-white/60 p-1.5 rounded-lg border border-[#ebd7e3]">
+            <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleMood('${mood}')" class="accent-[#b492cd] w-3.5 h-3.5 rounded">
+            <span>${mood}</span>
+          </label>`;
+      });
+    }
+
+    function autoSaveHealth(field, val) {
+      currentData.health[field] = val;
+      saveCurrentDay();
+    }
+
+    function toggleSymptom(sym) {
+      if(!currentData.health.symptoms) currentData.health.symptoms = [];
+      const idx = currentData.health.symptoms.indexOf(sym);
+      if(idx > -1) currentData.health.symptoms.splice(idx, 1);
+      else currentData.health.symptoms.push(sym);
+      saveCurrentDay();
+    }
+
+    function toggleMood(mood) {
+      if(!currentData.health.moods) currentData.health.moods = [];
+      const idx = currentData.health.moods.indexOf(mood);
+      if(idx > -1) currentData.health.moods.splice(idx, 1);
+      else currentData.health.moods.push(mood);
+      saveCurrentDay();
+    }
+
+    // Exercises
+    function renderExercises() {
+      const container = document.getElementById('exercises-list-container');
+      container.innerHTML = '';
+      if(!currentData.exercises || currentData.exercises.length === 0) {
+        container.innerHTML = `<p class="text-[11px] text-stone-400 text-center py-1">Sin ejercicios agregados.</p>`;
+        return;
+      }
+
+      currentData.exercises.forEach((ex, idx) => {
+        container.innerHTML += `
+          <div class="flex items-center gap-2 text-xs bg-white/50 p-2 rounded-xl border border-[#ebd7e3]">
+            <input type="text" value="${ex.type}" oninput="updateExercise(${idx}, 'type', this.value)" placeholder="Tipo (ej. Pesas)" class="w-28 bg-white border border-[#ebd7e3] rounded-lg px-2 py-1 font-bold">
+            <input type="text" value="${ex.duration}" oninput="updateExercise(${idx}, 'duration', this.value)" placeholder="Duración (min)" class="flex-1 bg-white border border-[#ebd7e3] rounded-lg px-2 py-1 font-medium">
+            <button onclick="deleteExercise(${idx})" class="text-red-400 font-bold px-1 text-xs">✕</button>
+          </div>`;
+      });
+    }
+
+    function addExerciseRow() {
+      if(!currentData.exercises) currentData.exercises = [];
+      currentData.exercises.push({ type: "", duration: "" });
+      saveCurrentDay();
+      renderExercises();
+    }
+
+    function updateExercise(idx, field, val) {
+      currentData.exercises[idx][field] = val;
+      saveCurrentDay();
+    }
+
+    function deleteExercise(idx) {
+      currentData.exercises.splice(idx, 1);
+      saveCurrentDay();
+      renderExercises();
+    }
+
+    // Productivity & Stars
+    function renderProd() {
+      document.getElementById('prod-grind').value = currentData.prod.grind || '';
+      document.getElementById('prod-study').value = currentData.prod.study || '';
+      document.getElementById('prod-read').checked = !!currentData.prod.read;
+      document.getElementById('prod-reminder').value = currentData.prod.reminder || '';
+      renderStars(currentData.prod.rating || 0);
+    }
+
+    function autoSaveProd(field, val) {
+      currentData.prod[field] = val;
+      saveCurrentDay();
+    }
+
+    function renderStars(rating) {
+      const container = document.getElementById('star-rating');
+      let html = '';
+      for(let i=1; i<=5; i++) {
+        html += `<span onclick="setRating(${i})" class="cursor-pointer transition hover:scale-125">${i <= rating ? '⭐' : '☆'}</span>`;
+      }
+      container.innerHTML = html;
+    }
+
+    function setRating(r) {
+      currentData.prod.rating = r;
+      saveCurrentDay();
+      renderStars(r);
+    }
+
+    // Reflection
+    function renderReflection() {
+      for(let i=1; i<=6; i++) {
+        const el = document.getElementById(`ref-${i}`);
+        if(el) el.value = currentData.reflection[i] || '';
+      }
+    }
+
+    function autoSaveRef(qNum, val) {
+      currentData.reflection[qNum] = val;
+      saveCurrentDay();
+    }
+
+    function autoSaveField(field, val) {
+      currentData[field] = val;
+      saveCurrentDay();
+    }
+
+    function saveGratitude() {
+      const inputs = document.querySelectorAll('.gratitude-input');
+      currentData.gratitude = Array.from(inputs).map(inp => inp.value);
+      saveCurrentDay();
+    }
+
+    // Search & Automatic Weekly Report
+    function executeSearch() {
+      const fromDate = document.getElementById('search-from').value;
+      const toDate = document.getElementById('search-to').value;
+      const resultsContainer = document.getElementById('search-results');
+      const statsContainer = document.getElementById('search-stats');
+      const insightsContainer = document.getElementById('pattern-insights');
+      
+      resultsContainer.innerHTML = '';
+      statsContainer.innerHTML = '';
+      insightsContainer.innerHTML = '';
+      let matches = [];
+
+      for(let i=0; i<localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if(key && key.startsWith(STORAGE_PREFIX)) {
+          const dateStr = key.replace(STORAGE_PREFIX, '');
+          if(fromDate && dateStr < fromDate) continue;
+          if(toDate && dateStr > toDate) continue;
+
+          const dataJson = localStorage.getItem(key);
+          if(!dataJson) continue;
+
+          matches.push({ date: dateStr, data: JSON.parse(dataJson) });
+        }
+      }
+
+      matches.sort((a, b) => b.date.localeCompare(a.date));
+
+      if(matches.length > 0) {
+        let totalDays = matches.length;
+        let avgProd = (matches.reduce((acc, m) => acc + parseInt(m.data.prod.rating || 0), 0) / totalDays).toFixed(1);
+        let avgSleep = (matches.reduce((acc, m) => acc + parseFloat(m.data.health.sleep || 0), 0) / totalDays).toFixed(1);
+        let totalGrind = matches.reduce((acc, m) => acc + parseFloat(m.data.prod.grind || 0), 0).toFixed(1);
+
+        let energyCounts = {};
+        let moodCounts = {};
+
+        matches.forEach(m => {
+          const en = m.data.health.energy;
+          if(en) energyCounts[en] = (energyCounts[en] || 0) + 1;
+
+          (m.data.health.moods || []).forEach(mo => {
+            moodCounts[mo] = (moodCounts[mo] || 0) + 1;
+          });
+        });
+
+        statsContainer.innerHTML = `
+          <div class="glass-card p-3 rounded-2xl text-xs"><strong class="text-stone-400 block">Días en reporte</strong><span class="text-base font-black text-stone-800">${totalDays}</span></div>
+          <div class="glass-card p-3 rounded-2xl text-xs"><strong class="text-stone-400 block">Promedio Productividad</strong><span class="text-base font-black text-amber-500">⭐ ${avgProd} / 5</span></div>
+          <div class="glass-card p-3 rounded-2xl text-xs"><strong class="text-stone-400 block">Promedio Sueño</strong><span class="text-base font-black text-[#b492cd]">${avgSleep} hrs</span></div>
+          <div class="glass-card p-3 rounded-2xl text-xs"><strong class="text-stone-400 block">Total Grind (Póker)</strong><span class="text-base font-black text-[#c879a8]">${totalGrind} hrs</span></div>
+        `;
+
+        let energyHtml = Object.entries(energyCounts).map(([k, v]) => `<span class="bg-white/80 px-2 py-1 rounded-lg font-bold border border-[#ebd7e3]">${k}: <strong>${v} días</strong></span>`).join(' ') || 'Sin registros';
+        let moodHtml = Object.entries(moodCounts).map(([k, v]) => `<span class="bg-white/80 px-2 py-1 rounded-lg font-bold border border-[#ebd7e3]">${k}: <strong>${v} veces</strong></span>`).join(' ') || 'Sin registros';
+
+        insightsContainer.innerHTML = `
+          <div class="glass-card p-4 rounded-3xl space-y-2">
+            <strong class="text-xs font-black uppercase text-stone-700">⚡ Patrones de Energía</strong>
+            <div class="flex flex-wrap gap-1.5 text-xs pt-1">${energyHtml}</div>
+          </div>
+          <div class="glass-card p-4 rounded-3xl space-y-2">
+            <strong class="text-xs font-black uppercase text-stone-700">💖 Estados de Ánimo Frecuentes</strong>
+            <div class="flex flex-wrap gap-1.5 text-xs pt-1">${moodHtml}</div>
+          </div>
+        `;
+      }
+
+      if(matches.length === 0) {
+        resultsContainer.innerHTML = `<p class="text-xs text-stone-400 text-center py-6">No hay registros en este rango de fechas.</p>`;
+        return;
+      }
+
+      resultsContainer.innerHTML = `<h4 class="text-xs font-black uppercase tracking-wider text-stone-700 pb-2">Desglose Día por Día en el Rango</h4>`;
+
+      matches.forEach(m => {
+        const d = m.date;
+        const dat = m.data;
+        const moodsStr = (dat.health.moods || []).join(', ') || 'N/A';
+        const symsStr = (dat.health.symptoms || []).join(', ') || 'Ninguno';
+        
+        const habitsList = dat.habits || [];
+        const totalHabits = habitsList.length;
+        const doneHabits = habitsList.filter(h => h.status === 'done').length;
+
+        resultsContainer.innerHTML += `
+          <div class="glass-card p-4 rounded-2xl space-y-1.5 cursor-pointer transition hover:border-[#b492cd]" onclick="jumpToDate('${d}')">
+            <div class="flex justify-between items-center">
+              <strong class="text-xs font-black text-stone-800">📅 ${d} · Productividad: ⭐ ${dat.prod.rating || 0}/5 | Hábitos: ${doneHabits}/${totalHabits} ✓</strong>
+              <span class="text-[10px] font-bold text-[#b492cd] bg-[#f3ecf5] px-2 py-0.5 rounded-md">Ver día ↗</span>
+            </div>
+            <p class="text-xs text-stone-600"><strong>Ánimo:</strong> ${moodsStr} | <strong>Energía:</strong> ${dat.health.energy || 'N/A'} | <strong>Ciclo:</strong> ${dat.health.cycle || 'No especificado'}</p>
+            <p class="text-xs text-stone-500"><strong>Síntomas:</strong> ${symsStr} | <strong>Sueño:</strong> ${dat.health.sleep || '-'} hrs</p>
+          </div>`;
+      });
+    }
+
+    function jumpToDate(dateStr) {
+      currentDate = dateStr;
+      currentData = loadDayData(currentDate);
+      switchTab('planner');
+    }
+
+    document.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
