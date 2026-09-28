@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MARY · Pendientes</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <link rel="apple-touch-icon" href="https://emojicdn.elk.sh/✅?style=apple">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body {
+      background:
+        radial-gradient(circle at 10% 15%, rgba(217, 167, 199, 0.25) 0%, transparent 40%),
+        radial-gradient(circle at 90% 85%, rgba(180, 146, 205, 0.25) 0%, transparent 45%),
+        linear-gradient(135deg, #fcf8fa 0%, #f7f1f5 50%, #f3ecf5 100%);
+      color: #3d2c3d;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .glass-card {
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(217, 167, 199, 0.4);
+      box-shadow: 0 10px 30px rgba(120, 80, 100, 0.06);
+    }
+    .nav-btn { transition: all 0.2s; cursor: pointer; }
+    .nav-btn.active {
+      background: linear-gradient(135deg, #b492cd, #c879a8) !important;
+      color: white !important;
+      font-weight: 800;
+    }
+    .modal-overlay {
+      background: rgba(61, 44, 61, 0.45);
+      backdrop-filter: blur(6px);
+      z-index: 99999;
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+  <header class="bg-white/90 backdrop-blur sticky top-0 z-40 border-b border-[#ebd7e3]">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#b492cd] to-[#d9a7c7] flex items-center justify-center text-white font-black shadow-md">✅</div>
+        <div>
+          <h1 class="text-sm font-black tracking-wider uppercase text-stone-800">MARY <span class="text-[#c879a8]">PENDIENTES</span></h1>
+          <p class="text-[10px] text-stone-500 font-medium">Tareas, recordatorios y seguimiento</p>
+        </div>
+      </div>
+      <nav class="flex gap-1.5 bg-[#f7f0f4] p-1 rounded-2xl border border-[#ebd7e3]">
+        <button onclick="switchView('lista')" id="btn-lista" class="nav-btn active px-3 py-1.5 rounded-xl font-bold text-xs text-stone-600">📋 Lista</button>
+        <button onclick="switchView('calendario')" id="btn-calendario" class="nav-btn px-3 py-1.5 rounded-xl font-bold text-xs text-stone-600">🗓️ Calendario</button>
+      </nav>
+      <button onclick="openModal()" class="px-4 py-1.5 bg-[#b492cd] text-white font-black text-xs rounded-xl shadow-md cursor-pointer">+ Nuevo Pendiente</button>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 space-y-4">
+
+    <!-- FILTROS -->
+    <div class="glass-card rounded-2xl p-3 flex flex-wrap gap-2 items-center text-xs">
+      <span class="font-bold text-stone-600">Filtrar:</span>
+      <select id="filter-status" onchange="renderList()" class="bg-white border border-[#ebd7e3] rounded-xl px-2 py-1 font-bold">
+        <option value="all">Todos</option>
+        <option value="pendiente">Pendientes</option>
+        <option value="hecho">Hechos</option>
+        <option value="postergado">Postergados</option>
+      </select>
+      <select id="filter-urgente" onchange="renderList()" class="bg-white border border-[#ebd7e3] rounded-xl px-2 py-1 font-bold">
+        <option value="all">Urgencia: todas</option>
+        <option value="si">Solo urgentes</option>
+        <option value="no">No urgentes</option>
+      </select>
+      <input type="text" id="filter-search" oninput="renderList()" placeholder="🔍 Buscar..." class="bg-white border border-[#ebd7e3] rounded-xl px-2 py-1 font-bold flex-1 min-w-[140px]">
+    </div>
+
+    <!-- LISTA -->
+    <div id="view-lista" class="space-y-3">
+      <div id="pendientes-list" class="space-y-3"></div>
+      <p id="pendientes-empty" class="text-xs text-stone-400 text-center py-8">No hay pendientes. ¡Crea el primero!</p>
+    </div>
+
+    <!-- CALENDARIO SIMPLE -->
+    <div id="view-calendario" class="hidden space-y-4">
+      <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
+        <button onclick="changeMonth(-1)" class="px-3 py-1 bg-white border border-[#ebd7e3] rounded-xl font-bold text-xs cursor-pointer">◀</button>
+        <span id="cal-label" class="font-black text-sm text-stone-800"></span>
+        <button onclick="changeMonth(1)" class="px-3 py-1 bg-white border border-[#ebd7e3] rounded-xl font-bold text-xs cursor-pointer">▶</button>
+      </div>
+      <div id="cal-grid" class="grid grid-cols-7 gap-1.5 text-center text-xs"></div>
+      <div id="cal-day-detail" class="glass-card rounded-2xl p-4 space-y-2 text-xs"></div>
+    </div>
+  </main>
+
+  <!-- MODAL -->
+  <div id="modal" class="fixed inset-0 flex items-center justify-center p-4 modal-overlay hidden">
+    <div class="glass-card rounded-3xl max-w-md w-full p-5 space-y-3 max-h-[90vh] overflow-y-auto border border-[#ebd7e3]">
+      <div class="flex justify-between items-center pb-2 border-b border-[#ebd7e3]">
+        <h3 class="font-black text-stone-800 text-sm">✅ Pendiente</h3>
+        <button onclick="closeModal()" class="text-stone-400 font-bold cursor-pointer">✕</button>
+      </div>
+      <input type="hidden" id="edit-id">
+      <div class="space-y-2 text-xs">
+        <div>
+          <label class="font-bold text-stone-700 block mb-0.5">Título *</label>
+          <input type="text" id="f-titulo" class="w-full bg-white border border-[#ebd7e3] rounded-xl px-3 py-2 font-bold" placeholder="Qué hay que hacer">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="font-bold text-stone-700 block mb-0.5">Fecha</label>
+            <input type="date" id="f-fecha" class="w-full bg-white border border-[#ebd7e3] rounded-xl px-3 py-2 font-bold">
+          </div>
+          <div>
+            <label class="font-bold text-stone-700 block mb-0.5">Hora</label>
+            <input type="time" id="f-hora" class="w-full bg-white border border-[#ebd7e3] rounded-xl px-3 py-2 font-bold">
+          </div>
+        </div>
+        <div>
+          <label class="font-bold text-stone-700 block mb-0.5">Con quién</label>
+          <input type="text" id="f-quien" class="w-full bg-white border border-[#ebd7e3] rounded-xl px-3 py-2 font-bold" placeholder="Persona o lugar">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="font-bold text-stone-700 block mb-0.5">Estado</label>
+            <select id="f-estado" class="w-full bg-white border border-[#ebd7e3] rounded-xl px-3 py-2 font-bold">
+              <option value="pendiente">Pendiente</option>
+              <option value="hecho">Hecho</option>
+              <option value="postergado">Postergado</option>
+            </select>
+          </div>
+          <div class="flex items-end pb-1">
+            <label class="flex items-center gap-2 font-bold text-stone-700 cursor-pointer">
+              <input type="checkbox" id="f-urgente" class="accent-[#c879a8] w-4 h-4"> Urgente
+            </label>
+          </div>
+        </div>
+        <div>
+          <label class="font-bold text-stone-700 block mb-0.5">Subtareas (una por línea)</label>
+          <textarea id="f-sub" rows="3" class="w-full bg-white border border-[#ebd7e3] rounded-xl p-2 font-medium" placeholder="Subtarea 1&#10;Subtarea 2"></textarea>
+        </div>
+        <div>
+          <label class="font-bold text-stone-700 block mb-0.5">Notas</label>
+          <textarea id="f-notas" rows="2" class="w-full bg-white border border-[#ebd7e3] rounded-xl p-2 font-medium" placeholder="Detalles adicionales..."></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeModal()" class="px-3 py-1.5 border border-[#ebd7e3] rounded-xl font-bold text-xs cursor-pointer">Cancelar</button>
+        <button onclick="saveItem()" class="px-4 py-1.5 bg-[#b492cd] text-white rounded-xl font-black text-xs cursor-pointer">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCnhvfyXpwJdYOQFCvsyHDhgW9F3X7ARR4",
+      authDomain: "marpk-816dd.firebaseapp.com",
+      projectId: "marpk-816dd",
+      storageBucket: "marpk-816dd.firebasestorage.app",
+      messagingSenderId: "189644122232",
+      appId: "1:189644122232:web:ed7894f1510a373d44658d"
+    };
+    let db = null;
+    try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); } catch(e) {}
+
+    const STORAGE_KEY = 'MARY_PENDIENTES_V1';
+    let items = [];
+    let calYear = new Date().getFullYear();
+    let calMonth = new Date().getMonth();
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        items = raw ? JSON.parse(raw) : [];
+      } catch(e) { items = []; }
+      if (db) {
+        db.collection('mary_pendientes').doc('all').get().then(doc => {
+          if (doc.exists && doc.data().items) {
+            items = doc.data().items;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+            renderList(); renderCal();
+          }
+        }).catch(()=>{});
+      }
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      if (db) db.collection('mary_pendientes').doc('all').set({ items }).catch(()=>{});
+    }
+
+    function switchView(v) {
+      document.getElementById('view-lista').classList.toggle('hidden', v !== 'lista');
+      document.getElementById('view-calendario').classList.toggle('hidden', v !== 'calendario');
+      document.getElementById('btn-lista').classList.toggle('active', v === 'lista');
+      document.getElementById('btn-calendario').classList.toggle('active', v === 'calendario');
+      if (v === 'calendario') renderCal();
+    }
+
+    function openModal(id) {
+      document.getElementById('edit-id').value = id || '';
+      if (id) {
+        const it = items.find(x => x.id === id);
+        if (!it) return;
+        document.getElementById('f-titulo').value = it.titulo || '';
+        document.getElementById('f-fecha').value = it.fecha || '';
+        document.getElementById('f-hora').value = it.hora || '';
+        document.getElementById('f-quien').value = it.quien || '';
+        document.getElementById('f-estado').value = it.estado || 'pendiente';
+        document.getElementById('f-urgente').checked = !!it.urgente;
+        document.getElementById('f-sub').value = (it.subtareas || []).join('\n');
+        document.getElementById('f-notas').value = it.notas || '';
+      } else {
+        document.getElementById('f-titulo').value = '';
+        document.getElementById('f-fecha').value = new Date().toISOString().slice(0,10);
+        document.getElementById('f-hora').value = '';
+        document.getElementById('f-quien').value = '';
+        document.getElementById('f-estado').value = 'pendiente';
+        document.getElementById('f-urgente').checked = false;
+        document.getElementById('f-sub').value = '';
+        document.getElementById('f-notas').value = '';
+      }
+      document.getElementById('modal').classList.remove('hidden');
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.add('hidden');
+      document.getElementById('modal').style.display = 'none';
+    }
+
+    function saveItem() {
+      const titulo = document.getElementById('f-titulo').value.trim();
+      if (!titulo) { alert('Escribe un título'); return; }
+      const editId = document.getElementById('edit-id').value;
+      const obj = {
+        id: editId ? parseInt(editId) : Date.now(),
+        titulo,
+        fecha: document.getElementById('f-fecha').value,
+        hora: document.getElementById('f-hora').value,
+        quien: document.getElementById('f-quien').value.trim(),
+        estado: document.getElementById('f-estado').value,
+        urgente: document.getElementById('f-urgente').checked,
+        subtareas: document.getElementById('f-sub').value.split('\n').map(s => s.trim()).filter(Boolean),
+        notas: document.getElementById('f-notas').value.trim()
+      };
+      if (editId) items = items.map(x => x.id === obj.id ? obj : x);
+      else items.push(obj);
+      save(); closeModal(); renderList(); renderCal();
+    }
+
+    function deleteItem(id) {
+      if (!confirm('¿Eliminar este pendiente?')) return;
+      items = items.filter(x => x.id !== id);
+      save(); renderList(); renderCal();
+    }
+
+    function setEstado(id, estado) {
+      const it = items.find(x => x.id === id);
+      if (it) { it.estado = estado; save(); renderList(); }
+    }
+
+    function renderList() {
+      const st = document.getElementById('filter-status').value;
+      const urg = document.getElementById('filter-urgente').value;
+      const q = (document.getElementById('filter-search').value || '').toLowerCase();
+      let list = [...items];
+      if (st !== 'all') list = list.filter(x => x.estado === st);
+      if (urg === 'si') list = list.filter(x => x.urgente);
+      if (urg === 'no') list = list.filter(x => !x.urgente);
+      if (q) list = list.filter(x => (x.titulo + ' ' + (x.quien||'') + ' ' + (x.notas||'')).toLowerCase().includes(q));
+      list.sort((a,b) => (a.fecha||'').localeCompare(b.fecha||'') || (a.hora||'').localeCompare(b.hora||''));
+
+      const container = document.getElementById('pendientes-list');
+      const empty = document.getElementById('pendientes-empty');
+      container.innerHTML = '';
+      if (list.length === 0) { empty.classList.remove('hidden'); return; }
+      empty.classList.add('hidden');
+
+      list.forEach(it => {
+        const estadoColor = it.estado === 'hecho' ? 'bg-emerald-100 text-emerald-800' : it.estado === 'postergado' ? 'bg-amber-100 text-amber-800' : 'bg-pink-100 text-pink-800';
+        const subs = (it.subtareas||[]).map(s => `<li class="ml-3 list-disc">${s}</li>`).join('');
+        container.innerHTML += `
+          <div class="glass-card rounded-2xl p-4 text-xs space-y-2 ${it.estado==='hecho'?'opacity-60':''}">
+            <div class="flex justify-between items-start gap-2">
+              <div class="space-y-1 flex-1">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  ${it.urgente ? '<span class="px-2 py-0.5 bg-red-100 text-red-700 font-black rounded-lg text-[10px]">🔥 URGENTE</span>' : ''}
+                  <span class="px-2 py-0.5 ${estadoColor} font-bold rounded-lg text-[10px] uppercase">${it.estado}</span>
+                  <strong class="text-sm font-black text-stone-800 ${it.estado==='hecho'?'line-through':''}">${it.titulo}</strong>
+                </div>
+                <p class="text-stone-500">📅 ${it.fecha || '--'} ${it.hora ? '· ⏰ '+it.hora : ''} ${it.quien ? '· 👤 '+it.quien : ''}</p>
+                ${subs ? `<ul class="text-stone-600">${subs}</ul>` : ''}
+                ${it.notas ? `<p class="text-stone-500 italic">📝 ${it.notas}</p>` : ''}
+              </div>
+              <div class="flex flex-col gap-1">
+                <button onclick="openModal(${it.id})" class="px-2 py-1 bg-white border border-[#ebd7e3] rounded-lg font-bold cursor-pointer">✏️</button>
+                <button onclick="deleteItem(${it.id})" class="px-2 py-1 text-red-500 font-bold cursor-pointer">✕</button>
+              </div>
+            </div>
+            <div class="flex gap-1.5 pt-1">
+              <button onclick="setEstado(${it.id},'pendiente')" class="px-2 py-0.5 bg-pink-50 text-pink-700 rounded-lg font-bold text-[10px] cursor-pointer">Pendiente</button>
+              <button onclick="setEstado(${it.id},'hecho')" class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-lg font-bold text-[10px] cursor-pointer">Hecho</button>
+              <button onclick="setEstado(${it.id},'postergado')" class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-lg font-bold text-[10px] cursor-pointer">Postergar</button>
+            </div>
+          </div>`;
+      });
+    }
+
+    function changeMonth(d) {
+      calMonth += d;
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      if (calMonth < 0) { calMonth = 11; calYear--; }
+      renderCal();
+    }
+
+    function renderCal() {
+      const label = document.getElementById('cal-label');
+      const grid = document.getElementById('cal-grid');
+      const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      label.textContent = months[calMonth] + ' ' + calYear;
+      const first = new Date(calYear, calMonth, 1);
+      const startDay = (first.getDay() + 6) % 7; // lunes=0
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      grid.innerHTML = ['L','M','X','J','V','S','D'].map(d => `<div class="font-black text-stone-400 py-1">${d}</div>`).join('');
+      for (let i = 0; i < startDay; i++) grid.innerHTML += '<div></div>';
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const dayItems = items.filter(x => x.fecha === dateStr);
+        const hasUrg = dayItems.some(x => x.urgente);
+        grid.innerHTML += `<button onclick="showDayDetail('${dateStr}')" class="aspect-square rounded-xl border text-[11px] font-bold cursor-pointer ${dayItems.length ? (hasUrg ? 'bg-red-100 border-red-300 text-red-800' : 'bg-[#b492cd]/25 border-[#b492cd] text-[#633a82]') : 'bg-white border-[#ebd7e3] text-stone-600'}">${d}${dayItems.length ? '<div class="text-[8px]">'+dayItems.length+'</div>' : ''}</button>`;
+      }
+    }
+
+    function showDayDetail(dateStr) {
+      const detail = document.getElementById('cal-day-detail');
+      const dayItems = items.filter(x => x.fecha === dateStr);
+      if (dayItems.length === 0) {
+        detail.innerHTML = `<p class="text-stone-400 font-bold">Sin pendientes el ${dateStr}</p>`;
+        return;
+      }
+      detail.innerHTML = `<strong class="text-stone-800">📅 ${dateStr}</strong>` + dayItems.map(it =>
+        `<div class="flex justify-between items-center border-t border-[#ebd7e3] pt-2">
+          <span class="font-bold ${it.estado==='hecho'?'line-through text-stone-400':''}">${it.urgente?'🔥 ':''}${it.titulo} ${it.hora?'('+it.hora+')':''}</span>
+          <button onclick="openModal(${it.id})" class="text-[#b492cd] font-bold cursor-pointer">Ver</button>
+        </div>`
+      ).join('');
+    }
+
+    load();
+    renderList();
+    renderCal();
+  </script>
+</body>
+</html>

@@ -358,6 +358,19 @@
         </div>
       </div>
 
+      <!-- REVISIÓN DEL DÍA – ÁREAS PERSONALIZADAS -->
+      <div class="glass-card rounded-3xl p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#ebd7e3]">
+          <div>
+            <h3 class="text-xs font-black uppercase tracking-wider text-stone-800">🪞 Revisión del Día</h3>
+            <p class="text-[10px] text-stone-500">Evalúa del 1 al 10 las áreas que tú defines</p>
+          </div>
+          <button onclick="addReviewArea()" class="px-3 py-1.5 bg-[#b492cd] text-white font-bold text-[10px] rounded-xl shadow-xs cursor-pointer">+ Añadir área a trabajar</button>
+        </div>
+        <div id="review-areas-container" class="space-y-3"></div>
+        <p id="review-areas-empty" class="text-xs text-stone-400 text-center py-3">Aún no has creado áreas. Ej: Empatía, Autocontrol, Trato hacia otros…</p>
+      </div>
+
     </div>
 
     <!-- VISTA REPORTES Y ANÁLISIS DE PATRONES -->
@@ -492,6 +505,13 @@
         db.collection('mary_planner').doc(currentDate).set(currentData)
           .catch(err => console.log("Error en Firestore:", err));
       }
+    }
+
+    function saveDay() {
+      localStorage.setItem(getStorageKey(currentDate), JSON.stringify(currentData));
+      try {
+        if (db) db.collection('mary_planner').doc(currentDate).set(currentData);
+      } catch(e) {}
     }
 
     function saveDayManual() {
@@ -768,6 +788,7 @@
     function renderRoutines() {
       renderRoutineList('morning', currentData.morningRoutine, 'morning-routine-container');
       renderRoutineList('night', currentData.nightRoutine, 'night-routine-container');
+      renderReviewAreas();
     }
 
     function renderRoutineList(type, list, containerId) {
@@ -1111,6 +1132,76 @@
       currentDate = dateStr;
       currentData = loadDayData(currentDate);
       switchTab('planner');
+    }
+
+    
+    // ===== REVISIÓN DEL DÍA =====
+    function ensureReviewAreas() {
+      if (!Array.isArray(currentData.reviewAreas)) currentData.reviewAreas = [];
+      if (!currentData.reviewScores) currentData.reviewScores = {};
+    }
+
+    function addReviewArea() {
+      ensureReviewAreas();
+      const name = prompt('Nombre del área a trabajar (ej. Empatía, Autocontrol):');
+      if (!name || !name.trim()) return;
+      const id = 'ra_' + Date.now();
+      currentData.reviewAreas.push({ id, name: name.trim() });
+      currentData.reviewScores[id] = { score: 5, note: '', hacia: '' };
+      saveDay();
+      renderReviewAreas();
+    }
+
+    function deleteReviewArea(id) {
+      ensureReviewAreas();
+      if (!confirm('¿Eliminar esta área?')) return;
+      currentData.reviewAreas = currentData.reviewAreas.filter(a => a.id !== id);
+      delete currentData.reviewScores[id];
+      saveDay();
+      renderReviewAreas();
+    }
+
+    function updateReviewScore(id, field, value) {
+      ensureReviewAreas();
+      if (!currentData.reviewScores[id]) currentData.reviewScores[id] = { score: 5, note: '', hacia: '' };
+      currentData.reviewScores[id][field] = value;
+      saveDay();
+    }
+
+    function renderReviewAreas() {
+      ensureReviewAreas();
+      const container = document.getElementById('review-areas-container');
+      const empty = document.getElementById('review-areas-empty');
+      if (!container) return;
+      container.innerHTML = '';
+      if (currentData.reviewAreas.length === 0) {
+        empty?.classList.remove('hidden');
+        return;
+      }
+      empty?.classList.add('hidden');
+      currentData.reviewAreas.forEach(area => {
+        const s = currentData.reviewScores[area.id] || { score: 5, note: '', hacia: '' };
+        container.innerHTML += `
+          <div class="bg-white/70 border border-[#ebd7e3] rounded-2xl p-4 space-y-2 text-xs">
+            <div class="flex justify-between items-center">
+              <strong class="font-black text-stone-800 text-sm">${area.name}</strong>
+              <button onclick="deleteReviewArea('${area.id}')" class="text-red-400 font-bold cursor-pointer">✕</button>
+            </div>
+            <div class="flex items-center gap-3">
+              <label class="font-bold text-stone-600">Nota 1–10:</label>
+              <input type="range" min="1" max="10" value="${s.score}" oninput="this.nextElementSibling.textContent=this.value; updateReviewScore('${area.id}','score', +this.value)" class="flex-1 accent-[#b492cd]">
+              <span class="font-black text-[#b492cd] w-6 text-center">${s.score}</span>
+            </div>
+            <div>
+              <label class="font-bold text-stone-600 block mb-0.5">Hacia quién / con quién (opcional)</label>
+              <input type="text" value="${(s.hacia||'').replace(/"/g,'&quot;')}" oninput="updateReviewScore('${area.id}','hacia', this.value)" placeholder="Ej. con mi mamá, en el trabajo..." class="w-full bg-white border border-[#ebd7e3] rounded-xl px-2 py-1.5 font-medium">
+            </div>
+            <div>
+              <label class="font-bold text-stone-600 block mb-0.5">Breve nota</label>
+              <textarea rows="2" oninput="updateReviewScore('${area.id}','note', this.value)" placeholder="¿Por qué esa nota? ¿Qué hice o no hice?" class="w-full bg-white border border-[#ebd7e3] rounded-xl p-2 font-medium">${s.note || ''}</textarea>
+            </div>
+          </div>`;
+      });
     }
 
     document.addEventListener('DOMContentLoaded', initApp);

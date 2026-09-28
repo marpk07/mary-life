@@ -274,6 +274,7 @@
           <div><label class="font-bold text-rose-900 block mb-1">Fecha Inicio</label><input type="date" id="plan-start" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold text-rose-900"></div>
           <div><label class="font-bold text-rose-900 block mb-1">Fecha Límite</label><input type="date" id="plan-end" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold text-rose-900"></div>
         </div>
+        <div><label class="font-bold text-rose-900 block mb-1">🏷️ Tema (ej. Fe, Sabiduría, Amor)</label><input type="text" id="plan-tema" placeholder="Fe, Sabiduría, Amor, Perdón..." class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold text-rose-900"></div>
         <div><label class="font-bold text-rose-900 block mb-1">Nota / Enfoque adicional</label><textarea id="plan-desc" rows="2" placeholder="Ej. Leer con atención en la mañana..." class="w-full bg-white border border-pink-200 rounded-xl p-2 font-medium text-rose-900"></textarea></div>
       </div>
       <div class="pt-2 flex justify-end space-x-2">
@@ -551,6 +552,7 @@
       document.getElementById('plan-start').value = new Date().toISOString().slice(0, 10);
       document.getElementById('plan-end').value = '';
       document.getElementById('plan-desc').value = '';
+      document.getElementById('plan-tema').value = '';
       openModal('modal-plan');
     }
 
@@ -564,12 +566,14 @@
       if(chStart && chEnd) title += ` (Cap. ${chStart} al ${chEnd})`;
       else if(chStart) title += ` (Cap. ${chStart}+)`;
 
+      const tema = (document.getElementById('plan-tema').value || '').trim();
       const plan = {
         id: editId ? parseInt(editId) : Date.now(),
         title,
         book,
         chStart,
         chEnd,
+        tema,
         startDate: document.getElementById('plan-start').value,
         endDate: document.getElementById('plan-end').value,
         description: document.getElementById('plan-desc').value,
@@ -609,7 +613,7 @@
                 <input type="checkbox" ${p.completed ? 'checked' : ''} onchange="toggleStudyPlan(${p.id})" class="accent-pink-500 w-4 h-4 rounded">
                 <strong class="text-sm font-black text-rose-900 ${p.completed ? 'line-through' : ''}">📖 ${p.title}</strong>
               </div>
-              <p class="text-rose-500">📅 Del ${p.startDate || '--'} al ${p.endDate || '--'}</p>
+              <p class="text-rose-500">📅 Del ${p.startDate || '--'} al ${p.endDate || '--'}${p.tema ? ` · <span class="px-2 py-0.5 bg-pink-100 text-pink-700 rounded-lg font-bold">🏷️ ${p.tema}</span>` : ''}</p>
               <p class="text-rose-800">${p.description || ''}</p>
             </div>
             <button onclick="deleteStudyPlan(${p.id})" class="text-rose-400 hover:text-rose-600 font-bold px-2">✕</button>

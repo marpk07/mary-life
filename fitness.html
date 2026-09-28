@@ -125,6 +125,7 @@
             <input type="date" id="res-from" onchange="renderResumenRange()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 text-xs font-bold">
             <span class="text-xs font-bold text-stone-600">Hasta:</span>
             <input type="date" id="res-to" onchange="renderResumenRange()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 text-xs font-bold">
+            <button onclick="renderResumenRange()" class="px-3 py-1.5 bg-[#b492cd] text-white font-black text-xs rounded-xl shadow-sm cursor-pointer">🔍 Filtrar</button>
             <button onclick="copyWhatsAppReport()" class="px-3 py-1.5 bg-[#5fa89b] text-white font-black text-xs rounded-xl shadow-sm cursor-pointer">📋 Copiar WhatsApp</button>
           </div>
         </div>
@@ -191,12 +192,14 @@
             <h3 class="text-base font-black text-stone-800">💪 Registro de Fuerza & PRs</h3>
             <p class="text-xs text-stone-500">Series, peso mixto y PRs marcados</p>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <input type="date" id="en-from" onchange="renderEntrenamientoView()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 text-xs font-bold">
             <input type="date" id="en-to" onchange="renderEntrenamientoView()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 text-xs font-bold">
+            <input type="text" id="en-exercise-filter" oninput="renderEntrenamientoView()" placeholder="🔍 Filtrar ejercicio (ej. Sentadilla)" class="bg-white border border-[#c8e3dc] rounded-xl px-2.5 py-1 text-xs font-bold w-44">
             <button onclick="openModalRutina()" class="px-4 py-2 bg-[#5fa89b] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer">+ Nuevo Entreno</button>
           </div>
         </div>
+        <div id="pr-board" class="mb-4"></div>
         <div id="entrenamiento-content" class="space-y-4"></div>
       </div>
     </section>
@@ -655,11 +658,21 @@
             <label class="font-bold text-stone-600 block mb-1">Estado de Ánimo</label>
             <select id="salud-animo" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800">
               <option value="Motivada 🔥">Motivada 🔥</option>
-              <option value="Tranquila 🧘‍♀️">Tranquila 🧘‍♀️</option>
-              <option value="Neutra 😐">Neutra 😐</option>
-              <option value="Ansiosa ⚡">Ansiosa ⚡</option>
-              <option value="Cansada 🥱">Cansada 🥱</option>
               <option value="Feliz 😊">Feliz 😊</option>
+              <option value="Tranquila 🧘‍♀️">Tranquila 🧘‍♀️</option>
+              <option value="Agradecida 🙏">Agradecida 🙏</option>
+              <option value="Energética ⚡">Energética ⚡</option>
+              <option value="Neutra 😐">Neutra 😐</option>
+              <option value="Pensativa 🤔">Pensativa 🤔</option>
+              <option value="Ansiosa 😰">Ansiosa 😰</option>
+              <option value="Estresada 😫">Estresada 😫</option>
+              <option value="Cansada 🥱">Cansada 🥱</option>
+              <option value="Desmotivada 😔">Desmotivada 😔</option>
+              <option value="Bajoneada 😞">Bajoneada 😞</option>
+              <option value="Triste 😢">Triste 😢</option>
+              <option value="Apática 😶">Apática 😶</option>
+              <option value="Irritable 😤">Irritable 😤</option>
+              <option value="Abrumada 😩">Abrumada 😩</option>
             </select>
           </div>
         </div>
@@ -1602,10 +1615,15 @@
         return;
       }
 
-      let tCal = 0, tProt = 0, tCarb = 0, tFat = 0;
+      // Agrupar por día para promedios diarios reales
+      const byDay = {};
       list.forEach(al => {
-        tCal += al.cal; tProt += al.prot; tCarb += al.carb; tFat += al.fat;
-        
+        if (!byDay[al.date]) byDay[al.date] = { cal: 0, prot: 0, carb: 0, fat: 0 };
+        byDay[al.date].cal += (al.cal || 0);
+        byDay[al.date].prot += (al.prot || 0);
+        byDay[al.date].carb += (al.carb || 0);
+        byDay[al.date].fat += (al.fat || 0);
+
         container.innerHTML += `
           <div class="glass-card p-4 rounded-2xl flex justify-between items-center text-xs">
             <div>
@@ -1621,14 +1639,21 @@
           </div>`;
       });
 
+      const days = Object.keys(byDay);
+      const n = days.length || 1;
+      const avgCal = Math.round(days.reduce((a, d) => a + byDay[d].cal, 0) / n);
+      const avgProt = Math.round(days.reduce((a, d) => a + byDay[d].prot, 0) / n);
+      const avgCarb = Math.round(days.reduce((a, d) => a + byDay[d].carb, 0) / n);
+      const avgFat = Math.round(days.reduce((a, d) => a + byDay[d].fat, 0) / n);
+
       totalsCard.innerHTML = `
-        <div class="glass-card-solid p-4 rounded-2xl mb-4 flex flex-wrap justify-between items-center text-xs bg-emerald-50/50">
-          <strong class="font-black text-stone-800">📊 TOTALES DEL RANGO SELECCIONADO:</strong>
-          <div class="flex gap-4 font-bold text-stone-700">
-            <span>🔥 Cal: ${tCal} kcal</span>
-            <span>🥩 Prot: ${tProt}g</span>
-            <span>🍚 Carb: ${tCarb}g</span>
-            <span>🥑 Grasa: ${tFat}g</span>
+        <div class="glass-card-solid p-4 rounded-2xl mb-4 space-y-2 bg-emerald-50/50">
+          <strong class="font-black text-stone-800 text-xs">📊 PROMEDIO DIARIO DEL RANGO (${days.length} día${days.length===1?'':'s'}):</strong>
+          <div class="flex flex-wrap gap-3 font-bold text-stone-700 text-xs">
+            <span class="px-2.5 py-1 bg-white rounded-xl border border-[#c8e3dc]">🔥 ${avgCal} kcal/día</span>
+            <span class="px-2.5 py-1 bg-white rounded-xl border border-[#c8e3dc]">🥩 ${avgProt}g prot/día</span>
+            <span class="px-2.5 py-1 bg-white rounded-xl border border-[#c8e3dc]">🍚 ${avgCarb}g carb/día</span>
+            <span class="px-2.5 py-1 bg-white rounded-xl border border-[#c8e3dc]">🥑 ${avgFat}g grasa/día</span>
           </div>
         </div>`;
     }
@@ -1677,22 +1702,71 @@
     function renderEntrenamientoView() {
       const from = document.getElementById('en-from').value;
       const to = document.getElementById('en-to').value;
+      const filterEx = (document.getElementById('en-exercise-filter')?.value || '').trim().toLowerCase();
       const container = document.getElementById('entrenamiento-content');
+      const prBoard = document.getElementById('pr-board');
       container.innerHTML = '';
+      if (prBoard) prBoard.innerHTML = '';
 
-      const list = maryData.entrenamiento.filter(x => x.date >= from && x.date <= to).sort((a,b)=>b.date.localeCompare(a.date));
+      let list = maryData.entrenamiento.filter(x => x.date >= from && x.date <= to).sort((a,b)=>b.date.localeCompare(a.date));
+
+      // Calcular PRs globales (mejor peso marcado como PR, o el mayor peso si no hay PR)
+      const prMap = {}; // nombre -> {peso, unidad, reps, date}
+      maryData.entrenamiento.forEach(e => {
+        (e.ejercicios || []).forEach(ej => {
+          const name = (ej.nombre || '').trim();
+          if (!name) return;
+          (ej.series || []).forEach(s => {
+            const peso = parseFloat(s.peso) || 0;
+            const cur = prMap[name];
+            const isBetter = !cur || peso > cur.peso || (s.pr && peso >= cur.peso);
+            if (isBetter && peso > 0) {
+              prMap[name] = { peso, unidad: s.unidad || 'kg', reps: s.reps, date: e.date, pr: !!s.pr };
+            }
+          });
+        });
+      });
+
+      // Panel de PRs
+      const prNames = Object.keys(prMap).sort();
+      const filteredPrNames = filterEx ? prNames.filter(n => n.toLowerCase().includes(filterEx)) : prNames;
+      if (prBoard && filteredPrNames.length > 0) {
+        let prHtml = `<div class="glass-card-solid p-4 rounded-2xl space-y-3 bg-purple-50/40">
+          <h4 class="font-black text-stone-800 text-xs uppercase tracking-wider">👑 Tus PRs — Marca a superar</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">`;
+        filteredPrNames.forEach(n => {
+          const p = prMap[n];
+          const next = (p.peso * 1.025).toFixed(1);
+          prHtml += `<div class="bg-white border border-[#c8e3dc] rounded-xl p-3 text-xs">
+            <div class="font-black text-stone-800">${n}</div>
+            <div class="text-[#b492cd] font-bold mt-0.5">PR: ${p.peso} ${p.unidad} × ${p.reps} <span class="text-stone-400 font-medium">(${p.date})</span></div>
+            <div class="text-emerald-700 font-bold text-[11px] mt-1">🎯 A superar: ≥ ${next} ${p.unidad}</div>
+          </div>`;
+        });
+        prHtml += `</div></div>`;
+        prBoard.innerHTML = prHtml;
+      }
+
+      // Filtrar lista de sesiones por nombre de ejercicio
+      if (filterEx) {
+        list = list.filter(e => (e.ejercicios || []).some(ej => (ej.nombre || '').toLowerCase().includes(filterEx)));
+      }
+
       if (list.length === 0) {
-        container.innerHTML = `<p class="text-xs text-stone-400 text-center py-6">No hay entrenamientos en este rango.</p>`;
+        container.innerHTML = `<p class="text-xs text-stone-400 text-center py-6">No hay entrenamientos en este rango${filterEx ? ' con ese ejercicio' : ''}.</p>`;
         return;
       }
 
       list.forEach(e => {
         let ejHtml = '';
         (e.ejercicios || []).forEach((ej, idx) => {
+          if (filterEx && !(ej.nombre || '').toLowerCase().includes(filterEx)) return;
           let sHtml = ej.series.map((s, sidx) => {
             return `<span class="${s.pr ? 'bg-[#b492cd]/40 border-[#b492cd] text-[#42225c] font-black' : 'bg-white/80 border-[#c8e3dc] text-stone-700'} px-2 py-0.5 rounded border text-[10px] font-bold">S${sidx+1}: ${s.peso} ${s.unidad} × ${s.reps} reps ${s.pr ? '👑 PR' : ''}</span>`;
           }).join(' ');
-          ejHtml += `<div class="mt-1 text-stone-700"><strong>${idx+1}. ${ej.nombre}</strong> — ${sHtml}</div>`;
+          const prInfo = prMap[(ej.nombre || '').trim()];
+          const tip = prInfo ? `<span class="text-[10px] text-emerald-700 font-bold ml-1">(PR: ${prInfo.peso} ${prInfo.unidad})</span>` : '';
+          ejHtml += `<div class="mt-1 text-stone-700"><strong>${idx+1}. ${ej.nombre}</strong>${tip} — ${sHtml}</div>`;
         });
 
         container.innerHTML += `
