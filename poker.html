@@ -164,9 +164,15 @@
       <div class="glass-card-solid rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 class="text-xl font-black text-stone-800">Historial de Sesiones & Gráficas</h2>
-          <p class="text-xs text-stone-500 mt-0.5">Todas tus jornadas registradas con sus capturas</p>
+          <p class="text-xs text-stone-500 mt-0.5">Filtra por rango de fechas</p>
         </div>
         <button onclick="openModalGrindNew()" class="px-4 py-2 bg-[#ec4899] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer">+ Nueva Sesión</button>
+      </div>
+      <div class="glass-card p-3 rounded-2xl flex flex-wrap items-center gap-2 text-xs">
+        <span class="font-bold text-stone-600">Desde:</span>
+        <input type="date" id="grind-from" onchange="renderGrindView()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
+        <span class="font-bold text-stone-600">Hasta:</span>
+        <input type="date" id="grind-to" onchange="renderGrindView()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
       </div>
 
       <div class="glass-card-solid rounded-3xl p-6">
@@ -369,16 +375,20 @@
           </div>
           <div>
             <label class="font-bold text-stone-500 block mb-1">Frecuencia</label>
-            <select id="cg-freq" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
-              <option value="Diaria">Diaria</option>
-              <option value="Semanal">Semanal</option>
-              <option value="Quincenal">Quincenal</option>
-              <option value="Mensual">Mensual</option>
+            <select id="cg-freq" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold text-stone-800">
+              <option value="Diaria">Diaria (cada día)</option>
+              <option value="2x">2 veces / semana</option>
+              <option value="3x">3 veces / semana</option>
+              <option value="4x">4 veces / semana</option>
+              <option value="5x">5 veces / semana</option>
+              <option value="6x">6 veces / semana</option>
+              <option value="Semanal">Semanal (total suma)</option>
+              <option value="Mensual">Mensual (total suma)</option>
             </select>
           </div>
         </div>
         <div>
-          <label class="font-bold text-stone-500 block mb-1">Valor Objetivo (Meta numérica)</label>
+          <label class="font-bold text-stone-500 block mb-1">Valor objetivo (ej. 4 horas o 1 hora de estudio por vez)</label>
           <input type="number" step="0.5" id="cg-target" placeholder="Ej. 30" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
         </div>
       </div>
@@ -422,11 +432,11 @@
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="font-bold text-stone-500 block mb-1">Energía Inicial (1-10)</label>
-              <input type="number" min="1" max="10" id="modal-wu-energy" value="8" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-center text-stone-800">
+              <input type="number" min="1" max="10" id="modal-wu-energy" value="" placeholder="1-10" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-center text-stone-800">
             </div>
             <div>
               <label class="font-bold text-stone-500 block mb-1">Enfoque Inicial (1-10)</label>
-              <input type="number" min="1" max="10" id="modal-wu-focus" value="8" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-center text-stone-800">
+              <input type="number" min="1" max="10" id="modal-wu-focus" value="" placeholder="1-10" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-center text-stone-800">
             </div>
           </div>
           <input type="text" id="modal-wu-intention" placeholder="Intención del día..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-medium text-stone-800">
@@ -451,15 +461,15 @@
             </div>
             <div>
               <label class="font-bold text-stone-500 block mb-1">Focus (1-10)</label>
-              <input type="number" min="1" max="10" id="grind-focus" value="8" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-stone-800">
+              <input type="number" min="1" max="10" id="grind-focus" value="" placeholder="1-10" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-stone-800">
             </div>
             <div>
               <label class="font-bold text-stone-500 block mb-1">Mindset (1-10)</label>
-              <input type="number" min="1" max="10" id="grind-mindset" value="8" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-stone-800">
+              <input type="number" min="1" max="10" id="grind-mindset" value="" placeholder="1-10" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-stone-800">
             </div>
             <div>
               <label class="font-bold text-stone-500 block mb-1">Nivel Sesión (1-10)</label>
-              <input type="number" min="1" max="10" id="grind-session-level" value="7" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-stone-800" title="Cómo evalúas la sesión en general">
+              <input type="number" min="1" max="10" id="grind-session-level" value="" placeholder="1-10" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-stone-800" title="Cómo evalúas la sesión en general">
             </div>
           </div>
           <div class="grid grid-cols-2 gap-2">
@@ -885,9 +895,9 @@
       document.getElementById('grind-hours').value = '';
       document.getElementById('grind-games').value = '';
       document.getElementById('grind-cev').value = '';
-      document.getElementById('grind-focus').value = 8;
-      document.getElementById('grind-mindset').value = 8;
-      const gsl = document.getElementById('grind-session-level'); if (gsl) gsl.value = 7;
+      document.getElementById('grind-focus').value = '';
+      document.getElementById('grind-mindset').value = '';
+      const gsl = document.getElementById('grind-session-level'); if (gsl) gsl.value = '';
       document.getElementById('grind-study').value = '';
       document.getElementById('grind-hands').value = '';
       const gan = document.getElementById('grind-animo'); if (gan) gan.value = 'Neutra 😐';
@@ -1313,9 +1323,7 @@
       empty?.classList.add('hidden');
 
       const currDate = new Date(currentDate + 'T00:00:00');
-      
-      // CORRECCIÓN: Encontrar estrictamente el Lunes de la semana seleccionada
-      const dayOfWeek = (currDate.getDay() + 6) % 7; // Lunes = 0, Domingo = 6
+      const dayOfWeek = (currDate.getDay() + 6) % 7; // lun=0
       const monday = new Date(currDate);
       monday.setDate(currDate.getDate() - dayOfWeek);
 
@@ -1326,88 +1334,94 @@
         const yyyy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(d.getDate()).padStart(2, '0');
-        const dateStr = `${yyyy}-${mm}-${dd}`;
-        const dayName = ['L', 'M', 'X', 'J', 'V', 'S', 'D'][i];
-        weekDays.push({ dateStr, dayName, rawDay: i });
+        weekDays.push({ dateStr: yyyy + '-' + mm + '-' + dd, dayName: ['L','M','X','J','V','S','D'][i] });
+      }
+
+      function dayMetric(session, type) {
+        if (!session) return 0;
+        if (type === 'grind_hours') return session.hours || 0;
+        if (type === 'study_hours') return session.studyHours || 0;
+        if (type === 'games') return session.games || 0;
+        if (type === 'warmup') return session.wuDone ? 1 : 0;
+        if (type === 'cooldown') return session.cdDone ? 1 : 0;
+        return session.hours > 0 ? 1 : 0;
+      }
+
+      function dayMet(session, g) {
+        const v = dayMetric(session, g.metricType);
+        const target = parseFloat(g.targetValue) || 1;
+        if (g.metricType === 'warmup' || g.metricType === 'cooldown' || g.metricType === 'custom') return v >= 1;
+        return v >= target;
       }
 
       appData.customGoals.forEach(g => {
-        let accumulated = 0;
-
         let trackerDaysHtml = '';
+        let timesMet = 0;
         weekDays.forEach(w => {
-          const daySession = appData.grindSessions.find(s => s.date === w.dateStr) || { hours: 0, studyHours: 0, games: 0 };
-          let fulfilled = false;
-
-          if (g.metricType === 'grind_hours') fulfilled = (daySession.hours >= (g.targetValue / 7));
-          else if (g.metricType === 'study_hours') fulfilled = (daySession.studyHours >= (g.targetValue / 7));
-          else if (g.metricType === 'games') fulfilled = (daySession.games >= (g.targetValue / 7));
-          else if (g.metricType === 'warmup') fulfilled = !!daySession.wuDone;
-          else if (g.metricType === 'cooldown') fulfilled = !!daySession.cdDone;
-          else fulfilled = (daySession.hours > 0);
-
-          trackerDaysHtml += `
-            <div class="flex flex-col items-center">
-              <span class="text-[9px] font-extrabold text-stone-500 mb-1">${w.dayName}</span>
-              <div class="w-7 h-7 rounded-xl border flex items-center justify-center text-xs ${fulfilled ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-700 font-black' : 'bg-white border-[#e8d2dc] text-stone-400'}" title="${w.dateStr}">
-                ${fulfilled ? '✓' : '·'}
-              </div>
-            </div>`;
+          const daySession = appData.grindSessions.find(s => s.date === w.dateStr);
+          const fulfilled = dayMet(daySession, g);
+          if (fulfilled) timesMet++;
+          trackerDaysHtml += '<div class="flex flex-col items-center"><span class="text-[9px] font-extrabold text-stone-500 mb-1">' + w.dayName + '</span><div class="w-7 h-7 rounded-xl border flex items-center justify-center text-xs ' + (fulfilled ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-700 font-black' : 'bg-white border-pink-200 text-stone-400') + '">' + (fulfilled ? '✓' : '·') + '</div></div>';
         });
 
-        appData.grindSessions.forEach(s => {
-          const sDate = new Date(s.date + 'T00:00:00');
-          let inRange = false;
+        // Progreso según frecuencia
+        let timesNeeded = 7;
+        let progressLabel = '';
+        const target = parseFloat(g.targetValue) || 1;
+        if (g.frequency === 'Diaria') {
+          timesNeeded = 7;
+          progressLabel = timesMet + ' / 7 días cumplidos';
+        } else if (g.frequency && String(g.frequency).endsWith('x')) {
+          timesNeeded = parseInt(g.frequency) || 1;
+          progressLabel = timesMet + ' / ' + timesNeeded + ' veces esta semana';
+        } else if (g.frequency === 'Semanal') {
+          // suma de la métrica en la semana vs target
+          let sum = 0;
+          weekDays.forEach(w => {
+            const s = appData.grindSessions.find(x => x.date === w.dateStr);
+            sum += dayMetric(s, g.metricType);
+          });
+          timesMet = sum;
+          timesNeeded = target;
+          progressLabel = sum.toFixed(1) + ' / ' + target + ' (total semana)';
+        } else if (g.frequency === 'Mensual') {
+          const y = currDate.getFullYear(), mth = currDate.getMonth();
+          let sum = 0;
+          (appData.grindSessions || []).forEach(s => {
+            const d = new Date(s.date + 'T00:00:00');
+            if (d.getFullYear() === y && d.getMonth() === mth) sum += dayMetric(s, g.metricType);
+          });
+          timesMet = sum;
+          timesNeeded = target;
+          progressLabel = sum.toFixed(1) + ' / ' + target + ' (total mes)';
+        } else {
+          timesNeeded = 7;
+          progressLabel = timesMet + ' / 7';
+        }
 
-          if (g.frequency === 'Diaria') {
-            inRange = (s.date === currentDate);
-          } else if (g.frequency === 'Semanal') {
-            const diffTime = currDate - sDate;
-            const diffDays = diffTime / (1000 * 60 * 60 * 24);
-            inRange = (diffDays >= 0 && diffDays < 7);
-          } else if (g.frequency === 'Quincenal') {
-            const diffTime = currDate - sDate;
-            const diffDays = diffTime / (1000 * 60 * 60 * 24);
-            inRange = (diffDays >= 0 && diffDays < 15);
-          } else if (g.frequency === 'Mensual') {
-            inRange = (sDate.getFullYear() === currDate.getFullYear() && sDate.getMonth() === currDate.getMonth());
-          }
-
-          if (inRange) {
-            if (g.metricType === 'grind_hours') accumulated += (s.hours || 0);
-            else if (g.metricType === 'study_hours') accumulated += (s.studyHours || 0);
-            else if (g.metricType === 'games') accumulated += (s.games || 0);
-            else if (g.metricType === 'custom') accumulated += 1;
-          }
-        });
-
-        const target = g.targetValue || 1;
-        const pct = Math.min(100, Math.round((accumulated / target) * 100));
-
-        let unitLabel = '';
-        if (g.metricType === 'grind_hours') unitLabel = 'h';
-        else if (g.metricType === 'study_hours') unitLabel = 'h';
-        else if (g.metricType === 'games') unitLabel = ' games';
+        const pct = Math.min(100, Math.round((timesMet / (timesNeeded || 1)) * 100));
+        const unitHint = (g.metricType === 'grind_hours' || g.metricType === 'study_hours') ? 'h' : (g.metricType === 'games' ? ' games' : '');
 
         container.innerHTML += `
           <div class="glass-card p-4 rounded-2xl space-y-3">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div>
-                <span class="text-[9px] font-black bg-[#f5ecf0] px-2 py-0.5 rounded-md text-[#ec4899] uppercase border border-[#e8d2dc]">${g.frequency}</span>
+                <span class="text-[9px] font-black bg-pink-50 px-2 py-0.5 rounded-md text-pink-600 uppercase border border-pink-200">${g.frequency}</span>
                 <h4 class="font-black text-stone-800 text-sm mt-1">${g.title}</h4>
+                <p class="text-[10px] text-stone-500">Meta por vez: ${target}${unitHint}</p>
               </div>
               <div class="flex items-center space-x-2">
                 <div class="flex space-x-1.5">${trackerDaysHtml}</div>
-                <button onclick="deleteCustomGoal(${g.id})" class="text-stone-400 hover:text-red-500 font-bold px-2">✕</button>
+                <button onclick="deleteCustomGoal(${g.id})" class="text-stone-400 hover:text-red-500 font-bold px-2 cursor-pointer">✕</button>
               </div>
             </div>
             <div class="space-y-1">
               <div class="flex justify-between items-center text-xs font-black">
-                <span class="text-stone-500">Progreso Automático</span>
-                <span class="${pct >= 100 ? 'text-emerald-600' : 'text-[#ec4899]'}">${accumulated.toFixed(1)}${unitLabel} / ${target}${unitLabel} (${pct}%)</span>
+                <span class="text-stone-500">Progreso</span>
+                <span class="${pct >= 100 ? 'text-emerald-600' : 'text-pink-600'}">${progressLabel} (${pct}%)</span>
               </div>
-              <div class="w-full bg-[#f0e4eb] h-2.5 rounded-full overflow-hidden border border-[#e8d2dc]">
-                <div class="bg-gradient-to-r from-[#ec4899] to-[#db2777] h-full rounded-full transition-all duration-300" style="width: ${pct}%"></div>
+              <div class="w-full bg-pink-50 h-2.5 rounded-full overflow-hidden border border-pink-200">
+                <div class="bg-gradient-to-r from-pink-500 to-fuchsia-500 h-full rounded-full transition-all duration-300" style="width: ${pct}%"></div>
               </div>
             </div>
           </div>`;
@@ -1466,23 +1480,57 @@
       const empty = document.getElementById('grind-empty');
       if (!list) return;
       list.innerHTML = '';
-      const sessions = [...(appData.grindSessions||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-      if (sessions.length === 0) { empty?.classList.remove('hidden'); return; }
+      let from = document.getElementById('grind-from')?.value;
+      let to = document.getElementById('grind-to')?.value;
+      // Default: últimos 14 días si no hay filtro
+      if (!from && !to) {
+        const t = new Date();
+        const f = new Date(); f.setDate(t.getDate() - 14);
+        to = t.toISOString().slice(0,10);
+        from = f.toISOString().slice(0,10);
+        const gf = document.getElementById('grind-from');
+        const gt = document.getElementById('grind-to');
+        if (gf && !gf.value) gf.value = from;
+        if (gt && !gt.value) gt.value = to;
+      }
+      let sessions = [...(appData.grindSessions||[])];
+      if (from) sessions = sessions.filter(s => s.date >= from);
+      if (to) sessions = sessions.filter(s => s.date <= to);
+      sessions.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+      if (sessions.length === 0) { empty?.classList.remove('hidden'); list.innerHTML=''; return; }
       empty?.classList.add('hidden');
       sessions.forEach(s => {
         const money = parseFloat(s.money) || 0;
-        list.innerHTML += `<div class="p-4 glass-card rounded-2xl flex flex-wrap justify-between items-center gap-2 text-xs">
-          <div>
+        const wu = s.wuDone ? '✅ Warm-up' : '❌ Warm-up';
+        const cd = s.cdDone ? '✅ Cool-down' : '❌ Cool-down';
+        list.innerHTML += `<div class="p-4 glass-card rounded-2xl space-y-2 text-xs">
+          <div class="flex flex-wrap justify-between items-start gap-2">
             <strong class="text-sm font-black text-stone-800">📅 ${s.date}</strong>
-            <p class="text-stone-600 mt-0.5">🎮 ${s.games||0} games · ⏱️ ${s.hours||0}h · cEV ${s.cev||0} · <span class="${money>=0?'text-emerald-600':'text-red-600'} font-bold">$ ${money}</span> · Focus ${s.focus||'-'} · ${s.animo||''}</p>
+            <div class="flex gap-2">
+              <button onclick="editGrindSessionByDate('${s.date}')" class="px-3 py-1.5 bg-pink-500 text-white rounded-xl font-bold cursor-pointer">✏️ Editar</button>
+              <button onclick="deleteGrindSession(${s.id})" class="px-3 py-1 bg-red-50 text-red-600 rounded-xl font-bold cursor-pointer">✕</button>
+            </div>
           </div>
-          <div class="flex gap-2">
-            <button onclick="editGrindSessionByDate('${s.date}')" class="px-3 py-1.5 bg-pink-500 text-white rounded-xl font-bold cursor-pointer">✏️ Editar</button>
-            <button onclick="deleteGrindSession(${s.id})" class="px-3 py-1 bg-red-50 text-red-600 rounded-xl font-bold cursor-pointer">✕</button>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-stone-700">
+            <span>🎮 Games: <strong>${s.games||0}</strong></span>
+            <span>⏱️ Grind: <strong>${s.hours||0}h</strong></span>
+            <span>📚 Estudio: <strong>${s.studyHours||0}h</strong></span>
+            <span>📈 cEV: <strong>${s.cev||0}</strong></span>
+            <span class="${money>=0?'text-emerald-600':'text-red-600'}">💰 $ <strong>${money}</strong></span>
+            <span>🎯 Focus: <strong>${s.focus??'-'}/10</strong></span>
+            <span>🧠 Mindset: <strong>${s.mindset??'-'}/10</strong></span>
+            <span>⭐ Nivel: <strong>${s.sessionLevel??'-'}/10</strong></span>
           </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="px-2 py-0.5 bg-pink-50 border border-pink-200 rounded-lg font-bold">${s.animo||'Sin ánimo'}</span>
+            <span class="px-2 py-0.5 bg-white border border-pink-200 rounded-lg font-bold">${wu}</span>
+            <span class="px-2 py-0.5 bg-white border border-pink-200 rounded-lg font-bold">${cd}</span>
+          </div>
+          <p class="text-stone-500 italic">💬 ${(s.notes||s.cdSensations||'Sin comentario')}</p>
         </div>`;
       });
     }
+
 
 
     function renderPeriodicPhotos() {
