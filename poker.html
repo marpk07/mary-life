@@ -572,6 +572,8 @@
       <div class="space-y-3 text-xs">
         <input type="text" id="leak-title" placeholder="Título (ej. Chibetando de más)..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
         <input type="text" id="leak-initial" placeholder="Dato inicial PokerTracker (ej. 54%)" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+        <input type="text" id="leak-final" placeholder="Dato final PokerTracker..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+        <input type="date" id="leak-date" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
         <textarea id="leak-action" rows="2" placeholder="Plan de acción en mesas..." class="w-full bg-white border border-[#e8d2dc] rounded-xl p-3 text-stone-800"></textarea>
       </div>
       <div class="pt-2 flex justify-end space-x-2">
@@ -835,17 +837,17 @@
       document.getElementById('grind-cev').value = existing.cev || '';
       document.getElementById('grind-focus').value = existing.focus || 8;
       document.getElementById('grind-mindset').value = existing.mindset || 8;
-      document.getElementById('grind-session-level').value = existing.sessionLevel || 7;
+      const gsl = document.getElementById('grind-session-level'); if (gsl) gsl.value = existing.sessionLevel || 7;
       document.getElementById('grind-study').value = existing.studyHours || '';
       document.getElementById('grind-hands').value = existing.hands || '';
-      document.getElementById('grind-animo').value = existing.animo || 'Neutra 😐';
+      const gan = document.getElementById('grind-animo'); if (gan) gan.value = existing.animo || 'Neutra 😐';
       document.getElementById('grind-notes').value = existing.notes || '';
-      document.getElementById('grind-money').value = existing.money ?? '';
+      const gm = document.getElementById('grind-money'); if (gm) gm.value = existing.money ?? '';
 
-      document.getElementById('cd-correccion').checked = !!existing.cdCorreccion;
-      document.getElementById('cd-multitask').checked = !!existing.cdMultitask;
-      document.getElementById('cd-tilt-check').checked = !!existing.cdTiltCheck;
-      document.getElementById('cd-sueno').checked = !!existing.cdSueno;
+      const el_cd_correccion = document.getElementById('cd-correccion'); if (el_cd_correccion) el_cd_correccion.checked = !!existing.cdCorreccion;
+      const el_cd_multitask = document.getElementById('cd-multitask'); if (el_cd_multitask) el_cd_multitask.checked = !!existing.cdMultitask;
+      const el_cd_tilt_check = document.getElementById('cd-tilt-check'); if (el_cd_tilt_check) el_cd_tilt_check.checked = !!existing.cdTiltCheck;
+      const el_cd_sueno = document.getElementById('cd-sueno'); if (el_cd_sueno) el_cd_sueno.checked = !!existing.cdSueno;
       document.getElementById('cd-correccion-text').value = existing.cdCorreccionText || '';
       document.getElementById('cd-tilt-action').value = existing.cdTiltAction || '';
       document.getElementById('cd-correccion-note').classList.toggle('hidden', !existing.cdCorreccion);
@@ -884,18 +886,18 @@
         cev: parseFloat(document.getElementById('grind-cev').value || 0),
         focus: parseInt(document.getElementById('grind-focus').value || 8),
         mindset: parseInt(document.getElementById('grind-mindset').value || 8),
-        sessionLevel: parseInt(document.getElementById('grind-session-level').value || 7),
+        sessionLevel: parseInt((document.getElementById('grind-session-level')||{value:7}).value || 7),
         studyHours: parseFloat(document.getElementById('grind-study').value || 0),
         hands: parseInt(document.getElementById('grind-hands').value || 0),
-        animo: document.getElementById('grind-animo').value,
-        money: parseFloat(document.getElementById('grind-money').value || 0),
+        animo: (document.getElementById('grind-animo')||{value:'Neutra'}).value,
+        money: parseFloat((document.getElementById('grind-money')||{value:0}).value || 0),
         notes: document.getElementById('grind-notes').value,
-        cdCorreccion: document.getElementById('cd-correccion').checked,
-        cdMultitask: document.getElementById('cd-multitask').checked,
-        cdTiltCheck: document.getElementById('cd-tilt-check').checked,
-        cdSueno: document.getElementById('cd-sueno').checked,
-        cdCorreccionText: document.getElementById('cd-correccion-text').value,
-        cdTiltAction: document.getElementById('cd-tilt-action').value,
+        cdCorreccion: !!(document.getElementById('cd-correccion')||{}).checked,
+        cdMultitask: !!(document.getElementById('cd-multitask')||{}).checked,
+        cdTiltCheck: !!(document.getElementById('cd-tilt-check')||{}).checked,
+        cdSueno: !!(document.getElementById('cd-sueno')||{}).checked,
+        cdCorreccionText: (document.getElementById('cd-correccion-text')||{value:''}).value,
+        cdTiltAction: (document.getElementById('cd-tilt-action')||{value:''}).value,
         cdSensations: document.getElementById('modal-cd-sensations').value,
         cdTilt: document.getElementById('modal-cd-tilt').value
       };
@@ -979,7 +981,7 @@
         date: document.getElementById('study-date').value || currentDate,
         topic: document.getElementById('study-topic').value || 'Estudio GTO',
         hands: document.getElementById('study-hands').value,
-        conclusion: document.getElementById('study-conclusion').value
+        conclusion: (document.getElementById('study-conclusion') && document.getElementById('study-conclusion').value) || ''
       };
       if (editId) {
         appData.studyLogs = appData.studyLogs.map(x => x.id === log.id ? log : x);
@@ -1378,15 +1380,24 @@
       const empty = document.getElementById('study-empty');
       if (!container) return;
       container.innerHTML = '';
-      if (appData.studyLogs.length === 0) { empty?.classList.remove('hidden'); return; }
+      const from = document.getElementById('study-from')?.value;
+      const to = document.getElementById('study-to')?.value;
+      let logs = [...(appData.studyLogs || [])];
+      if (from) logs = logs.filter(l => l.date >= from);
+      if (to) logs = logs.filter(l => l.date <= to);
+      logs.sort((a,b) => (b.date || '').localeCompare(a.date || ''));
+      if (logs.length === 0) { empty?.classList.remove('hidden'); return; }
       empty?.classList.add('hidden');
 
-      ([...appData.studyLogs]).sort((a,b) => b.date.localeCompare(a.date)).forEach(l => {
+      logs.forEach(l => {
         container.innerHTML += `
           <div class="p-4 glass-card rounded-2xl space-y-2 text-xs">
             <div class="flex justify-between items-center">
               <strong class="text-sm font-black text-stone-800">📚 ${l.date} · ${l.topic}</strong>
-              <button onclick="deleteStudyLog(${l.id})" class="text-red-500 font-bold">✕ Borrar</button>
+              <div class="flex gap-2">
+                <button onclick="editStudyLog(${l.id})" class="text-[#c97b84] font-bold">✏️</button>
+                <button onclick="deleteStudyLog(${l.id})" class="text-red-500 font-bold">✕</button>
+              </div>
             </div>
             <p class="text-stone-700"><strong>Manos / Spots:</strong> ${l.hands || 'N/A'}</p>
             <p class="text-[#c97b84] font-bold"><strong>Conclusión GTO:</strong> ${l.conclusion || 'N/A'}</p>
@@ -1512,12 +1523,8 @@
       const to = document.getElementById('report-to').value;
       const sessions = appData.grindSessions.filter(s => (!from || s.date >= from) && (!to || s.date <= to)).sort((a,b)=>a.date.localeCompare(b.date));
       const isDay = from && to && from === to;
-      let report = isDay ? `♠️ *RESUMEN DÍA ${from}*
-
-` : `♠️ *RESUMEN ${from || '...'} → ${to || '...'}*
-
-`;
-      
+      const nl = String.fromCharCode(10);
+      let report = isDay ? ('♠️ *RESUMEN DÍA ' + from + '*' + nl + nl) : ('♠️ *RESUMEN ' + (from || '...') + ' → ' + (to || '...') + '*' + nl + nl);
       const totalH = sessions.reduce((a,s)=>a+(s.hours||0),0);
       const totalG = sessions.reduce((a,s)=>a+(s.games||0),0);
       const totalS = sessions.reduce((a,s)=>a+(s.studyHours||0),0);
@@ -1525,47 +1532,25 @@
       const totalHands = sessions.reduce((a,s)=>a+(s.hands||0),0);
       const n = sessions.length || 1;
       const avgCev = totalG > 0 ? sessions.reduce((a,s)=>a+((s.cev||0)*(s.games||0)),0)/totalG : 0;
-      
-      report += `⏱️ Grind: ${totalH.toFixed(1)}h | 📚 Estudio: ${totalS.toFixed(1)}h
-`;
-      report += `🎮 Games: ${totalG} | 📈 cEV: ${avgCev.toFixed(1)} | 💰 $: ${totalM.toFixed(2)}
-`;
-      report += `✋ Manos marcadas: ${totalHands}
-`;
-      report += `Focus avg: ${(sessions.reduce((a,s)=>a+(s.focus||0),0)/n).toFixed(1)} | Mindset avg: ${(sessions.reduce((a,s)=>a+(s.mindset||0),0)/n).toFixed(1)} | Nivel avg: ${(sessions.reduce((a,s)=>a+(s.sessionLevel||0),0)/n).toFixed(1)}
-`;
-      report += `Tilt: ${sessions.filter(s=>s.cdTiltCheck).length} | Sueño: ${sessions.filter(s=>s.cdSueno).length} | Multi: ${sessions.filter(s=>s.cdMultitask).length} | Correcciones: ${sessions.filter(s=>s.cdCorreccion).length}
-
-`;
-      
-      sessions.forEach(s => {
-        report += `---
-📅 ${s.date}
-`;
-        report += `Grind ${s.hours||0}h · Games ${s.games||0} · cEV ${s.cev||0} · $ ${s.money||0}
-`;
-        report += `Focus ${s.focus||'-'} | Mindset ${s.mindset||'-'} | Nivel ${s.sessionLevel||'-'} | Ánimo: ${s.animo||'-'}
-`;
-        report += `Estudio ${s.studyHours||0}h · Manos ${s.hands||0}
-`;
-        if (s.cdTiltCheck) report += `😤 Tilt: sí → ${s.cdTiltAction||s.cdTilt||''}
-`;
-        if (s.cdSueno) report += `😴 Sueño: sí
-`;
-        if (s.cdMultitask) report += `📱 Multitasking: sí
-`;
-        if (s.cdCorreccion) report += `✅ Correcciones: ${s.cdCorreccionText||'sí'}
-`;
-        if (s.cdSensations) report += `Sensaciones: ${s.cdSensations}
-`;
-        const tridents = (appData.tridents||[]).filter(t=>t.date===s.date);
-        if (tridents.length) report += `⚡ Tridents: ${tridents.map(t=>`${t.count} (${t.profit})`).join(', ')}
-`;
+      report += '⏱️ Grind: ' + totalH.toFixed(1) + 'h | 📚 Estudio: ' + totalS.toFixed(1) + 'h' + nl;
+      report += '🎮 Games: ' + totalG + ' | 📈 cEV: ' + avgCev.toFixed(1) + ' | 💰 $: ' + totalM.toFixed(2) + nl;
+      report += '✋ Manos marcadas: ' + totalHands + nl;
+      report += 'Focus avg: ' + (sessions.reduce((a,s)=>a+(s.focus||0),0)/n).toFixed(1) + ' | Mindset avg: ' + (sessions.reduce((a,s)=>a+(s.mindset||0),0)/n).toFixed(1) + ' | Nivel avg: ' + (sessions.reduce((a,s)=>a+(s.sessionLevel||0),0)/n).toFixed(1) + nl;
+      report += 'Tilt: ' + sessions.filter(s=>s.cdTiltCheck).length + ' | Sueño: ' + sessions.filter(s=>s.cdSueno).length + ' | Multi: ' + sessions.filter(s=>s.cdMultitask).length + ' | Correcciones: ' + sessions.filter(s=>s.cdCorreccion).length + nl + nl;
+      sessions.forEach(function(s) {
+        report += '---' + nl + '📅 ' + s.date + nl;
+        report += 'Grind ' + (s.hours||0) + 'h · Games ' + (s.games||0) + ' · cEV ' + (s.cev||0) + ' · $ ' + (s.money||0) + nl;
+        report += 'Focus ' + (s.focus||'-') + ' | Mindset ' + (s.mindset||'-') + ' | Nivel ' + (s.sessionLevel||'-') + ' | Ánimo: ' + (s.animo||'-') + nl;
+        report += 'Estudio ' + (s.studyHours||0) + 'h · Manos ' + (s.hands||0) + nl;
+        if (s.cdTiltCheck) report += '😤 Tilt: sí → ' + (s.cdTiltAction||s.cdTilt||'') + nl;
+        if (s.cdSueno) report += '😴 Sueño: sí' + nl;
+        if (s.cdMultitask) report += '📱 Multitasking: sí' + nl;
+        if (s.cdCorreccion) report += '✅ Correcciones: ' + (s.cdCorreccionText||'sí') + nl;
+        if (s.cdSensations) report += 'Sensaciones: ' + s.cdSensations + nl;
+        const tridents = (appData.tridents||[]).filter(function(t){ return t.date===s.date; });
+        if (tridents.length) report += '⚡ Tridents: ' + tridents.map(function(t){ return t.count + ' (' + t.profit + ')'; }).join(', ') + nl;
       });
-      
-      report = report.replace(/\n/g, '
-');
-      navigator.clipboard.writeText(report).then(() => showToast('Resumen Notion copiado')).catch(() => {
+      navigator.clipboard.writeText(report).then(function() { showToast('Resumen Notion copiado'); }).catch(function() {
         prompt('Copia el resumen:', report);
       });
     }
