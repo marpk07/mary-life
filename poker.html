@@ -118,6 +118,7 @@
         <input type="date" id="global-date" onchange="handleGlobalDateChange(this.value)" class="bg-white border border-[#e8d2dc] rounded-xl px-3 py-1.5 text-xs font-black text-stone-800 focus:outline-none">
       </div>
       <div class="flex items-center gap-2">
+        <button onclick="copyMartinReport()" class="px-3 py-2 bg-white border border-pink-300 text-pink-700 font-extrabold text-xs rounded-xl shadow-sm cursor-pointer">📋 Reporte Martín</button>
         <button onclick="openModalGrind()" class="px-4 py-2 bg-[#ec4899] hover:bg-[#db2777] text-white font-extrabold text-xs rounded-xl shadow-md transition cursor-pointer">+ Registrar / Editar Sesión</button>
       </div>
     </div>
@@ -129,7 +130,7 @@
       <div class="glass-card-solid rounded-3xl p-6 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#e8d2dc]">
           <div>
-            <h3 class="text-base font-black text-stone-800">🎯 Metas Principales de Póker ♠️</h3>
+            <h3 class="text-base font-black text-stone-800">🎯 Metas principales del día ♠️</h3>
             <p class="text-xs text-stone-500">Progreso automático en tiempo real</p>
           </div>
           <button onclick="openModalGoalsConfig()" class="text-xs font-extrabold text-[#ec4899] hover:underline cursor-pointer">⚙️ Configurar Metas Base</button>
@@ -141,7 +142,7 @@
       <div class="glass-card-solid rounded-3xl p-6 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#e8d2dc]">
           <div>
-            <h3 class="text-base font-black text-stone-800">✨ Hábitos & Metas (Habit Tracker Semanal)</h3>
+            <h3 class="text-base font-black text-stone-800">✨ Hábitos y metas de la semana</h3>
             <p class="text-xs text-stone-500">Tus registros diarios y seguimiento de Lunes a Domingo</p>
           </div>
           <button onclick="openModalCustomGoal()" class="px-4 py-2 bg-[#ec4899] hover:bg-[#db2777] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer">+ Añadir Meta o Hábito</button>
@@ -151,17 +152,21 @@
       </div>
 
       <!-- VISTA DEL RITUAL DE LA FECHA SELECCIONADA -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="daily-session-view"></div>
     </section>
 
     <!-- PANE 2: SESIONES -->
     <section id="pane-grind" class="tab-pane space-y-6 hidden">
+      <div class="glass-card-solid rounded-3xl p-4 mb-2">
+        <h3 class="text-sm font-black text-stone-800 mb-3">☀️🌙 Warm-up y Cool-down del día seleccionado</h3>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="daily-session-view"></div>
+      </div>
+
       <div class="glass-card-solid rounded-3xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 class="text-xl font-black text-stone-800">Historial de Sesiones & Gráficas</h2>
           <p class="text-xs text-stone-500 mt-0.5">Todas tus jornadas registradas con sus capturas</p>
         </div>
-        <button onclick="openModalGrind()" class="px-4 py-2 bg-[#ec4899] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer">+ Nueva Sesión</button>
+        <button onclick="openModalGrindNew()" class="px-4 py-2 bg-[#ec4899] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer">+ Nueva Sesión</button>
       </div>
 
       <div class="glass-card-solid rounded-3xl p-6">
@@ -230,6 +235,7 @@
             <h2 class="text-xl font-black text-stone-800">Panel de Métricas & Bóveda de Gráficas</h2>
             <p class="text-xs text-stone-500">Filtra tus números o guarda tus gráficas semanales y mensuales</p>
           </div>
+          <button onclick="copyMartinReport()" class="px-4 py-2 bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer">📋 Reporte Martín</button>
           <button onclick="copyNotionSummary()" class="px-4 py-2 bg-[#ec4899] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer">📄 Resumen Notion</button>
           <button onclick="copyWeeklyReport()" class="px-4 py-2 bg-stone-800 text-white font-bold text-xs rounded-xl shadow-md hover:bg-stone-900 cursor-pointer">📋 Copiar Reporte</button>
         </div>
@@ -356,6 +362,8 @@
               <option value="grind_hours">⏱️ Horas de Grind</option>
               <option value="study_hours">📚 Horas de Estudio</option>
               <option value="games">🎮 Total Games</option>
+              <option value="warmup">☀️ Warm-up completado</option>
+              <option value="cooldown">🌙 Cool-down completado</option>
               <option value="custom">✍️ Hábito / Otro Libre</option>
             </select>
           </div>
@@ -397,6 +405,10 @@
 
         <div class="bg-[#f5ecf0] p-4 rounded-2xl border border-[#e8d2dc] space-y-3">
           <h4 class="font-black text-[#db2777] text-xs uppercase tracking-wider">☀️ Warm-up (Pre-sesión)</h4>
+          <label class="flex items-center space-x-2 cursor-pointer bg-pink-50 p-2 rounded-xl border border-pink-200 mb-2">
+            <input type="checkbox" id="modal-wu-done" class="accent-pink-500 w-4 h-4 rounded">
+            <span class="font-black text-stone-800">✅ Warm-up completado</span>
+          </label>
           <div class="space-y-2">
             <label class="flex items-center space-x-2 cursor-pointer">
               <input type="checkbox" id="modal-wu-env" class="accent-[#ec4899] w-4 h-4 rounded">
@@ -480,6 +492,10 @@
 
         <div class="bg-[#f5ecf0] p-4 rounded-2xl border border-[#e8d2dc] space-y-3">
           <h4 class="font-black text-[#db2777] text-xs uppercase tracking-wider">🌙 Cool-down & Checklist</h4>
+          <label class="flex items-center space-x-2 cursor-pointer bg-pink-50 p-2 rounded-xl border border-pink-200 mb-2">
+            <input type="checkbox" id="modal-cd-done" class="accent-pink-500 w-4 h-4 rounded">
+            <span class="font-black text-stone-800">✅ Cool-down completado</span>
+          </label>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <label class="flex items-center gap-2 cursor-pointer bg-white p-2 rounded-xl border border-[#e8d2dc]">
               <input type="checkbox" id="cd-correccion" class="accent-[#ec4899] w-4 h-4 rounded" onchange="document.getElementById('cd-correccion-note').classList.toggle('hidden', !this.checked)">
@@ -731,6 +747,18 @@
       if (!Array.isArray(appData.customGoals)) appData.customGoals = [];
     }
 
+    function sanitizeSessionImages(data) {
+      if (!data || !data.grindSessions) return data;
+      data.grindSessions = data.grindSessions.map(function(s) {
+        if (s.imageUrl && s.imageUrl.length > 450000) {
+          console.warn('Imagen muy grande eliminada de sesión', s.date);
+          return Object.assign({}, s, { imageUrl: '' });
+        }
+        return s;
+      });
+      return data;
+    }
+
     function loadDatabaseLocal() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -840,6 +868,46 @@
       saveDatabase(); renderAllViews();
     }
 
+    
+    function openModalGrindNew() {
+      // Formulario vacío, fecha = día seleccionado en el selector global
+      const day = (document.getElementById('global-date') && document.getElementById('global-date').value) || currentDate;
+      currentDate = day;
+      document.getElementById('grind-edit-id').value = '';
+      document.getElementById('grind-date').value = day;
+      document.getElementById('modal-wu-env').checked = false;
+      document.getElementById('modal-wu-mind').checked = false;
+      document.getElementById('modal-wu-energy').value = 8;
+      document.getElementById('modal-wu-focus').value = 8;
+      document.getElementById('modal-wu-intention').value = '';
+      const wudn = document.getElementById('modal-wu-done'); if (wudn) wudn.checked = false;
+      const cddn = document.getElementById('modal-cd-done'); if (cddn) cddn.checked = false;
+      document.getElementById('grind-hours').value = '';
+      document.getElementById('grind-games').value = '';
+      document.getElementById('grind-cev').value = '';
+      document.getElementById('grind-focus').value = 8;
+      document.getElementById('grind-mindset').value = 8;
+      const gsl = document.getElementById('grind-session-level'); if (gsl) gsl.value = 7;
+      document.getElementById('grind-study').value = '';
+      document.getElementById('grind-hands').value = '';
+      const gan = document.getElementById('grind-animo'); if (gan) gan.value = 'Neutra 😐';
+      document.getElementById('grind-notes').value = '';
+      const gm = document.getElementById('grind-money'); if (gm) gm.value = '';
+      ['cd-correccion','cd-multitask','cd-tilt-check','cd-sueno'].forEach(function(id) {
+        const el = document.getElementById(id); if (el) el.checked = false;
+      });
+      const ct = document.getElementById('cd-correccion-text'); if (ct) ct.value = '';
+      const ta = document.getElementById('cd-tilt-action'); if (ta) ta.value = '';
+      const cn = document.getElementById('cd-correccion-note'); if (cn) cn.classList.add('hidden');
+      const tw = document.getElementById('cd-tilt-action-wrap'); if (tw) tw.classList.add('hidden');
+      document.getElementById('modal-cd-sensations').value = '';
+      document.getElementById('modal-cd-tilt').value = '';
+      document.getElementById('grind-image-input').value = '';
+      // flag: no cargar imagen previa
+      window._grindNewSession = true;
+      openModal('modal-grind');
+    }
+
     function openModalGrind() {
       const existing = appData.grindSessions.find(s => s.date === currentDate) || {};
       document.getElementById('grind-edit-id').value = existing.id || '';
@@ -850,6 +918,8 @@
       document.getElementById('modal-wu-energy').value = existing.wuEnergy || 8;
       document.getElementById('modal-wu-focus').value = existing.wuFocus || 8;
       document.getElementById('modal-wu-intention').value = existing.wuIntention || '';
+      const wud = document.getElementById('modal-wu-done'); if (wud) wud.checked = !!existing.wuDone;
+      const cdd = document.getElementById('modal-cd-done'); if (cdd) cdd.checked = !!existing.cdDone;
 
       document.getElementById('grind-hours').value = existing.hours || '';
       document.getElementById('grind-games').value = existing.games || '';
@@ -908,6 +978,7 @@
         wuEnergy: parseInt(document.getElementById('modal-wu-energy').value || 8),
         wuFocus: parseInt(document.getElementById('modal-wu-focus').value || 8),
         wuIntention: document.getElementById('modal-wu-intention').value,
+        wuDone: !!(document.getElementById('modal-wu-done')||{}).checked,
         hours: parseFloat(document.getElementById('grind-hours').value || 0),
         games: parseInt(document.getElementById('grind-games').value || 0),
         cev: parseFloat(document.getElementById('grind-cev').value || 0),
@@ -926,6 +997,7 @@
         cdCorreccionText: (document.getElementById('cd-correccion-text')||{value:''}).value,
         cdTiltAction: (document.getElementById('cd-tilt-action')||{value:''}).value,
         cdSensations: document.getElementById('modal-cd-sensations').value,
+        cdDone: !!(document.getElementById('modal-cd-done')||{}).checked,
         cdTilt: document.getElementById('modal-cd-tilt').value
       };
 
@@ -947,9 +1019,28 @@
       };
 
       if (fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        // Comprimir imagen para no saturar localStorage / Firebase
         const reader = new FileReader();
-        reader.onload = (e) => finish(e.target.result);
-        reader.readAsDataURL(fileInput.files[0]);
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            const maxW = 900;
+            let w = img.width, h = img.height;
+            if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            let dataUrl = canvas.toDataURL('image/jpeg', 0.65);
+            // Si sigue muy grande, bajar calidad
+            if (dataUrl.length > 400000) dataUrl = canvas.toDataURL('image/jpeg', 0.45);
+            finish(dataUrl);
+          };
+          img.onerror = function() { finish(null); showToast('No se pudo cargar la imagen'); };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
       } else finish(null);
     }
 
@@ -1251,6 +1342,8 @@
           if (g.metricType === 'grind_hours') fulfilled = (daySession.hours >= (g.targetValue / 7));
           else if (g.metricType === 'study_hours') fulfilled = (daySession.studyHours >= (g.targetValue / 7));
           else if (g.metricType === 'games') fulfilled = (daySession.games >= (g.targetValue / 7));
+          else if (g.metricType === 'warmup') fulfilled = !!daySession.wuDone;
+          else if (g.metricType === 'cooldown') fulfilled = !!daySession.cdDone;
           else fulfilled = (daySession.hours > 0);
 
           trackerDaysHtml += `
@@ -1678,6 +1771,31 @@
 
 
 
+    
+    function copyMartinReport() {
+      // Reporte diario de entrega — solo el día seleccionado (fecha global)
+      const day = (document.getElementById('global-date') && document.getElementById('global-date').value) || currentDate;
+      const s = appData.grindSessions.find(x => x.date === day);
+      const nl = String.fromCharCode(10);
+      let report = '📋 REPORTE MARTÍN' + nl;
+      report += 'Fecha: ' + day + nl + nl;
+      if (!s) {
+        report += 'Sin sesión registrada este día.' + nl;
+      } else {
+        report += 'Horas de grind: ' + (s.hours || 0) + ' h' + nl;
+        report += 'Total de games: ' + (s.games || 0) + nl;
+        report += 'Focus: ' + (s.focus != null ? s.focus : '-') + '/10' + nl;
+        report += 'Nivel de la sesión: ' + (s.sessionLevel != null ? s.sessionLevel : '-') + '/10' + nl;
+        report += 'Mindset: ' + (s.mindset != null ? s.mindset : '-') + '/10' + nl;
+        report += 'Comentario: ' + (s.notes || s.cdSensations || '—') + nl;
+      }
+      navigator.clipboard.writeText(report).then(function() {
+        showToast('Reporte Martín copiado');
+      }).catch(function() {
+        prompt('Copia el reporte:', report);
+      });
+    }
+
     function copyNotionSummary() {
       const from = document.getElementById('report-from').value;
       const to = document.getElementById('report-to').value;
@@ -1736,4 +1854,3 @@
   </script>
 </body>
 </html>
-
