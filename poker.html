@@ -279,6 +279,7 @@
             <button onclick="runPatternFilter('money_win')" class="px-3 py-1.5 bg-emerald-100 text-emerald-800 font-bold rounded-xl cursor-pointer">Más $ ganado</button>
             <button onclick="runPatternFilter('money_loss')" class="px-3 py-1.5 bg-red-100 text-red-800 font-bold rounded-xl cursor-pointer">Más $ perdido</button>
             <button onclick="runPatternFilter('most_study')" class="px-3 py-1.5 bg-purple-100 text-purple-800 font-bold rounded-xl cursor-pointer">Más estudio</button>
+            <button onclick="runPatternFilter('all')" class="px-3 py-1.5 bg-pink-500 text-white font-bold rounded-xl cursor-pointer shadow-md">📋 Todas las sesiones</button>
           </div>
           <div id="pattern-results" class="space-y-2 text-xs"></div>
           <div id="session-metrics-summary" class="glass-card rounded-2xl p-4 text-xs space-y-2"></div>
@@ -886,6 +887,14 @@
       openModalGrind();
     }
 
+    function editGrindSessionByDate(dateStr) {
+      currentDate = dateStr;
+      const gd = document.getElementById('global-date');
+      if (gd) gd.value = dateStr;
+      openModalGrind();
+    }
+
+
     function saveGrindSession() {
       const editId = document.getElementById('grind-edit-id').value;
       const date = document.getElementById('grind-date').value || currentDate;
@@ -1364,27 +1373,24 @@
       const empty = document.getElementById('grind-empty');
       if (!list) return;
       list.innerHTML = '';
-      if (appData.grindSessions.length === 0) { empty?.classList.remove('hidden'); return; }
+      const sessions = [...(appData.grindSessions||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+      if (sessions.length === 0) { empty?.classList.remove('hidden'); return; }
       empty?.classList.add('hidden');
-
-      ([...appData.grindSessions]).sort((a,b) => b.date.localeCompare(a.date)).forEach(s => {
-        let thumb = s.imageUrl ? `<img src="${s.imageUrl}" class="w-16 h-12 object-cover rounded-lg border border-[#e8d2dc]">` : '';
-        list.innerHTML += `
-          <div class="p-4 glass-card rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
-            <div class="flex items-center space-x-3">
-              ${thumb}
-              <div>
-                <strong class="text-sm font-black text-stone-800">📅 ${s.date}</strong>
-                <p class="text-stone-600 mt-1">🎮 ${s.games} games | ⏱️ Grind: ${s.hours}h | 📚 Estudio: ${s.studyHours}h | 📈 cEV: ${s.cev}</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <button onclick="editGrindSession(${s.id})" class="px-3 py-1.5 bg-white border border-[#e8d2dc] rounded-xl font-bold text-stone-700">✏️ Editar</button>
-              <button onclick="deleteGrindSession(${s.id})" class="px-3 py-1.5 bg-red-50 text-red-600 rounded-xl font-bold border border-red-200">✕ Borrar</button>
-            </div>
-          </div>`;
+      sessions.forEach(s => {
+        const money = parseFloat(s.money) || 0;
+        list.innerHTML += `<div class="p-4 glass-card rounded-2xl flex flex-wrap justify-between items-center gap-2 text-xs">
+          <div>
+            <strong class="text-sm font-black text-stone-800">📅 ${s.date}</strong>
+            <p class="text-stone-600 mt-0.5">🎮 ${s.games||0} games · ⏱️ ${s.hours||0}h · cEV ${s.cev||0} · <span class="${money>=0?'text-emerald-600':'text-red-600'} font-bold">$ ${money}</span> · Focus ${s.focus||'-'} · ${s.animo||''}</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="editGrindSessionByDate('${s.date}')" class="px-3 py-1.5 bg-pink-500 text-white rounded-xl font-bold cursor-pointer">✏️ Editar</button>
+            <button onclick="deleteGrindSession(${s.id})" class="px-3 py-1 bg-red-50 text-red-600 rounded-xl font-bold cursor-pointer">✕</button>
+          </div>
+        </div>`;
       });
     }
+
 
     function renderPeriodicPhotos() {
       const gallery = document.getElementById('periodic-photos-gallery');
@@ -1609,6 +1615,8 @@
       const sumEl = document.getElementById('session-metrics-summary');
       if (sumEl) {
         renderReportCharts(filteredSessions);
+      // Mostrar lista de sesiones del rango
+      try { runPatternFilter('all'); } catch(e) {}
         sumEl.innerHTML = `
           <h4 class="font-black text-stone-800 text-sm mb-2">📊 Métricas de calidad del rango (${filteredSessions.length} sesiones)</h4>
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -1629,9 +1637,12 @@
       const from = document.getElementById('report-from').value;
       const to = document.getElementById('report-to').value;
       let list = appData.grindSessions.filter(s => (!from || s.date >= from) && (!to || s.date <= to));
-      // Normalizar money a número
       list = list.map(s => ({ ...s, _money: parseFloat(s.money) || 0 }));
       let title = '';
+      if (type === 'all') {
+        list = [...list].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+        title = 'Todas las sesiones del rango';
+      }
       if (type === 'ev_high') { list = list.filter(s => (s.cev||0) >= 60).sort((a,b)=>(b.cev||0)-(a.cev||0)); title = 'Días con cEV ≥ 60'; }
       if (type === 'ev_low') { list = list.filter(s => (s.cev||0) < 60).sort((a,b)=>(a.cev||0)-(b.cev||0)); title = 'Días con cEV < 60'; }
       if (type === 'most_games') { list = [...list].sort((a,b)=>(b.games||0)-(a.games||0)).slice(0,15); title = 'Días con más games'; }
@@ -1641,16 +1652,30 @@
       const el = document.getElementById('pattern-results');
       if (!el) return;
       if (list.length === 0) {
-        el.innerHTML = `<p class="text-stone-400 font-bold py-3">${title}: sin resultados en este rango. Revisa que hayas guardado $ en las sesiones.</p>`;
+        el.innerHTML = `<p class="text-stone-400 font-bold py-3">${title}: sin resultados en este rango.</p>`;
         return;
       }
-      el.innerHTML = `<strong class="text-stone-800 block mb-2">${title} (${list.length})</strong>` + list.map(s =>
-        `<div class="glass-card p-2.5 rounded-xl flex flex-wrap justify-between gap-2 text-xs">
-          <span class="font-black">📅 ${s.date}</span>
-          <span>cEV ${s.cev||0} · 🎮 ${s.games||0} · <strong class="${s._money>=0?'text-emerald-600':'text-red-600'}">$ ${s._money}</strong> · 📚 ${s.studyHours||0}h · Focus ${s.focus||'-'}</span>
-        </div>`
-      ).join('');
+      el.innerHTML = `<strong class="text-stone-800 block mb-2">${title} (${list.length})</strong>` + list.map(s => {
+        const flags = [
+          s.cdTiltCheck ? '😤' : '',
+          s.cdSueno ? '😴' : '',
+          s.cdMultitask ? '📱' : '',
+          s.cdCorreccion ? '✅' : ''
+        ].filter(Boolean).join(' ');
+        return `<div class="glass-card p-3 rounded-xl flex flex-wrap justify-between items-center gap-2 text-xs">
+          <div class="space-y-0.5 flex-1 min-w-[180px]">
+            <span class="font-black text-stone-800">📅 ${s.date}</span>
+            <div class="text-stone-600">🎮 ${s.games||0} games · ⏱️ ${s.hours||0}h · cEV ${s.cev||0} · <strong class="${s._money>=0?'text-emerald-600':'text-red-600'}">$ ${s._money}</strong></div>
+            <div class="text-stone-500">Focus ${s.focus||'-'} · Mindset ${s.mindset||'-'} · Nivel ${s.sessionLevel||'-'} · ${s.animo||''} ${flags}</div>
+          </div>
+          <div class="flex gap-1.5">
+            <button onclick="editGrindSessionByDate('${s.date}')" class="px-3 py-1.5 bg-pink-500 text-white font-bold rounded-xl cursor-pointer">✏️ Editar</button>
+            <button onclick="deleteGrindSession(${s.id})" class="px-2 py-1.5 text-red-500 font-bold cursor-pointer">✕</button>
+          </div>
+        </div>`;
+      }).join('');
     }
+
 
 
     function copyNotionSummary() {
