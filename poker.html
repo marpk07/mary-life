@@ -93,12 +93,12 @@
       </div>
 
       <nav class="flex flex-wrap items-center justify-center gap-1.5 bg-[#4D3B5C] p-1.5 rounded-2xl border border-[#6D587E]">
-        <button onclick="switchTab('resumen')" id="tab-btn-resumen" class="nav-btn active px-3.5 py-1.5 rounded-xl font-bold text-xs text-stone-200 hover:text-white">📊 Resumen & Ritual</button>
+        <button onclick="switchTab('resumen')" id="tab-btn-resumen" class="nav-btn active px-3.5 py-1.5 rounded-xl font-bold text-xs text-stone-200 hover:text-white">🎯 Metas & Hábitos</button>
         <button onclick="switchTab('grind')" id="tab-btn-grind" class="nav-btn px-3.5 py-1.5 rounded-xl font-bold text-xs text-stone-200 hover:text-white">🃏 Sesiones</button>
         <button onclick="switchTab('estudio')" id="tab-btn-estudio" class="nav-btn px-3.5 py-1.5 rounded-xl font-bold text-xs text-stone-200 hover:text-white">📚 Estudio & Manos</button>
         <button onclick="switchTab('leaks')" id="tab-btn-leaks" class="nav-btn px-3.5 py-1.5 rounded-xl font-bold text-xs text-stone-200 hover:text-white">🎯 Leaks & Tracking</button>
         <button onclick="switchTab('tridents')" id="tab-btn-tridents" class="nav-btn px-3.5 py-1.5 rounded-xl font-bold text-xs text-stone-200 hover:text-white">⚡ Tridents</button>
-        <button onclick="switchTab('reportes')" id="tab-btn-reportes" class="nav-btn px-3.5 py-1.5 rounded-xl font-bold text-xs text-stone-200 hover:text-white">📈 Reportes & Gráficas</button>
+        <button onclick="switchTab('reportes')" id="tab-btn-reportes" class="nav-btn px-3.5 py-1.5 rounded-xl font-bold text-xs text-stone-200 hover:text-white">📈 Resumen / Reportes</button>
       </nav>
 
       <div class="flex items-center space-x-2">
@@ -151,7 +151,7 @@
       </div>
 
       <!-- VISTA DEL RITUAL DE LA FECHA SELECCIONADA -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="daily-ritual-view"></div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="daily-session-view"></div>
     </section>
 
     <!-- PANE 2: SESIONES -->
@@ -178,6 +178,12 @@
           <p class="text-xs text-stone-500">Tus revisiones en GTO Wizard / Solvers</p>
         </div>
         <button onclick="openModalStudy()" class="px-4 py-2 bg-[#c97b84] text-white font-extrabold text-xs rounded-xl shadow-md cursor-pointer">+ Nueva Entrada de Estudio</button>
+      </div>
+      <div class="glass-card p-3 rounded-2xl flex flex-wrap gap-2 items-center text-xs">
+        <span class="font-bold text-stone-600">Desde:</span>
+        <input type="date" id="study-from" onchange="renderStudyView()" class="bg-white border border-[#e8d2dc] rounded-xl px-2 py-1 font-bold">
+        <span class="font-bold text-stone-600">Hasta:</span>
+        <input type="date" id="study-to" onchange="renderStudyView()" class="bg-white border border-[#e8d2dc] rounded-xl px-2 py-1 font-bold">
       </div>
 
       <div class="glass-card-solid rounded-3xl p-6">
@@ -224,7 +230,8 @@
             <h2 class="text-xl font-black text-stone-800">Panel de Métricas & Bóveda de Gráficas</h2>
             <p class="text-xs text-stone-500">Filtra tus números o guarda tus gráficas semanales y mensuales</p>
           </div>
-          <button onclick="copyWeeklyReport()" class="px-4 py-2 bg-stone-800 text-white font-bold text-xs rounded-xl shadow-md hover:bg-stone-900 cursor-pointer">📋 Copiar Reporte General</button>
+          <button onclick="copyNotionSummary()" class="px-4 py-2 bg-[#c97b84] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer">📄 Resumen Notion</button>
+          <button onclick="copyWeeklyReport()" class="px-4 py-2 bg-stone-800 text-white font-bold text-xs rounded-xl shadow-md hover:bg-stone-900 cursor-pointer">📋 Copiar Reporte</button>
         </div>
 
         <div class="flex flex-wrap items-center gap-3 bg-white/60 p-4 rounded-2xl border border-[#e8d2dc]">
@@ -256,6 +263,25 @@
             <span class="text-[10px] font-bold text-stone-500 uppercase">cEV Ponderado</span>
             <p class="text-xl font-black text-emerald-600 mt-1" id="kpi-avg-cev">0.0</p>
           </div>
+          <div class="glass-card rounded-2xl p-4 text-center">
+            <span class="text-[10px] font-bold text-stone-500 uppercase">Dinero ($)</span>
+            <p class="text-xl font-black text-stone-800 mt-1" id="kpi-money">0</p>
+          </div>
+        </div>
+
+        <!-- Análisis de patrones -->
+        <div class="pt-4 border-t border-[#e8d2dc] space-y-3">
+          <h3 class="text-base font-black text-stone-800">🔍 Análisis de Patrones & Filtros</h3>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <button onclick="runPatternFilter('ev_high')" class="px-3 py-1.5 bg-emerald-100 text-emerald-800 font-bold rounded-xl cursor-pointer">cEV ≥ 60</button>
+            <button onclick="runPatternFilter('ev_low')" class="px-3 py-1.5 bg-red-100 text-red-800 font-bold rounded-xl cursor-pointer">cEV &lt; 60</button>
+            <button onclick="runPatternFilter('most_games')" class="px-3 py-1.5 bg-blue-100 text-blue-800 font-bold rounded-xl cursor-pointer">Más games</button>
+            <button onclick="runPatternFilter('money_win')" class="px-3 py-1.5 bg-emerald-100 text-emerald-800 font-bold rounded-xl cursor-pointer">Más $ ganado</button>
+            <button onclick="runPatternFilter('money_loss')" class="px-3 py-1.5 bg-red-100 text-red-800 font-bold rounded-xl cursor-pointer">Más $ perdido</button>
+            <button onclick="runPatternFilter('most_study')" class="px-3 py-1.5 bg-purple-100 text-purple-800 font-bold rounded-xl cursor-pointer">Más estudio</button>
+          </div>
+          <div id="pattern-results" class="space-y-2 text-xs"></div>
+          <div id="session-metrics-summary" class="glass-card rounded-2xl p-4 text-xs space-y-2"></div>
         </div>
 
         <div class="pt-6 border-t border-[#e8d2dc] space-y-4">
@@ -387,18 +413,22 @@
               <input type="number" id="grind-games" placeholder="100" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
             </div>
           </div>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <div>
               <label class="font-bold text-stone-500 block mb-1">cEV</label>
               <input type="number" step="0.1" id="grind-cev" placeholder="65.0" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-stone-800">
             </div>
             <div>
-              <label class="font-bold text-stone-500 block mb-1">Focus Final</label>
+              <label class="font-bold text-stone-500 block mb-1">Focus (1-10)</label>
               <input type="number" min="1" max="10" id="grind-focus" value="8" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-stone-800">
             </div>
             <div>
-              <label class="font-bold text-stone-500 block mb-1">Mindset</label>
+              <label class="font-bold text-stone-500 block mb-1">Mindset (1-10)</label>
               <input type="number" min="1" max="10" id="grind-mindset" value="8" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-stone-800">
+            </div>
+            <div>
+              <label class="font-bold text-stone-500 block mb-1">Nivel Sesión (1-10)</label>
+              <input type="number" min="1" max="10" id="grind-session-level" value="7" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-2 py-1.5 font-bold text-stone-800" title="Cómo evalúas la sesión en general">
             </div>
           </div>
           <div class="grid grid-cols-2 gap-2">
@@ -411,23 +441,69 @@
               <input type="number" id="grind-hands" placeholder="12" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
             </div>
           </div>
+          <div>
+            <label class="font-bold text-stone-500 block mb-1">Ánimo durante la sesión</label>
+            <select id="grind-animo" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+              <option value="Motivada 🔥">Motivada 🔥</option>
+              <option value="Concentrada 🎯">Concentrada 🎯</option>
+              <option value="Tranquila 🧘‍♀️">Tranquila 🧘‍♀️</option>
+              <option value="Neutra 😐">Neutra 😐</option>
+              <option value="Pensativa 🤔">Pensativa 🤔</option>
+              <option value="Desconcentrada 😵">Desconcentrada 😵</option>
+              <option value="Ansiosa 😰">Ansiosa 😰</option>
+              <option value="Desmotivada 😔">Desmotivada 😔</option>
+              <option value="Apática 😶">Apática 😶</option>
+              <option value="Irritable 😤">Irritable 😤</option>
+              <option value="Cansada 🥱">Cansada 🥱</option>
+            </select>
+          </div>
         </div>
 
         <div class="bg-[#f5ecf0] p-4 rounded-2xl border border-[#e8d2dc] space-y-3">
-          <h4 class="font-black text-[#b86b72] text-xs uppercase tracking-wider">🌙 Cool-down & Gráfica de Sesión</h4>
+          <h4 class="font-black text-[#b86b72] text-xs uppercase tracking-wider">🌙 Cool-down & Checklist</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <label class="flex items-center gap-2 cursor-pointer bg-white p-2 rounded-xl border border-[#e8d2dc]">
+              <input type="checkbox" id="cd-correccion" class="accent-[#c97b84] w-4 h-4 rounded" onchange="document.getElementById('cd-correccion-note').classList.toggle('hidden', !this.checked)">
+              <span class="font-bold text-stone-700">✅ Implementé correcciones</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer bg-white p-2 rounded-xl border border-[#e8d2dc]">
+              <input type="checkbox" id="cd-multitask" class="accent-[#c97b84] w-4 h-4 rounded">
+              <span class="font-bold text-stone-700">📱 Multitasking</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer bg-white p-2 rounded-xl border border-[#e8d2dc]">
+              <input type="checkbox" id="cd-tilt-check" class="accent-[#c97b84] w-4 h-4 rounded" onchange="document.getElementById('cd-tilt-action-wrap').classList.toggle('hidden', !this.checked)">
+              <span class="font-bold text-stone-700">😤 Tilt</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer bg-white p-2 rounded-xl border border-[#e8d2dc]">
+              <input type="checkbox" id="cd-sueno" class="accent-[#c97b84] w-4 h-4 rounded">
+              <span class="font-bold text-stone-700">😴 Sueño durante sesión</span>
+            </label>
+          </div>
+          <div id="cd-correccion-note" class="hidden">
+            <label class="font-bold text-stone-500 block mb-1">¿Qué correcciones aplicaste?</label>
+            <input type="text" id="cd-correccion-text" placeholder="Ej. sizing en 3bet pots..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-medium text-stone-800">
+          </div>
+          <div id="cd-tilt-action-wrap" class="hidden">
+            <label class="font-bold text-stone-500 block mb-1">¿Qué hiciste con el tilt?</label>
+            <input type="text" id="cd-tilt-action" placeholder="Ej. medité 5 min, tomé un break, cerré mesas..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-medium text-stone-800">
+          </div>
           <div>
             <label class="font-bold text-stone-500 block mb-1">Sensaciones al terminar</label>
             <textarea id="modal-cd-sensations" rows="2" placeholder="¿Cómo te sentiste..." class="w-full bg-white border border-[#e8d2dc] rounded-xl p-2 font-medium text-stone-800"></textarea>
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="font-bold text-stone-500 block mb-1">Alertas de tilt</label>
+              <label class="font-bold text-stone-500 block mb-1">Notas de tilt / spots</label>
               <input type="text" id="modal-cd-tilt" placeholder="Spots de juego automático..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-medium text-stone-800">
             </div>
             <div>
-              <label class="font-bold text-stone-500 block mb-1">Ganancias / EV (€/$)</label>
-              <input type="text" id="grind-notes" placeholder="Datos financieros..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-medium text-stone-800">
+              <label class="font-bold text-stone-500 block mb-1">Ganancias / $ (€/$)</label>
+              <input type="number" step="0.01" id="grind-money" placeholder="125.50" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-medium text-stone-800">
             </div>
+          </div>
+          <div>
+            <label class="font-bold text-stone-500 block mb-1">Notas generales</label>
+            <input type="text" id="grind-notes" placeholder="Otras notas..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-medium text-stone-800">
           </div>
           <div>
             <label class="font-bold text-stone-500 block mb-1">📸 Adjuntar Imagen / Gráfica de la Sesión</label>
@@ -759,9 +835,21 @@
       document.getElementById('grind-cev').value = existing.cev || '';
       document.getElementById('grind-focus').value = existing.focus || 8;
       document.getElementById('grind-mindset').value = existing.mindset || 8;
+      document.getElementById('grind-session-level').value = existing.sessionLevel || 7;
       document.getElementById('grind-study').value = existing.studyHours || '';
       document.getElementById('grind-hands').value = existing.hands || '';
+      document.getElementById('grind-animo').value = existing.animo || 'Neutra 😐';
       document.getElementById('grind-notes').value = existing.notes || '';
+      document.getElementById('grind-money').value = existing.money ?? '';
+
+      document.getElementById('cd-correccion').checked = !!existing.cdCorreccion;
+      document.getElementById('cd-multitask').checked = !!existing.cdMultitask;
+      document.getElementById('cd-tilt-check').checked = !!existing.cdTiltCheck;
+      document.getElementById('cd-sueno').checked = !!existing.cdSueno;
+      document.getElementById('cd-correccion-text').value = existing.cdCorreccionText || '';
+      document.getElementById('cd-tilt-action').value = existing.cdTiltAction || '';
+      document.getElementById('cd-correccion-note').classList.toggle('hidden', !existing.cdCorreccion);
+      document.getElementById('cd-tilt-action-wrap').classList.toggle('hidden', !existing.cdTiltCheck);
 
       document.getElementById('modal-cd-sensations').value = existing.cdSensations || '';
       document.getElementById('modal-cd-tilt').value = existing.cdTilt || '';
@@ -780,49 +868,60 @@
 
     function saveGrindSession() {
       const editId = document.getElementById('grind-edit-id').value;
-      const targetDate = document.getElementById('grind-date').value || currentDate;
+      const date = document.getElementById('grind-date').value || currentDate;
       const fileInput = document.getElementById('grind-image-input');
+      
+      const base = {
+        id: editId ? parseInt(editId) : Date.now(),
+        date,
+        wuEnv: document.getElementById('modal-wu-env').checked,
+        wuMind: document.getElementById('modal-wu-mind').checked,
+        wuEnergy: parseInt(document.getElementById('modal-wu-energy').value || 8),
+        wuFocus: parseInt(document.getElementById('modal-wu-focus').value || 8),
+        wuIntention: document.getElementById('modal-wu-intention').value,
+        hours: parseFloat(document.getElementById('grind-hours').value || 0),
+        games: parseInt(document.getElementById('grind-games').value || 0),
+        cev: parseFloat(document.getElementById('grind-cev').value || 0),
+        focus: parseInt(document.getElementById('grind-focus').value || 8),
+        mindset: parseInt(document.getElementById('grind-mindset').value || 8),
+        sessionLevel: parseInt(document.getElementById('grind-session-level').value || 7),
+        studyHours: parseFloat(document.getElementById('grind-study').value || 0),
+        hands: parseInt(document.getElementById('grind-hands').value || 0),
+        animo: document.getElementById('grind-animo').value,
+        money: parseFloat(document.getElementById('grind-money').value || 0),
+        notes: document.getElementById('grind-notes').value,
+        cdCorreccion: document.getElementById('cd-correccion').checked,
+        cdMultitask: document.getElementById('cd-multitask').checked,
+        cdTiltCheck: document.getElementById('cd-tilt-check').checked,
+        cdSueno: document.getElementById('cd-sueno').checked,
+        cdCorreccionText: document.getElementById('cd-correccion-text').value,
+        cdTiltAction: document.getElementById('cd-tilt-action').value,
+        cdSensations: document.getElementById('modal-cd-sensations').value,
+        cdTilt: document.getElementById('modal-cd-tilt').value
+      };
 
-      const existing = appData.grindSessions.find(x => x.id === parseInt(editId) || x.date === targetDate) || {};
-      let imageDataUrl = existing.imageUrl || '';
-
-      const processSave = (imgUrl) => {
-        const session = {
-          id: editId ? parseInt(editId) : Date.now(),
-          date: targetDate,
-          wuEnv: document.getElementById('modal-wu-env').checked,
-          wuMind: document.getElementById('modal-wu-mind').checked,
-          wuEnergy: parseInt(document.getElementById('modal-wu-energy').value || 8),
-          wuFocus: parseInt(document.getElementById('modal-wu-focus').value || 8),
-          wuIntention: document.getElementById('modal-wu-intention').value,
-          
-          hours: parseFloat(document.getElementById('grind-hours').value || 0),
-          games: parseInt(document.getElementById('grind-games').value || 0),
-          cev: parseFloat(document.getElementById('grind-cev').value || 0),
-          focus: parseInt(document.getElementById('grind-focus').value || 8),
-          mindset: parseInt(document.getElementById('grind-mindset').value || 8),
-          studyHours: parseFloat(document.getElementById('grind-study').value || 0),
-          hands: parseInt(document.getElementById('grind-hands').value || 0),
-          notes: document.getElementById('grind-notes').value,
-
-          cdSensations: document.getElementById('modal-cd-sensations').value,
-          cdTilt: document.getElementById('modal-cd-tilt').value,
-          imageUrl: imgUrl
-        };
-
-        appData.grindSessions = appData.grindSessions.filter(x => x.id !== session.id && x.date !== targetDate);
-        appData.grindSessions.push(session);
-
-        saveDatabase(); closeModal('modal-grind'); renderAllViews(); showToast('Sesión guardada con éxito');
+      const finish = (imageUrl) => {
+        if (imageUrl) base.imageUrl = imageUrl;
+        else {
+          const old = appData.grindSessions.find(s => s.id === base.id);
+          if (old && old.imageUrl) base.imageUrl = old.imageUrl;
+        }
+        if (editId) {
+          appData.grindSessions = appData.grindSessions.map(s => s.id === base.id ? { ...s, ...base } : s);
+        } else {
+          // replace same date if exists
+          const idx = appData.grindSessions.findIndex(s => s.date === date);
+          if (idx >= 0) appData.grindSessions[idx] = { ...appData.grindSessions[idx], ...base, id: appData.grindSessions[idx].id };
+          else appData.grindSessions.push(base);
+        }
+        saveDatabase(); closeModal('modal-grind'); renderAllViews(); showToast('Sesión guardada');
       };
 
       if (fileInput.files && fileInput.files[0]) {
         const reader = new FileReader();
+        reader.onload = (e) => finish(e.target.result);
         reader.readAsDataURL(fileInput.files[0]);
-        reader.onload = e => processSave(e.target.result);
-      } else {
-        processSave(imageDataUrl);
-      }
+      } else finish(null);
     }
 
     function deleteGrindSession(id) {
@@ -890,6 +989,18 @@
       saveDatabase(); closeModal('modal-study'); renderAllViews(); showToast('Bitácora guardada');
     }
 
+    function editStudyLog(id) {
+      const l = appData.studyLogs.find(x => x.id === id);
+      if (!l) return;
+      document.getElementById('study-edit-id').value = l.id;
+      document.getElementById('study-date').value = l.date || currentDate;
+      document.getElementById('study-topic').value = l.topic || '';
+      document.getElementById('study-hands').value = l.hands || '';
+      const conc = document.getElementById('study-conclusion');
+      if (conc) conc.value = l.conclusion || '';
+      openModal('modal-study');
+    }
+
     function deleteStudyLog(id) {
       appData.studyLogs = appData.studyLogs.filter(x => x.id !== id);
       saveDatabase(); renderAllViews();
@@ -898,22 +1009,33 @@
     function openModalLeak() {
       document.getElementById('leak-title').value = '';
       document.getElementById('leak-initial').value = '';
+      const lf = document.getElementById('leak-final'); if (lf) lf.value = '';
+      const ld = document.getElementById('leak-date'); if (ld) ld.value = currentDate;
       document.getElementById('leak-action').value = '';
+      document.getElementById('leak-edit-id') && (document.getElementById('leak-edit-id').value = '');
       openModal('modal-leak');
     }
 
     function saveLeakItem() {
       const title = document.getElementById('leak-title').value;
       if (!title) return;
+      const leakDate = (document.getElementById('leak-date') && document.getElementById('leak-date').value) || currentDate;
       const leak = {
         id: Date.now(),
         title,
         initial: document.getElementById('leak-initial').value,
+        final: (document.getElementById('leak-final') && document.getElementById('leak-final').value) || '',
+        analysisDate: leakDate,
         action: document.getElementById('leak-action').value,
-        progress: [{ date: currentDate, stat: document.getElementById('leak-initial').value }]
+        progress: [{ date: leakDate, stat: document.getElementById('leak-initial').value }]
       };
-      appData.leaks.push(leak);
-      saveDatabase(); closeModal('modal-leak'); renderAllViews(); showToast('Leak creado');
+      const editId = document.getElementById('leak-title').dataset.editId;
+      if (editId) {
+        leak.id = parseInt(editId);
+        appData.leaks = appData.leaks.map(x => x.id === leak.id ? { ...x, ...leak, progress: x.progress } : x);
+        delete document.getElementById('leak-title').dataset.editId;
+      } else appData.leaks.push(leak);
+      saveDatabase(); closeModal('modal-leak'); renderAllViews(); showToast('Leak guardado');
     }
 
     function openModalLeakProgress(leakId) {
@@ -933,6 +1055,19 @@
         });
         saveDatabase(); closeModal('modal-leak-progress'); renderAllViews(); showToast('Progreso registrado');
       }
+    }
+
+    function editLeak(id) {
+      const leak = appData.leaks.find(x => x.id === id);
+      if (!leak) return;
+      document.getElementById('leak-title').value = leak.title || '';
+      document.getElementById('leak-initial').value = leak.initial || '';
+      const lf = document.getElementById('leak-final'); if (lf) lf.value = leak.final || '';
+      const ld = document.getElementById('leak-date'); if (ld) ld.value = leak.analysisDate || currentDate;
+      document.getElementById('leak-action').value = leak.action || '';
+      // store edit id on title dataset
+      document.getElementById('leak-title').dataset.editId = leak.id;
+      openModal('modal-leak');
     }
 
     function deleteLeak(id) {
@@ -957,6 +1092,23 @@
       saveDatabase(); closeModal('modal-trident'); renderAllViews(); showToast('Tridents guardados');
     }
 
+    function editTrident(id) {
+      const t = appData.tridents.find(x => x.id === id);
+      if (!t) return;
+      let hid = document.getElementById('trident-edit-id');
+      if (!hid) {
+        const inp = document.createElement('input');
+        inp.type = 'hidden'; inp.id = 'trident-edit-id';
+        document.getElementById('modal-trident')?.querySelector('.space-y-3')?.prepend(inp);
+        hid = inp;
+      }
+      hid.value = t.id;
+      document.getElementById('trident-date').value = t.date;
+      document.getElementById('trident-count').value = t.count;
+      document.getElementById('trident-profit').value = t.profit;
+      openModal('modal-trident');
+    }
+
     function deleteTrident(id) {
       appData.tridents = appData.tridents.filter(x => x.id !== id);
       saveDatabase(); renderAllViews();
@@ -965,7 +1117,7 @@
     function renderAllViews() {
       renderDailyGoalsProgress();
       renderCustomGoalsAutoProgress();
-      renderDailyRitualView();
+      renderDailySessionView();
       renderGrindView();
       renderStudyView();
       renderLeaksView();
@@ -1126,8 +1278,8 @@
       });
     }
 
-    function renderDailyRitualView() {
-      const container = document.getElementById('daily-ritual-view');
+    function renderDailySessionView() {
+      const container = document.getElementById('daily-session-view');
       if (!container) return;
 
       const session = appData.grindSessions.find(s => s.date === currentDate);
@@ -1135,37 +1287,40 @@
         container.innerHTML = `
           <div class="col-span-2 glass-card rounded-3xl p-8 text-center space-y-3">
             <p class="text-stone-500 text-xs font-bold">No hay sesión registrada para esta fecha (${currentDate}).</p>
-            <button onclick="openModalGrind()" class="px-5 py-2.5 bg-[#c97b84] text-white rounded-xl text-xs font-black shadow-md cursor-pointer">+ Registrar Sesión, Ritual y Gráfica</button>
+            <button onclick="openModalGrind()" class="px-5 py-2.5 bg-[#c97b84] text-white rounded-xl text-xs font-black shadow-md cursor-pointer">+ Registrar Sesión Completa</button>
           </div>`;
         return;
       }
 
-      let imgHtml = session.imageUrl ? `<div class="mt-3"><p class="text-[11px] font-bold text-stone-500 mb-1">📸 Gráfica adjunta:</p><img src="${session.imageUrl}" class="w-full h-40 object-cover rounded-xl border border-[#e8d2dc]"></div>` : '';
+      let imgHtml = session.imageUrl ? `<div class="mt-3"><img src="${session.imageUrl}" class="w-full h-40 object-cover rounded-xl border border-[#e8d2dc]"></div>` : '';
+      const flags = [
+        session.cdCorreccion ? '✅ Correcciones' : null,
+        session.cdMultitask ? '📱 Multitasking' : null,
+        session.cdTiltCheck ? '😤 Tilt' : null,
+        session.cdSueno ? '😴 Sueño' : null
+      ].filter(Boolean).join(' · ') || 'Sin flags';
 
       container.innerHTML = `
         <div class="glass-card-solid rounded-3xl p-6 space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-[#e8d2dc]">
-            <h3 class="text-base font-black text-stone-800">☀️ Warm-up Registrado</h3>
-            <button onclick="openModalGrind()" class="text-xs font-bold text-[#c97b84] hover:underline">✏️ Editar</button>
-          </div>
+          <div class="flex items-center justify-between pb-3 border-b border-[#e8d2dc]"><h3 class="text-base font-black text-stone-800">☀️ Warm-up</h3><button onclick="openModalGrind()" class="text-xs font-bold text-[#c97b84]">✏️ Editar</button></div>
           <div class="space-y-2 text-xs text-stone-700 font-bold">
-            <p>${session.wuEnv ? '✅' : '❌'} Espacio ordenado y programas abiertos</p>
-            <p>${session.wuMind ? '✅' : '❌'} Activación realizada (respiración / meditación)</p>
-            <p>⚡ Energía inicial: <span class="text-[#c97b84]">${session.wuEnergy}/10</span> | Enfoque: <span class="text-[#c97b84]">${session.wuFocus}/10</span></p>
-            <p class="font-normal italic text-stone-500">🎯 Intención: "${session.wuIntention || 'Ninguna'}"</p>
+            <p>${session.wuEnv ? '✅' : '❌'} Espacio ordenado</p>
+            <p>${session.wuMind ? '✅' : '❌'} Activación mental</p>
+            <p>⚡ Energía: <span class="text-[#c97b84]">${session.wuEnergy}/10</span> | Enfoque inicial: <span class="text-[#c97b84]">${session.wuFocus}/10</span></p>
+            <p class="font-normal italic text-stone-500">🎯 Intención: "${session.wuIntention || ''}"</p>
           </div>
           ${imgHtml}
         </div>
-
         <div class="glass-card-solid rounded-3xl p-6 space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-[#e8d2dc]">
-            <h3 class="text-base font-black text-stone-800">🌙 Cool-down & Cierre</h3>
-            <button onclick="openModalGrind()" class="text-xs font-bold text-[#c97b84] hover:underline">✏️ Editar</button>
-          </div>
+          <div class="flex items-center justify-between pb-3 border-b border-[#e8d2dc]"><h3 class="text-base font-black text-stone-800">🌙 Cool-down & Métricas</h3><button onclick="openModalGrind()" class="text-xs font-bold text-[#c97b84]">✏️ Editar</button></div>
           <div class="space-y-2 text-xs text-stone-700">
-            <p><strong>Sensaciones:</strong> ${session.cdSensations || 'Sin registrar'}</p>
-            <p><strong>Alertas de tilt/fatiga:</strong> ${session.cdTilt || 'Ninguna'}</p>
-            <p><strong>Ganancias / EV:</strong> ${session.notes || 'Sin registrar'}</p>
+            <p><strong>Focus:</strong> ${session.focus||'-'}/10 · <strong>Mindset:</strong> ${session.mindset||'-'}/10 · <strong>Nivel sesión:</strong> ${session.sessionLevel||'-'}/10</p>
+            <p><strong>Ánimo:</strong> ${session.animo||'-'} · <strong>cEV:</strong> ${session.cev||0} · <strong>$:</strong> ${session.money||0}</p>
+            <p><strong>Flags:</strong> ${flags}</p>
+            ${session.cdTiltCheck && session.cdTiltAction ? `<p><strong>Acción tilt:</strong> ${session.cdTiltAction}</p>` : ''}
+            ${session.cdCorreccion && session.cdCorreccionText ? `<p><strong>Correcciones:</strong> ${session.cdCorreccionText}</p>` : ''}
+            <p><strong>Sensaciones:</strong> ${session.cdSensations || '--'}</p>
+            <p><strong>Notas:</strong> ${session.notes || '--'}</p>
           </div>
         </div>`;
     }
@@ -1287,18 +1442,132 @@
     function applyReportFilters() {
       const from = document.getElementById('report-from').value;
       const to = document.getElementById('report-to').value;
-
       const filteredSessions = appData.grindSessions.filter(s => s.date >= from && s.date <= to);
-
       const totalGrindHours = filteredSessions.reduce((acc, s) => acc + (s.hours || 0), 0);
       const totalStudyHours = filteredSessions.reduce((acc, s) => acc + (s.studyHours || 0), 0);
       const totalGames = filteredSessions.reduce((acc, s) => acc + (s.games || 0), 0);
       const avgCev = totalGames > 0 ? filteredSessions.reduce((acc, s) => acc + ((s.cev || 0) * (s.games || 0)), 0) / totalGames : 0;
+      const totalMoney = filteredSessions.reduce((acc, s) => acc + (parseFloat(s.money) || 0), 0);
 
       document.getElementById('kpi-grind-hours').innerText = `${totalGrindHours.toFixed(1)} h`;
       document.getElementById('kpi-study-hours').innerText = `${totalStudyHours.toFixed(1)} h`;
       document.getElementById('kpi-total-games').innerText = totalGames;
       document.getElementById('kpi-avg-cev').innerText = avgCev.toFixed(1);
+      const moneyEl = document.getElementById('kpi-money');
+      if (moneyEl) moneyEl.innerText = totalMoney.toFixed(2);
+
+      // Session quality metrics summary
+      const n = filteredSessions.length || 1;
+      const avgFocus = (filteredSessions.reduce((a,s)=>a+(s.focus||0),0)/n).toFixed(1);
+      const avgMind = (filteredSessions.reduce((a,s)=>a+(s.mindset||0),0)/n).toFixed(1);
+      const avgLevel = (filteredSessions.reduce((a,s)=>a+(s.sessionLevel||0),0)/n).toFixed(1);
+      const timesTilt = filteredSessions.filter(s=>s.cdTiltCheck).length;
+      const timesSueno = filteredSessions.filter(s=>s.cdSueno).length;
+      const timesMulti = filteredSessions.filter(s=>s.cdMultitask).length;
+      const timesCorr = filteredSessions.filter(s=>s.cdCorreccion).length;
+      const totalHands = filteredSessions.reduce((a,s)=>a+(s.hands||0),0);
+      const animoCount = {};
+      filteredSessions.forEach(s => { const a=s.animo||'N/A'; animoCount[a]=(animoCount[a]||0)+1; });
+      const animoStr = Object.entries(animoCount).map(([k,v])=>`${k}: ${v}`).join(' · ') || '—';
+
+      const sumEl = document.getElementById('session-metrics-summary');
+      if (sumEl) {
+        sumEl.innerHTML = `
+          <h4 class="font-black text-stone-800 text-sm mb-2">📊 Métricas de calidad del rango (${filteredSessions.length} sesiones)</h4>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div class="bg-white/70 p-2 rounded-xl border border-[#e8d2dc]"><span class="text-stone-500 block">Focus avg</span><strong>${avgFocus}/10</strong></div>
+            <div class="bg-white/70 p-2 rounded-xl border border-[#e8d2dc]"><span class="text-stone-500 block">Mindset avg</span><strong>${avgMind}/10</strong></div>
+            <div class="bg-white/70 p-2 rounded-xl border border-[#e8d2dc]"><span class="text-stone-500 block">Nivel sesión avg</span><strong>${avgLevel}/10</strong></div>
+            <div class="bg-white/70 p-2 rounded-xl border border-[#e8d2dc]"><span class="text-stone-500 block">Manos marcadas</span><strong>${totalHands}</strong></div>
+            <div class="bg-white/70 p-2 rounded-xl border border-[#e8d2dc]"><span class="text-stone-500 block">Veces tilt</span><strong>${timesTilt}</strong></div>
+            <div class="bg-white/70 p-2 rounded-xl border border-[#e8d2dc]"><span class="text-stone-500 block">Veces sueño</span><strong>${timesSueno}</strong></div>
+            <div class="bg-white/70 p-2 rounded-xl border border-[#e8d2dc]"><span class="text-stone-500 block">Multitasking</span><strong>${timesMulti}</strong></div>
+            <div class="bg-white/70 p-2 rounded-xl border border-[#e8d2dc]"><span class="text-stone-500 block">Correcciones</span><strong>${timesCorr}</strong></div>
+          </div>
+          <p class="mt-2 text-stone-600"><strong>Ánimos:</strong> ${animoStr}</p>`;
+      }
+    }
+
+    function runPatternFilter(type) {
+      const from = document.getElementById('report-from').value;
+      const to = document.getElementById('report-to').value;
+      let list = appData.grindSessions.filter(s => (!from || s.date >= from) && (!to || s.date <= to));
+      let title = '';
+      if (type === 'ev_high') { list = list.filter(s => (s.cev||0) >= 60).sort((a,b)=>(b.cev||0)-(a.cev||0)); title = 'Días con cEV ≥ 60'; }
+      if (type === 'ev_low') { list = list.filter(s => (s.cev||0) < 60).sort((a,b)=>(a.cev||0)-(b.cev||0)); title = 'Días con cEV < 60'; }
+      if (type === 'most_games') { list = [...list].sort((a,b)=>(b.games||0)-(a.games||0)).slice(0,10); title = 'Días con más games'; }
+      if (type === 'money_win') { list = list.filter(s => (s.money||0) > 0).sort((a,b)=>(b.money||0)-(a.money||0)); title = 'Más dinero ganado'; }
+      if (type === 'money_loss') { list = list.filter(s => (s.money||0) < 0).sort((a,b)=>(a.money||0)-(b.money||0)); title = 'Más dinero perdido'; }
+      if (type === 'most_study') { list = [...list].sort((a,b)=>(b.studyHours||0)-(a.studyHours||0)).slice(0,10); title = 'Más horas de estudio'; }
+      const el = document.getElementById('pattern-results');
+      if (!el) return;
+      if (list.length === 0) { el.innerHTML = `<p class="text-stone-400">${title}: sin resultados</p>`; return; }
+      el.innerHTML = `<strong class="text-stone-800">${title}</strong>` + list.map(s =>
+        `<div class="glass-card p-2 rounded-xl flex justify-between"><span>📅 ${s.date}</span><span>cEV ${s.cev||0} · 🎮 ${s.games||0} · $ ${s.money||0} · 📚 ${s.studyHours||0}h · Focus ${s.focus||'-'}</span></div>`
+      ).join('');
+    }
+
+    function copyNotionSummary() {
+      const from = document.getElementById('report-from').value;
+      const to = document.getElementById('report-to').value;
+      const sessions = appData.grindSessions.filter(s => (!from || s.date >= from) && (!to || s.date <= to)).sort((a,b)=>a.date.localeCompare(b.date));
+      const isDay = from && to && from === to;
+      let report = isDay ? `♠️ *RESUMEN DÍA ${from}*
+
+` : `♠️ *RESUMEN ${from || '...'} → ${to || '...'}*
+
+`;
+      
+      const totalH = sessions.reduce((a,s)=>a+(s.hours||0),0);
+      const totalG = sessions.reduce((a,s)=>a+(s.games||0),0);
+      const totalS = sessions.reduce((a,s)=>a+(s.studyHours||0),0);
+      const totalM = sessions.reduce((a,s)=>a+(parseFloat(s.money)||0),0);
+      const totalHands = sessions.reduce((a,s)=>a+(s.hands||0),0);
+      const n = sessions.length || 1;
+      const avgCev = totalG > 0 ? sessions.reduce((a,s)=>a+((s.cev||0)*(s.games||0)),0)/totalG : 0;
+      
+      report += `⏱️ Grind: ${totalH.toFixed(1)}h | 📚 Estudio: ${totalS.toFixed(1)}h
+`;
+      report += `🎮 Games: ${totalG} | 📈 cEV: ${avgCev.toFixed(1)} | 💰 $: ${totalM.toFixed(2)}
+`;
+      report += `✋ Manos marcadas: ${totalHands}
+`;
+      report += `Focus avg: ${(sessions.reduce((a,s)=>a+(s.focus||0),0)/n).toFixed(1)} | Mindset avg: ${(sessions.reduce((a,s)=>a+(s.mindset||0),0)/n).toFixed(1)} | Nivel avg: ${(sessions.reduce((a,s)=>a+(s.sessionLevel||0),0)/n).toFixed(1)}
+`;
+      report += `Tilt: ${sessions.filter(s=>s.cdTiltCheck).length} | Sueño: ${sessions.filter(s=>s.cdSueno).length} | Multi: ${sessions.filter(s=>s.cdMultitask).length} | Correcciones: ${sessions.filter(s=>s.cdCorreccion).length}
+
+`;
+      
+      sessions.forEach(s => {
+        report += `---
+📅 ${s.date}
+`;
+        report += `Grind ${s.hours||0}h · Games ${s.games||0} · cEV ${s.cev||0} · $ ${s.money||0}
+`;
+        report += `Focus ${s.focus||'-'} | Mindset ${s.mindset||'-'} | Nivel ${s.sessionLevel||'-'} | Ánimo: ${s.animo||'-'}
+`;
+        report += `Estudio ${s.studyHours||0}h · Manos ${s.hands||0}
+`;
+        if (s.cdTiltCheck) report += `😤 Tilt: sí → ${s.cdTiltAction||s.cdTilt||''}
+`;
+        if (s.cdSueno) report += `😴 Sueño: sí
+`;
+        if (s.cdMultitask) report += `📱 Multitasking: sí
+`;
+        if (s.cdCorreccion) report += `✅ Correcciones: ${s.cdCorreccionText||'sí'}
+`;
+        if (s.cdSensations) report += `Sensaciones: ${s.cdSensations}
+`;
+        const tridents = (appData.tridents||[]).filter(t=>t.date===s.date);
+        if (tridents.length) report += `⚡ Tridents: ${tridents.map(t=>`${t.count} (${t.profit})`).join(', ')}
+`;
+      });
+      
+      report = report.replace(/\n/g, '
+');
+      navigator.clipboard.writeText(report).then(() => showToast('Resumen Notion copiado')).catch(() => {
+        prompt('Copia el resumen:', report);
+      });
     }
 
     function copyWeeklyReport() {
