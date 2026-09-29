@@ -309,6 +309,12 @@
       <button class="nav-item" data-view="pendientes" onclick="navigateTo('pendientes')">
         <span class="emoji">✅</span> Pendientes
       </button>
+      <button class="nav-item" data-view="gastos" onclick="navigateTo('gastos')">
+        <span class="emoji">💸</span> Gastos
+      </button>
+      <button class="nav-item" data-view="cierre" onclick="navigateTo('cierre')">
+        <span class="emoji">📊</span> Cierre
+      </button>
     </nav>
 
     <div class="p-4 border-t border-white/10">
@@ -380,6 +386,18 @@
             <p>Tareas, recordatorios, urgentes, subtareas y vista calendario.</p>
             <button class="enter-btn">Entrar →</button>
           </div>
+          <div class="area-card" onclick="navigateTo('gastos')">
+            <div class="card-icon" style="background: linear-gradient(135deg, #ec4899, #b492cd);">💸</div>
+            <h3>Gastos</h3>
+            <p>Ingresos, egresos, categorías y balance.</p>
+            <button class="enter-btn">Entrar →</button>
+          </div>
+          <div class="area-card" onclick="navigateTo('cierre')">
+            <div class="card-icon" style="background: linear-gradient(135deg, #b492cd, #ec4899);">📊</div>
+            <h3>Cierre & Insights</h3>
+            <p>Resumen semanal/mensual y copiar a Notion.</p>
+            <button class="enter-btn">Entrar →</button>
+          </div>
         </div>
 
         <p class="text-center text-[11px] text-[#b492cd] font-semibold mt-8 opacity-70">
@@ -407,12 +425,18 @@
       <div id="view-pendientes" class="view">
         <iframe class="module-frame" src="pendientes.html" title="Pendientes" loading="lazy"></iframe>
       </div>
+      <div id="view-gastos" class="view">
+        <iframe class="module-frame" src="gastos.html" title="Gastos" loading="lazy"></iframe>
+      </div>
+      <div id="view-cierre" class="view">
+        <iframe class="module-frame" src="cierre.html" title="Cierre" loading="lazy"></iframe>
+      </div>
 
     </div>
   </div>
 
   <script>
-    const views = ['dashboard', 'poker', 'fitness', 'espiritual', 'planner', 'pendientes'];
+    const views = ['dashboard', 'poker', 'fitness', 'espiritual', 'planner', 'pendientes', 'gastos', 'cierre'];
 
     function navigateTo(viewId) {
       // Hide all views

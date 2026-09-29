@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MARY · Cierre & Insights</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body {
+      background:
+        radial-gradient(circle at 12% 15%, rgba(249,168,212,0.35) 0%, transparent 42%),
+        radial-gradient(circle at 88% 85%, rgba(180,146,205,0.3) 0%, transparent 45%),
+        linear-gradient(135deg, #fdf2f8 0%, #fce7f3 45%, #f3e8ff 100%);
+      color: #4a2c3d; min-height: 100vh; margin: 0;
+    }
+    .glass { background: rgba(255,255,255,0.92); backdrop-filter: blur(14px); border: 1px solid rgba(249,168,212,0.45); box-shadow: 0 10px 28px rgba(120,80,100,0.07); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+  <header class="bg-gradient-to-r from-[#c879a8] via-[#d9a7c7] to-[#b492cd] text-white sticky top-0 z-40 shadow-lg">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <div class="w-10 h-10 rounded-2xl bg-white/25 flex items-center justify-center font-black">📊</div>
+        <div>
+          <h1 class="text-sm font-black tracking-wide uppercase">Cierre & Insights</h1>
+          <p class="text-[10px] text-white/85">Semana / mes · comparación · Notion</p>
+        </div>
+      </div>
+      <button onclick="copyCierre()" class="px-3 py-1.5 bg-white text-pink-700 rounded-xl text-xs font-black cursor-pointer">📋 Copiar cierre</button>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-4xl mx-auto w-full p-4 space-y-4">
+    <div class="glass rounded-2xl p-3 flex flex-wrap gap-2 items-center text-xs">
+      <span class="font-bold text-stone-600">Modo</span>
+      <select id="mode" onchange="onModeChange()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
+        <option value="week">Semana</option>
+        <option value="month">Mes</option>
+      </select>
+      <span class="font-bold text-stone-600">Desde</span>
+      <input type="date" id="from" onchange="render()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
+      <span class="font-bold text-stone-600">Hasta</span>
+      <input type="date" id="to" onchange="render()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
+      <button onclick="setThisWeek()" class="px-2 py-1 bg-pink-100 text-pink-700 rounded-lg font-bold cursor-pointer">Esta semana</button>
+      <button onclick="setThisMonth()" class="px-2 py-1 bg-fuchsia-100 text-fuchsia-700 rounded-lg font-bold cursor-pointer">Este mes</button>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="kpis"></div>
+
+    <div class="glass rounded-2xl p-4 space-y-2">
+      <h3 class="font-black text-stone-800 text-sm">📈 Comparación con periodo anterior</h3>
+      <div id="compare" class="text-xs space-y-1"></div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="glass rounded-2xl p-4">
+        <h4 class="font-black text-xs text-stone-800 mb-2">♠️ Póker (horas / games)</h4>
+        <canvas id="chart-poker" height="160"></canvas>
+      </div>
+      <div class="glass rounded-2xl p-4">
+        <h4 class="font-black text-xs text-stone-800 mb-2">💸 Gastos (egresos diarios)</h4>
+        <canvas id="chart-gastos" height="160"></canvas>
+      </div>
+    </div>
+
+    <div class="glass rounded-2xl p-4 space-y-2 text-xs" id="detail"></div>
+    <p class="text-[10px] text-stone-400 text-center">Lee datos guardados en este dispositivo (Póker, Gastos, Planner). Si usas la app unificada en el mismo navegador, verás el resumen aquí.</p>
+  </main>
+
+  <script>
+    let chartPoker = null, chartGastos = null;
+
+    function startOfWeek(d) {
+      const x = new Date(d); const day = (x.getDay()+6)%7;
+      x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x;
+    }
+    function fmt(d) {
+      return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    }
+    function setThisWeek() {
+      const mon = startOfWeek(new Date());
+      const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+      document.getElementById('from').value = fmt(mon);
+      document.getElementById('to').value = fmt(sun);
+      document.getElementById('mode').value = 'week';
+      render();
+    }
+    function setThisMonth() {
+      const n = new Date();
+      document.getElementById('from').value = n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-01';
+      document.getElementById('to').value = fmt(n);
+      document.getElementById('mode').value = 'month';
+      render();
+    }
+    function onModeChange() {
+      if (document.getElementById('mode').value === 'week') setThisWeek();
+      else setThisMonth();
+    }
+
+    function loadJSON(key) {
+      try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch(e) { return null; }
+    }
+
+    // Try common keys used by our apps
+    function getPokerSessions() {
+      // poker may store under various keys - scan
+      const found = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k) continue;
+        try {
+          const v = JSON.parse(localStorage.getItem(k));
+          if (v && Array.isArray(v.grindSessions)) return v.grindSessions;
+          if (v && v.appData && Array.isArray(v.appData.grindSessions)) return v.appData.grindSessions;
+        } catch(e) {}
+      }
+      return found;
+    }
+
+    function getGastos() {
+      try { return JSON.parse(localStorage.getItem('MARY_GASTOS_V1') || '[]'); } catch(e) { return []; }
+    }
+
+    function getFitness() {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        try {
+          const v = JSON.parse(localStorage.getItem(k));
+          if (v && (v.entrenamiento || v.alimentacion)) return v;
+        } catch(e) {}
+      }
+      return null;
+    }
+
+    function inRange(date, from, to) {
+      if (!date) return false;
+      if (from && date < from) return false;
+      if (to && date > to) return false;
+      return true;
+    }
+
+    function prevRange(from, to) {
+      const f = new Date(from+'T00:00:00');
+      const t = new Date(to+'T00:00:00');
+      const days = Math.round((t - f) / 86400000) + 1;
+      const pt = new Date(f); pt.setDate(f.getDate() - 1);
+      const pf = new Date(pt); pf.setDate(pt.getDate() - days + 1);
+      return { from: fmt(pf), to: fmt(pt) };
+    }
+
+    function stats(from, to) {
+      const sessions = getPokerSessions().filter(s => inRange(s.date, from, to));
+      const gastos = getGastos().filter(g => inRange(g.fecha, from, to));
+      const fit = getFitness();
+      let grindH = 0, studyH = 0, games = 0, money = 0, focusSum = 0, focusN = 0;
+      sessions.forEach(s => {
+        grindH += s.hours || 0;
+        studyH += s.studyHours || 0;
+        games += s.games || 0;
+        money += parseFloat(s.money) || 0;
+        if (s.focus != null) { focusSum += s.focus; focusN++; }
+      });
+      let ing = 0, egr = 0;
+      gastos.forEach(g => { if (g.tipo==='ingreso') ing += g.monto; else egr += g.monto; });
+      let entrenos = 0, cardio = 0;
+      if (fit) {
+        entrenos = (fit.entrenamiento||[]).filter(x => inRange(x.date, from, to)).length;
+        cardio = (fit.cardio||[]).filter(x => inRange(x.date, from, to)).length;
+      }
+      return {
+        sessions: sessions.length, grindH, studyH, games, money,
+        focusAvg: focusN ? (focusSum/focusN) : null,
+        ing, egr, balance: ing - egr, entrenos, cardio,
+        sessionsList: sessions, gastosList: gastos
+      };
+    }
+
+    function delta(cur, prev, inv) {
+      if (prev === 0 && cur === 0) return '—';
+      if (prev === 0) return cur > 0 ? '↑ nuevo' : '—';
+      const pct = Math.round(((cur - prev) / Math.abs(prev)) * 100);
+      const up = inv ? pct < 0 : pct > 0;
+      const arrow = pct > 0 ? '↑' : (pct < 0 ? '↓' : '→');
+      return arrow + ' ' + Math.abs(pct) + '%';
+    }
+
+    function render() {
+      const from = document.getElementById('from').value;
+      const to = document.getElementById('to').value;
+      if (!from || !to) return;
+      const cur = stats(from, to);
+      const pr = prevRange(from, to);
+      const prev = stats(pr.from, pr.to);
+
+      document.getElementById('kpis').innerHTML = `
+        <div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">Grind</span><p class="text-lg font-black text-pink-600">${cur.grindH.toFixed(1)}h</p></div>
+        <div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">Games</span><p class="text-lg font-black text-stone-800">${cur.games}</p></div>
+        <div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">Focus avg</span><p class="text-lg font-black text-fuchsia-600">${cur.focusAvg!=null?cur.focusAvg.toFixed(1):'—'}</p></div>
+        <div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">Balance $</span><p class="text-lg font-black ${cur.balance>=0?'text-emerald-600':'text-pink-600'}">${cur.balance.toFixed(2)}</p></div>`;
+
+      document.getElementById('compare').innerHTML = `
+        <p class="text-stone-500">Periodo anterior: <strong>${pr.from}</strong> → <strong>${pr.to}</strong></p>
+        <p>⏱️ Grind: ${cur.grindH.toFixed(1)}h vs ${prev.grindH.toFixed(1)}h <span class="font-bold">${delta(cur.grindH, prev.grindH)}</span></p>
+        <p>🎮 Games: ${cur.games} vs ${prev.games} <span class="font-bold">${delta(cur.games, prev.games)}</span></p>
+        <p>📚 Estudio: ${cur.studyH.toFixed(1)}h vs ${prev.studyH.toFixed(1)}h <span class="font-bold">${delta(cur.studyH, prev.studyH)}</span></p>
+        <p>💸 Egresos: ${cur.egr.toFixed(2)} vs ${prev.egr.toFixed(2)} <span class="font-bold">${delta(cur.egr, prev.egr, true)}</span></p>
+        <p>💪 Entrenos: ${cur.entrenos} vs ${prev.entrenos} <span class="font-bold">${delta(cur.entrenos, prev.entrenos)}</span></p>
+        <p>🏃 Cardio: ${cur.cardio} vs ${prev.cardio} <span class="font-bold">${delta(cur.cardio, prev.cardio)}</span></p>`;
+
+      // charts by day
+      const days = [];
+      const d0 = new Date(from+'T00:00:00'), d1 = new Date(to+'T00:00:00');
+      for (let d = new Date(d0); d <= d1; d.setDate(d.getDate()+1)) days.push(fmt(d));
+
+      const grindByDay = days.map(day => cur.sessionsList.filter(s=>s.date===day).reduce((a,s)=>a+(s.hours||0),0));
+      const gamesByDay = days.map(day => cur.sessionsList.filter(s=>s.date===day).reduce((a,s)=>a+(s.games||0),0));
+      const egrByDay = days.map(day => cur.gastosList.filter(g=>g.fecha===day && g.tipo==='egreso').reduce((a,g)=>a+g.monto,0));
+
+      if (chartPoker) chartPoker.destroy();
+      if (chartGastos) chartGastos.destroy();
+      chartPoker = new Chart(document.getElementById('chart-poker'), {
+        type: 'bar',
+        data: {
+          labels: days.map(d => d.slice(5)),
+          datasets: [
+            { label: 'Horas', data: grindByDay, backgroundColor: 'rgba(236,72,153,0.55)' },
+            { label: 'Games/10', data: gamesByDay.map(g => g/10), backgroundColor: 'rgba(180,146,205,0.55)' }
+          ]
+        },
+        options: { plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } } }
+      });
+      chartGastos = new Chart(document.getElementById('chart-gastos'), {
+        type: 'line',
+        data: {
+          labels: days.map(d => d.slice(5)),
+          datasets: [{ label: 'Egresos', data: egrByDay, borderColor: '#ec4899', backgroundColor: 'rgba(236,72,153,0.15)', fill: true, tension: 0.3 }]
+        },
+        options: { plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } } }
+      });
+
+      document.getElementById('detail').innerHTML = `
+        <h3 class="font-black text-stone-800 text-sm">📌 Detalle del periodo</h3>
+        <p>Sesiones de póker: <strong>${cur.sessions}</strong> · Estudio: <strong>${cur.studyH.toFixed(1)}h</strong> · $ póker: <strong>${cur.money.toFixed(2)}</strong></p>
+        <p>Ingresos: <strong>${cur.ing.toFixed(2)}</strong> · Egresos: <strong>${cur.egr.toFixed(2)}</strong></p>
+        <p>Fitness — fuerza: <strong>${cur.entrenos}</strong> · cardio: <strong>${cur.cardio}</strong></p>
+        <p class="text-stone-400 pt-2">Tip: captura las gráficas (screenshot) y pégalas en Notion junto al texto del cierre.</p>`;
+    }
+
+    function copyCierre() {
+      const from = document.getElementById('from').value;
+      const to = document.getElementById('to').value;
+      const cur = stats(from, to);
+      const pr = prevRange(from, to);
+      const prev = stats(pr.from, pr.to);
+      const nl = String.fromCharCode(10);
+      let r = '📊 CIERRE MARY LIFE' + nl + 'Periodo: ' + from + ' → ' + to + nl + nl;
+      r += '♠️ PÓKER' + nl;
+      r += 'Grind: ' + cur.grindH.toFixed(1) + 'h (antes ' + prev.grindH.toFixed(1) + 'h)' + nl;
+      r += 'Games: ' + cur.games + ' (antes ' + prev.games + ')' + nl;
+      r += 'Estudio: ' + cur.studyH.toFixed(1) + 'h · Focus avg: ' + (cur.focusAvg!=null?cur.focusAvg.toFixed(1):'—') + nl;
+      r += '$ sesiones: ' + cur.money.toFixed(2) + nl + nl;
+      r += '💸 DINERO' + nl;
+      r += 'Ingresos: ' + cur.ing.toFixed(2) + ' · Egresos: ' + cur.egr.toFixed(2) + ' · Balance: ' + cur.balance.toFixed(2) + nl + nl;
+      r += '🍎 FITNESS' + nl;
+      r += 'Entrenos: ' + cur.entrenos + ' · Cardio: ' + cur.cardio + nl;
+      navigator.clipboard.writeText(r).then(()=>alert('Cierre copiado — pégalo en Notion')).catch(()=>prompt('Copia:', r));
+    }
+
+    setThisWeek();
+  </script>
+</body>
+</html>

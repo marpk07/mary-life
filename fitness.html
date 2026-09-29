@@ -18,15 +18,13 @@
     * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
     
     body {
-      background: 
-        radial-gradient(circle at 10% 15%, rgba(164, 219, 208, 0.5) 0%, transparent 40%),
-        radial-gradient(circle at 90% 85%, rgba(205, 186, 224, 0.45) 0%, transparent 45%),
-        linear-gradient(135deg, #f4faf8 0%, #ebf5f1 50%, #f3edf7 100%);
-      color: #2c3e35;
+      background:
+        radial-gradient(circle at 12% 15%, rgba(249, 168, 212, 0.4) 0%, transparent 42%),
+        radial-gradient(circle at 88% 85%, rgba(180, 146, 205, 0.35) 0%, transparent 45%),
+        linear-gradient(135deg, #fdf2f8 0%, #fce7f3 45%, #f3e8ff 100%);
+      color: #4a2c3d;
       min-height: 100vh;
       margin: 0;
-      padding: 0;
-      background-attachment: fixed;
     }
 
     .hidden { display: none !important; }
@@ -53,7 +51,7 @@
       cursor: pointer;
     }
     .nav-btn.active {
-      background: linear-gradient(135deg, #5fa89b 0%, #4a8c80) !important;
+      background: linear-gradient(135deg, #ec4899 0%, #4a8c80) !important;
       color: #ffffff !important;
       font-weight: 800;
       box-shadow: 0 6px 20px rgba(95, 168, 155, 0.4);
@@ -69,17 +67,17 @@
 <body class="min-h-screen flex flex-col antialiased">
 
   <!-- HEADER -->
-  <header class="glass-card-solid sticky top-0 z-40 border-b border-[#c8e3dc]">
+  <header class="glass-card-solid sticky top-0 z-40 border-b border-[#f9a8d4]">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
       <div class="flex items-center space-x-3">
-        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#5fa89b] to-[#b492cd] flex items-center justify-center font-black text-white text-lg shadow-lg">🍎</div>
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#ec4899] to-[#b492cd] flex items-center justify-center font-black text-white text-lg shadow-lg">🍎</div>
         <div>
-          <h1 class="text-base font-black tracking-wider uppercase text-stone-800 leading-none">MARY <span class="text-[#5fa89b] text-xs font-bold">FITNESS SUITE</span></h1>
+          <h1 class="text-base font-black tracking-wider uppercase text-stone-800 leading-none">MARY <span class="text-[#ec4899] text-xs font-bold">FITNESS SUITE</span></h1>
           <p class="text-[11px] font-medium text-stone-500 italic mt-0.5">"Construyendo constancia paso a paso"</p>
         </div>
       </div>
 
-      <nav class="flex flex-wrap items-center justify-center gap-1.5 bg-[#eaf4f1] p-1.5 rounded-2xl border border-[#c8e3dc]">
+      <nav class="flex flex-wrap items-center justify-center gap-1.5 bg-[#eaf4f1] p-1.5 rounded-2xl border border-[#f9a8d4]">
         <button onclick="switchTab('resumen')" id="tab-btn-resumen" class="nav-btn active px-3.5 py-1.5 rounded-xl font-bold text-xs text-stone-600">📊 Resumen</button>
         <button onclick="switchTab('alimentacion')" id="tab-btn-alimentacion" class="nav-btn px-3.5 py-1.5 rounded-xl font-bold text-xs text-stone-600">🥗 Alimentación</button>
         <button onclick="switchTab('cardio')" id="tab-btn-cardio" class="nav-btn px-3.5 py-1.5 rounded-xl font-bold text-xs text-stone-600">🏃‍♀️ Cardio</button>
@@ -90,16 +88,16 @@
       </nav>
 
       <div class="flex items-center space-x-2">
-        <span class="text-[9px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">☁️ Sincronizado</span>
+        <span class="text-[9px] font-extrabold px-2.5 py-1 rounded-full bg-pink-100 text-emerald-800 border border-emerald-300">☁️ Sincronizado</span>
       </div>
     </div>
   </header>
 
   <!-- BARRA DE RESPALDO ENTRE DISPOSITIVOS -->
-  <div class="bg-[#eaf4f1] border-b border-[#c8e3dc] px-4 py-2 flex justify-between items-center text-xs font-bold text-stone-700 max-w-7xl mx-auto w-full">
+  <div class="bg-[#eaf4f1] border-b border-[#f9a8d4] px-4 py-2 flex justify-between items-center text-xs font-bold text-stone-700 max-w-7xl mx-auto w-full">
     <span>🔄 Sincronización Manual Celular ⇄ PC:</span>
     <div class="space-x-3">
-      <button onclick="openExportModal()" class="text-[#5fa89b] hover:underline cursor-pointer">📤 Copiar Código de Datos</button>
+      <button onclick="openExportModal()" class="text-[#ec4899] hover:underline cursor-pointer">📤 Copiar Código de Datos</button>
       <button onclick="openImportModal()" class="text-[#b492cd] hover:underline cursor-pointer">📥 Pegar y Sincronizar Datos</button>
     </div>
   </div>
@@ -115,23 +113,24 @@
     <!-- PESTAÑA 1: RESUMEN GENERAL -->
     <section id="pane-resumen" class="tab-pane space-y-6">
       <div class="glass-card-solid rounded-3xl p-6 space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#c8e3dc]">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#f9a8d4]">
           <div>
             <h3 class="text-base font-black text-stone-800">Resumen General</h3>
             <p class="text-xs text-stone-500">Métricas y reporte por rango de fechas</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <span class="text-xs font-bold text-stone-600">Desde:</span>
-            <input type="date" id="res-from" onchange="renderResumenRange()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 text-xs font-bold">
+            <input type="date" id="res-from" onchange="renderResumenRange()" class="bg-white border border-[#f9a8d4] rounded-xl px-2 py-1 text-xs font-bold">
             <span class="text-xs font-bold text-stone-600">Hasta:</span>
-            <input type="date" id="res-to" onchange="renderResumenRange()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 text-xs font-bold">
+            <input type="date" id="res-to" onchange="renderResumenRange()" class="bg-white border border-[#f9a8d4] rounded-xl px-2 py-1 text-xs font-bold">
             <button onclick="renderResumenRange()" class="px-3 py-1.5 bg-[#b492cd] text-white font-black text-xs rounded-xl shadow-sm cursor-pointer">🔍 Filtrar</button>
-            <button onclick="copyWhatsAppReport()" class="px-3 py-1.5 bg-[#5fa89b] text-white font-black text-xs rounded-xl shadow-sm cursor-pointer">📋 Copiar WhatsApp</button>
+            <button onclick="copyFitnessReport()" class="px-3 py-1.5 bg-stone-800 text-white font-black text-xs rounded-xl cursor-pointer">📋 Copiar informe</button>
+            <button onclick="copyWhatsAppReport()" class="px-3 py-1.5 bg-[#ec4899] text-white font-black text-xs rounded-xl shadow-sm cursor-pointer">📋 Copiar WhatsApp</button>
           </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="resumen-range-kpis"></div>
 
-        <div class="pt-4 border-t border-[#c8e3dc] space-y-4">
+        <div class="pt-4 border-t border-[#f9a8d4] space-y-4">
           <div class="flex justify-between items-center">
             <h4 class="font-black text-stone-800 text-sm">✨ Metas & Habit Tracker Semanal</h4>
             <button onclick="openModalMetaCustom()" class="px-3 py-1 bg-[#b492cd] text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer">+ Nueva Meta</button>
@@ -139,7 +138,7 @@
           <div id="custom-goals-container" class="space-y-3"></div>
         </div>
 
-        <div class="pt-4 border-t border-[#c8e3dc] space-y-3">
+        <div class="pt-4 border-t border-[#f9a8d4] space-y-3">
           <h4 class="font-black text-stone-800 text-sm">📜 Detalle de Registros en el Rango</h4>
           <div id="resumen-detalles-container" class="space-y-3"></div>
         </div>
@@ -149,15 +148,15 @@
     <!-- PESTAÑA 2: ALIMENTACIÓN -->
     <section id="pane-alimentacion" class="tab-pane space-y-6 hidden">
       <div class="glass-card-solid rounded-3xl p-6 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#c8e3dc]">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#f9a8d4]">
           <div>
             <h3 class="text-base font-black text-stone-800">🥗 Control de Alimentación & Macros</h3>
             <p class="text-xs text-stone-500">Registro detallado con cantidades y totales</p>
           </div>
           <div class="flex items-center gap-2">
-            <input type="date" id="al-from" onchange="renderAlimentacionView()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 text-xs font-bold">
-            <input type="date" id="al-to" onchange="renderAlimentacionView()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 text-xs font-bold">
-            <button onclick="openModalAlimentacion()" class="px-4 py-2 bg-[#5fa89b] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer">+ Registrar Comida</button>
+            <input type="date" id="al-from" onchange="renderAlimentacionView()" class="bg-white border border-[#f9a8d4] rounded-xl px-2 py-1 text-xs font-bold">
+            <input type="date" id="al-to" onchange="renderAlimentacionView()" class="bg-white border border-[#f9a8d4] rounded-xl px-2 py-1 text-xs font-bold">
+            <button onclick="openModalAlimentacion()" class="px-4 py-2 bg-[#ec4899] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer">+ Registrar Comida</button>
           </div>
         </div>
         <div id="alimentacion-totals-card"></div>
@@ -168,15 +167,15 @@
     <!-- PESTAÑA 3: CARDIO -->
     <section id="pane-cardio" class="tab-pane space-y-6 hidden">
       <div class="glass-card-solid rounded-3xl p-6 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#c8e3dc]">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#f9a8d4]">
           <div>
             <h3 class="text-base font-black text-stone-800">🏃‍♀️ Cardio & Running</h3>
             <p class="text-xs text-stone-500">Sesiones y totales de distancia</p>
           </div>
           <div class="flex items-center gap-2">
-            <input type="date" id="ca-from" onchange="renderCardioView()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 text-xs font-bold">
-            <input type="date" id="ca-to" onchange="renderCardioView()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 text-xs font-bold">
-            <button onclick="openModalCardio()" class="px-4 py-2 bg-[#5fa89b] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer">+ Registrar</button>
+            <input type="date" id="ca-from" onchange="renderCardioView()" class="bg-white border border-[#f9a8d4] rounded-xl px-2 py-1 text-xs font-bold">
+            <input type="date" id="ca-to" onchange="renderCardioView()" class="bg-white border border-[#f9a8d4] rounded-xl px-2 py-1 text-xs font-bold">
+            <button onclick="openModalCardio()" class="px-4 py-2 bg-[#ec4899] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer">+ Registrar</button>
           </div>
         </div>
         <div id="cardio-totals-card"></div>
@@ -187,16 +186,16 @@
     <!-- PESTAÑA 4: ENTRENAMIENTO -->
     <section id="pane-entrenamiento" class="tab-pane space-y-6 hidden">
       <div class="glass-card-solid rounded-3xl p-6 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#c8e3dc]">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#f9a8d4]">
           <div>
             <h3 class="text-base font-black text-stone-800">💪 Registro de Fuerza & PRs</h3>
             <p class="text-xs text-stone-500">Series, peso mixto y PRs marcados</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <input type="date" id="en-from" onchange="renderEntrenamientoView()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 text-xs font-bold">
-            <input type="date" id="en-to" onchange="renderEntrenamientoView()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 text-xs font-bold">
-            <input type="text" id="en-exercise-filter" oninput="renderEntrenamientoView()" placeholder="🔍 Filtrar ejercicio (ej. Sentadilla)" class="bg-white border border-[#c8e3dc] rounded-xl px-2.5 py-1 text-xs font-bold w-44">
-            <button onclick="openModalRutina()" class="px-4 py-2 bg-[#5fa89b] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer">+ Nuevo Entreno</button>
+            <input type="date" id="en-from" onchange="renderEntrenamientoView()" class="bg-white border border-[#f9a8d4] rounded-xl px-2 py-1 text-xs font-bold">
+            <input type="date" id="en-to" onchange="renderEntrenamientoView()" class="bg-white border border-[#f9a8d4] rounded-xl px-2 py-1 text-xs font-bold">
+            <input type="text" id="en-exercise-filter" oninput="renderEntrenamientoView()" placeholder="🔍 Filtrar ejercicio (ej. Sentadilla)" class="bg-white border border-[#f9a8d4] rounded-xl px-2.5 py-1 text-xs font-bold w-44">
+            <button onclick="openModalRutina()" class="px-4 py-2 bg-[#ec4899] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer">+ Nuevo Entreno</button>
           </div>
         </div>
         <div id="pr-board" class="mb-4"></div>
@@ -207,15 +206,15 @@
     <!-- PESTAÑA 5: CALENDARIO -->
     <section id="pane-calendario" class="tab-pane space-y-6 hidden">
       <div class="glass-card-solid rounded-3xl p-6 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#c8e3dc]">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#f9a8d4]">
           <div>
             <h3 class="text-base font-black text-stone-800">🗓️ Calendario Histórico de Actividad</h3>
             <p class="text-xs text-stone-500">🥗 Calorías | 🐟 Proteína | 🏋️‍♀️ Fuerza | 🏃‍♀️ Cardio</p>
           </div>
           <div class="flex items-center space-x-2">
-            <button onclick="changeCalendarMonth(-1)" class="px-3 py-1 bg-white border border-[#c8e3dc] rounded-xl font-bold text-xs cursor-pointer">◀ Mes Anterior</button>
+            <button onclick="changeCalendarMonth(-1)" class="px-3 py-1 bg-white border border-[#f9a8d4] rounded-xl font-bold text-xs cursor-pointer">◀ Mes Anterior</button>
             <span id="calendar-month-label" class="text-xs font-black uppercase text-stone-800 px-2"></span>
-            <button onclick="changeCalendarMonth(1)" class="px-3 py-1 bg-white border border-[#c8e3dc] rounded-xl font-bold text-xs cursor-pointer">Mes Siguiente ▶</button>
+            <button onclick="changeCalendarMonth(1)" class="px-3 py-1 bg-white border border-[#f9a8d4] rounded-xl font-bold text-xs cursor-pointer">Mes Siguiente ▶</button>
           </div>
         </div>
         <div id="calendar-view" class="grid grid-cols-7 gap-2 py-4"></div>
@@ -225,15 +224,15 @@
     <!-- PESTAÑA 6: SALUD Y BIENESTAR -->
     <section id="pane-salud" class="tab-pane space-y-6 hidden">
       <div class="glass-card-solid rounded-3xl p-6 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#c8e3dc]">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#f9a8d4]">
           <div>
             <h3 class="text-base font-black text-stone-800">🍎 Salud & Bienestar Diario</h3>
             <p class="text-xs text-stone-500">Agua, sueño, ánimo, periodo y totales</p>
           </div>
           <div class="flex items-center gap-2">
-            <input type="date" id="sa-from" onchange="renderSaludView()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 text-xs font-bold">
-            <input type="date" id="sa-to" onchange="renderSaludView()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 text-xs font-bold">
-            <button onclick="openModalSalud()" class="px-4 py-2 bg-[#5fa89b] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer">+ Registrar</button>
+            <input type="date" id="sa-from" onchange="renderSaludView()" class="bg-white border border-[#f9a8d4] rounded-xl px-2 py-1 text-xs font-bold">
+            <input type="date" id="sa-to" onchange="renderSaludView()" class="bg-white border border-[#f9a8d4] rounded-xl px-2 py-1 text-xs font-bold">
+            <button onclick="openModalSalud()" class="px-4 py-2 bg-[#ec4899] text-white font-bold text-xs rounded-xl shadow-md cursor-pointer">+ Registrar</button>
           </div>
         </div>
         <div id="salud-totals-card"></div>
@@ -244,7 +243,7 @@
     <!-- PESTAÑA 7: PESO & BIOMETRÍA -->
     <section id="pane-peso" class="tab-pane space-y-6 hidden">
       <div class="glass-card-solid rounded-3xl p-6 space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#c8e3dc]">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#f9a8d4]">
           <div>
             <h3 class="text-base font-black text-stone-800">⚖️ Control de Peso, Medidas & Fotos</h3>
             <p class="text-xs text-stone-500">Seguimiento biométrico completo, objetivos, promedios y galería visual ampliada</p>
@@ -261,9 +260,9 @@
             <button onclick="openModalObjetivo()" class="px-3 py-1 bg-[#b492cd] text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer">⚙️ Configurar Objetivo</button>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs pt-1" id="objetivo-kpi-container">
-            <div class="bg-white/80 p-3 rounded-xl border border-[#c8e3dc]"><span class="text-stone-500 block">Peso Inicial</span><strong class="text-base font-black text-stone-800" id="obj-inicial">-- kg</strong></div>
-            <div class="bg-white/80 p-3 rounded-xl border border-[#c8e3dc]"><span class="text-stone-500 block">Peso Objetivo</span><strong class="text-base font-black text-[#b492cd]" id="obj-meta">-- kg</strong></div>
-            <div class="bg-white/80 p-3 rounded-xl border border-[#c8e3dc]"><span class="text-stone-500 block">Progreso Actual</span><strong class="text-base font-black text-[#5fa89b]" id="obj-progreso">-- kg</strong></div>
+            <div class="bg-white/80 p-3 rounded-xl border border-[#f9a8d4]"><span class="text-stone-500 block">Peso Inicial</span><strong class="text-base font-black text-stone-800" id="obj-inicial">-- kg</strong></div>
+            <div class="bg-white/80 p-3 rounded-xl border border-[#f9a8d4]"><span class="text-stone-500 block">Peso Objetivo</span><strong class="text-base font-black text-[#b492cd]" id="obj-meta">-- kg</strong></div>
+            <div class="bg-white/80 p-3 rounded-xl border border-[#f9a8d4]"><span class="text-stone-500 block">Progreso Actual</span><strong class="text-base font-black text-[#ec4899]" id="obj-progreso">-- kg</strong></div>
           </div>
         </div>
 
@@ -274,34 +273,34 @@
             <h4 class="font-black text-stone-800 text-xs uppercase tracking-wider">📌 Registrar Peso Diario</h4>
             <input type="hidden" id="peso-edit-id">
             <div class="grid grid-cols-2 gap-2 text-xs">
-              <div><label class="font-bold text-stone-600 block mb-1">Fecha</label><input type="date" id="peso-date" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold"></div>
-              <div><label class="font-bold text-stone-600 block mb-1">Peso (kg)</label><input type="number" step="0.1" id="peso-kg" placeholder="65.4" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold"></div>
+              <div><label class="font-bold text-stone-600 block mb-1">Fecha</label><input type="date" id="peso-date" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold"></div>
+              <div><label class="font-bold text-stone-600 block mb-1">Peso (kg)</label><input type="number" step="0.1" id="peso-kg" placeholder="65.4" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold"></div>
             </div>
             <div>
               <label class="font-bold text-stone-600 block mb-1">Nota (Periodo, retención, comida pesada...)</label>
-              <input type="text" id="peso-nota" placeholder="Ej. Reteniendo líquidos por la cena de ayer" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-medium text-xs">
+              <input type="text" id="peso-nota" placeholder="Ej. Reteniendo líquidos por la cena de ayer" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-medium text-xs">
             </div>
-            <button onclick="savePesoLog()" class="w-full py-2 bg-[#5fa89b] text-white rounded-xl text-xs font-black cursor-pointer shadow-sm">Registrar Peso</button>
+            <button onclick="savePesoLog()" class="w-full py-2 bg-[#ec4899] text-white rounded-xl text-xs font-black cursor-pointer shadow-sm">Registrar Peso</button>
           </div>
 
           <!-- Formulario de Medidas Corporales Completas -->
           <div class="glass-card p-5 rounded-2xl space-y-3">
             <h4 class="font-black text-stone-800 text-xs uppercase tracking-wider">📏 Medidas Corporales (cm)</h4>
             <input type="hidden" id="med-edit-id">
-            <div class="text-xs mb-2"><label class="font-bold text-stone-600 block mb-1">Fecha</label><input type="date" id="med-date" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold"></div>
+            <div class="text-xs mb-2"><label class="font-bold text-stone-600 block mb-1">Fecha</label><input type="date" id="med-date" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold"></div>
             
             <div class="grid grid-cols-3 gap-2 text-xs">
-              <div><label class="font-bold text-stone-600 block mb-0.5">Cuello</label><input type="number" step="0.5" id="med-cuello" placeholder="cm" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-1.5 font-bold"></div>
-              <div><label class="font-bold text-stone-600 block mb-0.5">Pecho</label><input type="number" step="0.5" id="med-pecho" placeholder="cm" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-1.5 font-bold"></div>
-              <div><label class="font-bold text-stone-600 block mb-0.5">Cintura</label><input type="number" step="0.5" id="med-cintura" placeholder="cm" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-1.5 font-bold"></div>
-              <div><label class="font-bold text-stone-600 block mb-0.5">Caderas</label><input type="number" step="0.5" id="med-cadera" placeholder="cm" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-1.5 font-bold"></div>
-              <div><label class="font-bold text-stone-600 block mb-0.5">Glúteo</label><input type="number" step="0.5" id="med-gluteo" placeholder="cm" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-1.5 font-bold"></div>
-              <div><label class="font-bold text-stone-600 block mb-0.5">Cuád. Der.</label><input type="number" step="0.5" id="med-cuad-der" placeholder="cm" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-1.5 font-bold"></div>
-              <div><label class="font-bold text-stone-600 block mb-0.5">Cuád. Izq.</label><input type="number" step="0.5" id="med-cuad-izq" placeholder="cm" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-1.5 font-bold"></div>
-              <div><label class="font-bold text-stone-600 block mb-0.5">Pant. Der.</label><input type="number" step="0.5" id="med-pant-der" placeholder="cm" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-1.5 font-bold"></div>
-              <div><label class="font-bold text-stone-600 block mb-0.5">Pant. Izq.</label><input type="number" step="0.5" id="med-pant-izq" placeholder="cm" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-1.5 font-bold"></div>
-              <div><label class="font-bold text-stone-600 block mb-0.5">Brazo Der.</label><input type="number" step="0.5" id="med-brazo-der" placeholder="cm" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-1.5 font-bold"></div>
-              <div><label class="font-bold text-stone-600 block mb-0.5">Brazo Izq.</label><input type="number" step="0.5" id="med-brazo-izq" placeholder="cm" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-1.5 font-bold"></div>
+              <div><label class="font-bold text-stone-600 block mb-0.5">Cuello</label><input type="number" step="0.5" id="med-cuello" placeholder="cm" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-1.5 font-bold"></div>
+              <div><label class="font-bold text-stone-600 block mb-0.5">Pecho</label><input type="number" step="0.5" id="med-pecho" placeholder="cm" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-1.5 font-bold"></div>
+              <div><label class="font-bold text-stone-600 block mb-0.5">Cintura</label><input type="number" step="0.5" id="med-cintura" placeholder="cm" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-1.5 font-bold"></div>
+              <div><label class="font-bold text-stone-600 block mb-0.5">Caderas</label><input type="number" step="0.5" id="med-cadera" placeholder="cm" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-1.5 font-bold"></div>
+              <div><label class="font-bold text-stone-600 block mb-0.5">Glúteo</label><input type="number" step="0.5" id="med-gluteo" placeholder="cm" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-1.5 font-bold"></div>
+              <div><label class="font-bold text-stone-600 block mb-0.5">Cuád. Der.</label><input type="number" step="0.5" id="med-cuad-der" placeholder="cm" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-1.5 font-bold"></div>
+              <div><label class="font-bold text-stone-600 block mb-0.5">Cuád. Izq.</label><input type="number" step="0.5" id="med-cuad-izq" placeholder="cm" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-1.5 font-bold"></div>
+              <div><label class="font-bold text-stone-600 block mb-0.5">Pant. Der.</label><input type="number" step="0.5" id="med-pant-der" placeholder="cm" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-1.5 font-bold"></div>
+              <div><label class="font-bold text-stone-600 block mb-0.5">Pant. Izq.</label><input type="number" step="0.5" id="med-pant-izq" placeholder="cm" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-1.5 font-bold"></div>
+              <div><label class="font-bold text-stone-600 block mb-0.5">Brazo Der.</label><input type="number" step="0.5" id="med-brazo-der" placeholder="cm" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-1.5 font-bold"></div>
+              <div><label class="font-bold text-stone-600 block mb-0.5">Brazo Izq.</label><input type="number" step="0.5" id="med-brazo-izq" placeholder="cm" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-1.5 font-bold"></div>
             </div>
             <button onclick="saveMedidasLog()" class="w-full py-2 bg-[#b492cd] text-white rounded-xl text-xs font-black cursor-pointer shadow-sm mt-2">Guardar Medidas</button>
           </div>
@@ -311,40 +310,40 @@
         <div class="glass-card p-5 rounded-2xl space-y-3">
           <h4 class="font-black text-stone-800 text-xs uppercase tracking-wider">📸 Subir Foto de Progreso (Desde Dispositivo)</h4>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-            <div><label class="font-bold text-stone-600 block mb-1">Fecha</label><input type="date" id="foto-date" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold"></div>
+            <div><label class="font-bold text-stone-600 block mb-1">Fecha</label><input type="date" id="foto-date" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold"></div>
             <div>
               <label class="font-bold text-stone-600 block mb-1">Pose</label>
-              <select id="foto-pose" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold">
+              <select id="foto-pose" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold">
                 <option value="Frente">Frente</option>
                 <option value="Lado">Lado</option>
                 <option value="Espalda">Espalda</option>
               </select>
             </div>
-            <div><label class="font-bold text-stone-600 block mb-1">Seleccionar Archivo (Imagen)</label><input type="file" id="foto-file" accept="image/*" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-1.5 text-xs font-bold"></div>
+            <div><label class="font-bold text-stone-600 block mb-1">Seleccionar Archivo (Imagen)</label><input type="file" id="foto-file" accept="image/*" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-1.5 text-xs font-bold"></div>
           </div>
-          <button onclick="saveFotoLog()" class="w-full py-2 bg-[#5fa89b] text-white rounded-xl text-xs font-black cursor-pointer shadow-sm">+ Guardar Foto</button>
+          <button onclick="saveFotoLog()" class="w-full py-2 bg-[#ec4899] text-white rounded-xl text-xs font-black cursor-pointer shadow-sm">+ Guardar Foto</button>
         </div>
 
         <!-- Sección de Gráficas (Chart.js) con Filtro de Medida -->
         <div class="glass-card p-5 rounded-2xl space-y-4">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#c8e3dc]">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#f9a8d4]">
             <h4 class="font-black text-stone-800 text-xs uppercase tracking-wider">📈 Gráficas de Evolución en el Tiempo</h4>
             <div class="flex flex-wrap items-center gap-2 text-xs">
               <span class="font-bold text-stone-600">Desde:</span>
-              <input type="date" id="chart-from" onchange="renderBiometriaCharts()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 font-bold">
+              <input type="date" id="chart-from" onchange="renderBiometriaCharts()" class="bg-white border border-[#f9a8d4] rounded-xl px-2 py-1 font-bold">
               <span class="font-bold text-stone-600">Hasta:</span>
-              <input type="date" id="chart-to" onchange="renderBiometriaCharts()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 font-bold">
+              <input type="date" id="chart-to" onchange="renderBiometriaCharts()" class="bg-white border border-[#f9a8d4] rounded-xl px-2 py-1 font-bold">
             </div>
           </div>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white/80 p-4 rounded-2xl border border-[#c8e3dc] space-y-2">
+            <div class="bg-white/80 p-4 rounded-2xl border border-[#f9a8d4] space-y-2">
               <span class="font-bold text-xs text-stone-700 block">Evolución de Peso (kg)</span>
               <canvas id="weightChart" height="200"></canvas>
             </div>
-            <div class="bg-white/80 p-4 rounded-2xl border border-[#c8e3dc] space-y-2">
+            <div class="bg-white/80 p-4 rounded-2xl border border-[#f9a8d4] space-y-2">
               <div class="flex justify-between items-center">
                 <span class="font-bold text-xs text-stone-700">Evolución de Medidas</span>
-                <select id="measurement-filter" onchange="renderBiometriaCharts()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 text-xs font-bold">
+                <select id="measurement-filter" onchange="renderBiometriaCharts()" class="bg-white border border-[#f9a8d4] rounded-xl px-2 py-1 text-xs font-bold">
                   <option value="cintura">Cintura</option>
                   <option value="cadera">Cadera</option>
                   <option value="cuello">Cuello</option>
@@ -365,13 +364,13 @@
 
         <!-- Tracker Visual de Constancia de Pesaje (Rango Personalizado Desde / Hasta) -->
         <div class="glass-card p-5 rounded-2xl space-y-3">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#c8e3dc]">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#f9a8d4]">
             <h4 class="font-black text-stone-800 text-xs uppercase tracking-wider">🗓️ Constancia de Pesaje (Fecha Personalizada)</h4>
             <div class="flex items-center gap-2 text-xs">
               <span class="font-bold text-stone-600">Desde:</span>
-              <input type="date" id="streak-from" onchange="renderPesoStreak()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 font-bold">
+              <input type="date" id="streak-from" onchange="renderPesoStreak()" class="bg-white border border-[#f9a8d4] rounded-xl px-2 py-1 font-bold">
               <span class="font-bold text-stone-600">Hasta:</span>
-              <input type="date" id="streak-to" onchange="renderPesoStreak()" class="bg-white border border-[#c8e3dc] rounded-xl px-2 py-1 font-bold">
+              <input type="date" id="streak-to" onchange="renderPesoStreak()" class="bg-white border border-[#f9a8d4] rounded-xl px-2 py-1 font-bold">
             </div>
           </div>
           <p class="text-[11px] text-stone-500">Visualiza qué días te pesaste y detecta fácilmente si te faltó registrar algún día en cualquier mes (ej. enero, septiembre, etc.).</p>
@@ -381,18 +380,18 @@
         <!-- Listados de Historiales (Peso y Medidas lado a lado) -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div class="glass-card p-4 rounded-2xl space-y-2 max-h-96 overflow-y-auto">
-            <h5 class="font-black text-stone-800 text-xs pb-1 border-b border-[#c8e3dc]">📋 Historial de Peso</h5>
+            <h5 class="font-black text-stone-800 text-xs pb-1 border-b border-[#f9a8d4]">📋 Historial de Peso</h5>
             <div id="peso-history-list" class="space-y-2 text-xs"></div>
           </div>
           <div class="glass-card p-4 rounded-2xl space-y-2 max-h-96 overflow-y-auto">
-            <h5 class="font-black text-stone-800 text-xs pb-1 border-b border-[#c8e3dc]">📋 Historial de Medidas</h5>
+            <h5 class="font-black text-stone-800 text-xs pb-1 border-b border-[#f9a8d4]">📋 Historial de Medidas</h5>
             <div id="med-history-list" class="space-y-2 text-xs"></div>
           </div>
         </div>
 
         <!-- GALERÍA VISUAL AMPLIADA (ABARCA TODO EL ANCHO) -->
         <div class="glass-card p-6 rounded-3xl space-y-4">
-          <h5 class="font-black text-stone-800 text-sm pb-2 border-b border-[#c8e3dc]">📸 Galería Visual de Progreso (Lado a Lado por Fecha)</h5>
+          <h5 class="font-black text-stone-800 text-sm pb-2 border-b border-[#f9a8d4]">📸 Galería Visual de Progreso (Lado a Lado por Fecha)</h5>
           <div id="foto-gallery-grid" class="space-y-6"></div>
         </div>
 
@@ -403,23 +402,23 @@
 
   <!-- MODAL EXPORTAR RESPALDO -->
   <div id="modal-export" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
-    <div class="glass-card-solid rounded-3xl max-w-sm w-full p-5 space-y-3 shadow-2xl border border-[#c8e3dc]">
+    <div class="glass-card-solid rounded-3xl max-w-sm w-full p-5 space-y-3 shadow-2xl border border-[#f9a8d4]">
       <h3 class="text-sm font-black text-stone-800 text-center">📤 Copiar Código de Datos</h3>
       <p class="text-[11px] text-stone-500 text-center">Copia este código y guárdalo o mándatelo para sincronizar con tu otro dispositivo:</p>
-      <textarea id="export-textarea" class="w-full h-32 bg-white border border-[#c8e3dc] rounded-2xl p-2 text-[10px] font-mono text-stone-700 outline-none resize-none" readonly></textarea>
+      <textarea id="export-textarea" class="w-full h-32 bg-white border border-[#f9a8d4] rounded-2xl p-2 text-[10px] font-mono text-stone-700 outline-none resize-none" readonly></textarea>
       <div class="flex justify-between pt-2">
         <button onclick="closeModal('modal-export')" class="px-4 py-1.5 bg-stone-100 rounded-xl text-xs font-bold text-stone-700 cursor-pointer">Cerrar</button>
-        <button onclick="copyExportText()" class="px-4 py-1.5 bg-[#5fa89b] text-white rounded-xl text-xs font-black cursor-pointer">📋 Copiar al Portapapeles</button>
+        <button onclick="copyExportText()" class="px-4 py-1.5 bg-[#ec4899] text-white rounded-xl text-xs font-black cursor-pointer">📋 Copiar al Portapapeles</button>
       </div>
     </div>
   </div>
 
   <!-- MODAL IMPORTAR RESPALDO -->
   <div id="modal-import" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
-    <div class="glass-card-solid rounded-3xl max-w-sm w-full p-5 space-y-3 shadow-2xl border border-[#c8e3dc]">
+    <div class="glass-card-solid rounded-3xl max-w-sm w-full p-5 space-y-3 shadow-2xl border border-[#f9a8d4]">
       <h3 class="text-sm font-black text-stone-800 text-center">📥 Sincronizar Datos</h3>
       <p class="text-[11px] text-stone-500 text-center">Pega aquí el código que copiaste de tu otro dispositivo:</p>
-      <textarea id="import-textarea" placeholder="Pega el código aquí..." class="w-full h-32 bg-white border border-[#c8e3dc] rounded-2xl p-2 text-[10px] font-mono text-stone-700 outline-none resize-none"></textarea>
+      <textarea id="import-textarea" placeholder="Pega el código aquí..." class="w-full h-32 bg-white border border-[#f9a8d4] rounded-2xl p-2 text-[10px] font-mono text-stone-700 outline-none resize-none"></textarea>
       <div class="flex justify-between pt-2">
         <button onclick="closeModal('modal-import')" class="px-4 py-1.5 bg-stone-100 rounded-xl text-xs font-bold text-stone-700 cursor-pointer">Cancelar</button>
         <button onclick="applyImportText()" class="px-4 py-1.5 bg-[#b492cd] text-white rounded-xl text-xs font-black cursor-pointer">✨ Restaurar Datos</button>
@@ -429,14 +428,14 @@
 
   <!-- MODAL CONFIGURAR OBJETIVO DE PESO -->
   <div id="modal-objetivo" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
-    <div class="glass-card-solid rounded-3xl max-w-sm w-full p-6 space-y-4 border border-[#c8e3dc]">
-      <div class="flex items-center justify-between pb-2 border-b border-[#c8e3dc]">
+    <div class="glass-card-solid rounded-3xl max-w-sm w-full p-6 space-y-4 border border-[#f9a8d4]">
+      <div class="flex items-center justify-between pb-2 border-b border-[#f9a8d4]">
         <h3 class="text-base font-black text-stone-800">🎯 Configurar mi Objetivo</h3>
         <button onclick="closeModal('modal-objetivo')" class="text-stone-400 font-bold cursor-pointer">✕</button>
       </div>
       <div class="space-y-3 text-xs">
-        <div><label class="font-bold text-stone-600 block mb-1">Peso Inicial (kg)</label><input type="number" step="0.1" id="cfg-peso-inicial" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
-        <div><label class="font-bold text-stone-600 block mb-1">Peso Objetivo / Meta (kg)</label><input type="number" step="0.1" id="cfg-peso-meta" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+        <div><label class="font-bold text-stone-600 block mb-1">Peso Inicial (kg)</label><input type="number" step="0.1" id="cfg-peso-inicial" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+        <div><label class="font-bold text-stone-600 block mb-1">Peso Objetivo / Meta (kg)</label><input type="number" step="0.1" id="cfg-peso-meta" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
       </div>
       <div class="pt-2 flex justify-end space-x-2">
         <button onclick="closeModal('modal-objetivo')" class="px-4 py-2 border rounded-xl text-xs font-bold cursor-pointer">Cancelar</button>
@@ -447,17 +446,17 @@
 
   <!-- MODALES ANTERIORES INTACTOS -->
   <div id="modal-meta-custom" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
-    <div class="glass-card-solid rounded-3xl max-w-md w-full p-6 space-y-4 border border-[#c8e3dc]">
-      <div class="flex items-center justify-between pb-2 border-b border-[#c8e3dc]">
+    <div class="glass-card-solid rounded-3xl max-w-md w-full p-6 space-y-4 border border-[#f9a8d4]">
+      <div class="flex items-center justify-between pb-2 border-b border-[#f9a8d4]">
         <h3 class="text-base font-black text-stone-800">✨ Nueva Meta / Hábito</h3>
         <button onclick="closeModal('modal-meta-custom')" class="text-stone-400 font-bold cursor-pointer">✕</button>
       </div>
       <div class="space-y-3 text-xs">
-        <div><label class="font-bold text-stone-600 block mb-1">Título de la Meta</label><input type="text" id="gm-title" placeholder="Ej. Sesiones de Cardio Zona 2" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+        <div><label class="font-bold text-stone-600 block mb-1">Título de la Meta</label><input type="text" id="gm-title" placeholder="Ej. Sesiones de Cardio Zona 2" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="font-bold text-stone-600 block mb-1">Tipo de Métrica</label>
-            <select id="gm-type" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+            <select id="gm-type" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800">
               <option value="prot">🥩 Proteína (g)</option>
               <option value="cal">🔥 Calorías (kcal)</option>
               <option value="cardio_sesiones">🏃‍♀️ Sesiones de Cardio (General)</option>
@@ -469,13 +468,13 @@
           </div>
           <div>
             <label class="font-bold text-stone-600 block mb-1">Frecuencia</label>
-            <select id="gm-freq" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+            <select id="gm-freq" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800">
               <option value="Semanal">Semanal</option>
               <option value="Diaria">Diaria</option>
             </select>
           </div>
         </div>
-        <div><label class="font-bold text-stone-600 block mb-1">Valor Objetivo (Veces / Veces por semana)</label><input type="number" step="1" id="gm-target" placeholder="4" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+        <div><label class="font-bold text-stone-600 block mb-1">Valor Objetivo (Veces / Veces por semana)</label><input type="number" step="1" id="gm-target" placeholder="4" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
       </div>
       <div class="pt-2 flex justify-end space-x-2">
         <button onclick="closeModal('modal-meta-custom')" class="px-4 py-2 border rounded-xl text-xs font-bold cursor-pointer">Cancelar</button>
@@ -485,23 +484,23 @@
   </div>
 
   <div id="modal-metas" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
-    <div class="glass-card-solid rounded-3xl max-w-sm w-full p-6 space-y-4 border border-[#c8e3dc]">
-      <div class="flex items-center justify-between pb-2 border-b border-[#c8e3dc]">
+    <div class="glass-card-solid rounded-3xl max-w-sm w-full p-6 space-y-4 border border-[#f9a8d4]">
+      <div class="flex items-center justify-between pb-2 border-b border-[#f9a8d4]">
         <h3 class="text-base font-black text-stone-800">⚙️ Configurar Metas Base</h3>
         <button onclick="closeModal('modal-metas')" class="text-stone-400 font-bold cursor-pointer">✕</button>
       </div>
       <div class="space-y-3 text-xs">
         <div class="grid grid-cols-2 gap-2">
-          <div><label class="font-bold text-stone-600 block mb-1">Calorías Mín</label><input type="number" id="meta-cal-min" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
-          <div><label class="font-bold text-stone-600 block mb-1">Calorías Máx</label><input type="number" id="meta-cal-max" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Calorías Mín</label><input type="number" id="meta-cal-min" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Calorías Máx</label><input type="number" id="meta-cal-max" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
         </div>
         <div class="grid grid-cols-2 gap-2">
-          <div><label class="font-bold text-stone-600 block mb-1">Proteína Mín (g)</label><input type="number" id="meta-prot-min" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
-          <div><label class="font-bold text-stone-600 block mb-1">Proteína Máx (g)</label><input type="number" id="meta-prot-max" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Proteína Mín (g)</label><input type="number" id="meta-prot-min" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Proteína Máx (g)</label><input type="number" id="meta-prot-max" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
         </div>
         <div class="grid grid-cols-2 gap-2">
-          <div><label class="font-bold text-stone-600 block mb-1">Cardio Mín (min)</label><input type="number" id="meta-cardio" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
-          <div><label class="font-bold text-stone-600 block mb-1">Agua Mín (L)</label><input type="number" step="0.1" id="meta-agua" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Cardio Mín (min)</label><input type="number" id="meta-cardio" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Agua Mín (L)</label><input type="number" step="0.1" id="meta-agua" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
         </div>
       </div>
       <div class="pt-2 flex justify-end space-x-2">
@@ -512,20 +511,20 @@
   </div>
 
   <div id="modal-alimentacion" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
-    <div class="glass-card-solid rounded-3xl max-w-md w-full p-6 space-y-4 border border-[#c8e3dc] max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between pb-2 border-b border-[#c8e3dc]">
+    <div class="glass-card-solid rounded-3xl max-w-md w-full p-6 space-y-4 border border-[#f9a8d4] max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-2 border-b border-[#f9a8d4]">
         <h3 class="text-base font-black text-stone-800">🥗 Registrar Comida</h3>
         <button onclick="closeModal('modal-alimentacion')" class="text-stone-400 font-bold cursor-pointer">✕</button>
       </div>
       <div class="space-y-3 text-xs">
         <input type="hidden" id="alimentacion-edit-id">
-        <div><label class="font-bold text-stone-600 block mb-1">Fecha</label><input type="date" id="alimentacion-date" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
-        <div><label class="font-bold text-stone-600 block mb-1">Alimento / Comida</label><input type="text" id="alimentacion-nombre" placeholder="Ej. Panqueca" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+        <div><label class="font-bold text-stone-600 block mb-1">Fecha</label><input type="date" id="alimentacion-date" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+        <div><label class="font-bold text-stone-600 block mb-1">Alimento / Comida</label><input type="text" id="alimentacion-nombre" placeholder="Ej. Panqueca" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
         <div class="grid grid-cols-2 gap-2">
-          <div><label class="font-bold text-stone-600 block mb-1">Cantidad</label><input type="number" step="0.1" id="alimentacion-cant" placeholder="150" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Cantidad</label><input type="number" step="0.1" id="alimentacion-cant" placeholder="150" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
           <div>
             <label class="font-bold text-stone-600 block mb-1">Unidad</label>
-            <select id="alimentacion-unidad" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+            <select id="alimentacion-unidad" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800">
               <option value="g">Gramos (g)</option>
               <option value="ml">Mililitros (ml)</option>
               <option value="unidad">Unidades</option>
@@ -534,32 +533,32 @@
             </select>
           </div>
         </div>
-        <div><label class="font-bold text-stone-600 block mb-1">Calorías (kcal)</label><input type="number" id="alimentacion-cal" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+        <div><label class="font-bold text-stone-600 block mb-1">Calorías (kcal)</label><input type="number" id="alimentacion-cal" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
         <div class="grid grid-cols-3 gap-2">
-          <div><label class="font-bold text-stone-600 block mb-1">🥩 Prot (g)</label><input type="number" id="alimentacion-prot" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
-          <div><label class="font-bold text-stone-600 block mb-1">🍚 Carb (g)</label><input type="number" id="alimentacion-carb" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
-          <div><label class="font-bold text-stone-600 block mb-1">🥑 Grasa (g)</label><input type="number" id="alimentacion-fat" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">🥩 Prot (g)</label><input type="number" id="alimentacion-prot" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">🍚 Carb (g)</label><input type="number" id="alimentacion-carb" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">🥑 Grasa (g)</label><input type="number" id="alimentacion-fat" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
         </div>
       </div>
       <div class="pt-2 flex justify-end space-x-2">
         <button onclick="closeModal('modal-alimentacion')" class="px-4 py-2 border rounded-xl text-xs font-bold cursor-pointer">Cancelar</button>
-        <button onclick="saveAlimentacion()" class="px-4 py-2 bg-[#5fa89b] text-white rounded-xl text-xs font-black cursor-pointer">Guardar</button>
+        <button onclick="saveAlimentacion()" class="px-4 py-2 bg-[#ec4899] text-white rounded-xl text-xs font-black cursor-pointer">Guardar</button>
       </div>
     </div>
   </div>
 
   <div id="modal-cardio" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
-    <div class="glass-card-solid rounded-3xl max-w-sm w-full p-6 space-y-4 border border-[#c8e3dc]">
-      <div class="flex items-center justify-between pb-2 border-b border-[#c8e3dc]">
+    <div class="glass-card-solid rounded-3xl max-w-sm w-full p-6 space-y-4 border border-[#f9a8d4]">
+      <div class="flex items-center justify-between pb-2 border-b border-[#f9a8d4]">
         <h3 class="text-base font-black text-stone-800">🏃‍♀️ Registrar Cardio</h3>
         <button onclick="closeModal('modal-cardio')" class="text-stone-400 font-bold cursor-pointer">✕</button>
       </div>
       <div class="space-y-3 text-xs">
         <input type="hidden" id="cardio-edit-id">
-        <div><label class="font-bold text-stone-600 block mb-1">Fecha</label><input type="date" id="cardio-date" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+        <div><label class="font-bold text-stone-600 block mb-1">Fecha</label><input type="date" id="cardio-date" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
         <div>
           <label class="font-bold text-stone-600 block mb-1">Lugar / Tipo</label>
-          <select id="cardio-lugar" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+          <select id="cardio-lugar" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800">
             <option value="Zona 2 (Cinta/Suave)">Zona 2 (Cinta/Suave)</option>
             <option value="Intenso (HIIT/Running)">Intenso (HIIT/Running)</option>
             <option value="Cinta en Gimnasio">Cinta en Gimnasio</option>
@@ -570,35 +569,35 @@
           </select>
         </div>
         <div class="grid grid-cols-2 gap-2">
-          <div><label class="font-bold text-stone-600 block mb-1">Duración (min)</label><input type="number" id="cardio-min" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
-          <div><label class="font-bold text-stone-600 block mb-1">Distancia (km)</label><input type="number" step="0.01" id="cardio-km" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Duración (min)</label><input type="number" id="cardio-min" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Distancia (km)</label><input type="number" step="0.01" id="cardio-km" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
         </div>
         <div class="grid grid-cols-3 gap-2">
-          <div><label class="font-bold text-stone-600 block mb-1">Calorías</label><input type="number" id="cardio-cal" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
-          <div><label class="font-bold text-stone-600 block mb-1">HR (lpm)</label><input type="number" id="cardio-hr" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
-          <div><label class="font-bold text-stone-600 block mb-1">Ritmo Medio</label><input type="text" id="cardio-ritmo" placeholder="5'30''" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Calorías</label><input type="number" id="cardio-cal" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">HR (lpm)</label><input type="number" id="cardio-hr" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Ritmo Medio</label><input type="text" id="cardio-ritmo" placeholder="5'30''" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
         </div>
       </div>
       <div class="pt-2 flex justify-end space-x-2">
         <button onclick="closeModal('modal-cardio')" class="px-4 py-2 border rounded-xl text-xs font-bold cursor-pointer">Cancelar</button>
-        <button onclick="saveCardio()" class="px-4 py-2 bg-[#5fa89b] text-white rounded-xl text-xs font-black cursor-pointer">Guardar</button>
+        <button onclick="saveCardio()" class="px-4 py-2 bg-[#ec4899] text-white rounded-xl text-xs font-black cursor-pointer">Guardar</button>
       </div>
     </div>
   </div>
 
   <div id="modal-entrenamiento" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
-    <div class="glass-card-solid rounded-3xl max-w-lg w-full p-6 space-y-4 border border-[#c8e3dc] max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between pb-2 border-b border-[#c8e3dc]">
+    <div class="glass-card-solid rounded-3xl max-w-lg w-full p-6 space-y-4 border border-[#f9a8d4] max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-2 border-b border-[#f9a8d4]">
         <h3 class="text-base font-black text-stone-800">💪 Registro de Fuerza & PRs</h3>
         <button onclick="closeModal('modal-entrenamiento')" class="text-stone-400 font-bold cursor-pointer">✕</button>
       </div>
       <div class="space-y-4 text-xs">
         <input type="hidden" id="entreno-edit-id">
-        <div><label class="font-bold text-stone-600 block mb-1">Fecha</label><input type="date" id="entreno-date" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+        <div><label class="font-bold text-stone-600 block mb-1">Fecha</label><input type="date" id="entreno-date" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="font-bold text-stone-600 block mb-1">Tipo de Rutina</label>
-            <select id="entreno-rutina" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+            <select id="entreno-rutina" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800">
               <option value="Torso A">Torso A</option>
               <option value="Pierna A">Pierna A</option>
               <option value="Torso B">Torso B</option>
@@ -606,48 +605,48 @@
               <option value="Full Body">Full Body</option>
             </select>
           </div>
-          <div><label class="font-bold text-stone-600 block mb-1">Tiempo (min)</label><input type="number" id="entreno-tiempo" placeholder="60" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Tiempo (min)</label><input type="number" id="entreno-tiempo" placeholder="60" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
         </div>
         <div class="grid grid-cols-3 gap-2">
-          <div><label class="font-bold text-stone-600 block mb-1">Calorías</label><input type="number" id="entreno-cal" placeholder="400" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
-          <div><label class="font-bold text-stone-600 block mb-1">HR Prom</label><input type="number" id="entreno-hr" placeholder="104" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
-          <div><label class="font-bold text-stone-600 block mb-1">Esfuerzo RPE (1-10)</label><input type="number" min="1" max="10" id="entreno-esfuerzo" placeholder="8" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Calorías</label><input type="number" id="entreno-cal" placeholder="400" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">HR Prom</label><input type="number" id="entreno-hr" placeholder="104" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Esfuerzo RPE (1-10)</label><input type="number" min="1" max="10" id="entreno-esfuerzo" placeholder="8" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-2 py-2 font-bold text-stone-800"></div>
         </div>
 
-        <div class="space-y-3 pt-2 border-t border-[#c8e3dc]">
+        <div class="space-y-3 pt-2 border-t border-[#f9a8d4]">
           <div class="flex justify-between items-center">
             <span class="font-black text-stone-800">📋 Ejercicios, Series & PR (👑)</span>
-            <button onclick="addExerciseRow()" class="px-3 py-1 bg-[#5fa89b] text-white rounded-lg font-bold text-[11px]">+ Añadir Ejercicio</button>
+            <button onclick="addExerciseRow()" class="px-3 py-1 bg-[#ec4899] text-white rounded-lg font-bold text-[11px]">+ Añadir Ejercicio</button>
           </div>
           <div id="ejercicios-container" class="space-y-3"></div>
         </div>
 
-        <div><label class="font-bold text-stone-600 block mb-1">Notas</label><textarea id="entreno-notas" rows="2" placeholder="Notas de la sesión..." class="w-full bg-white border border-[#c8e3dc] rounded-xl p-2 font-medium text-stone-800"></textarea></div>
+        <div><label class="font-bold text-stone-600 block mb-1">Notas</label><textarea id="entreno-notas" rows="2" placeholder="Notas de la sesión..." class="w-full bg-white border border-[#f9a8d4] rounded-xl p-2 font-medium text-stone-800"></textarea></div>
       </div>
       <div class="pt-2 flex justify-end space-x-2">
         <button onclick="closeModal('modal-entrenamiento')" class="px-4 py-2 border rounded-xl text-xs font-bold cursor-pointer">Cancelar</button>
-        <button onclick="saveEntrenamiento()" class="px-4 py-2 bg-[#5fa89b] text-white rounded-xl text-xs font-black cursor-pointer">Guardar Entreno</button>
+        <button onclick="saveEntrenamiento()" class="px-4 py-2 bg-[#ec4899] text-white rounded-xl text-xs font-black cursor-pointer">Guardar Entreno</button>
       </div>
     </div>
   </div>
 
   <div id="modal-salud" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
-    <div class="glass-card-solid rounded-3xl max-w-sm w-full p-6 space-y-4 border border-[#c8e3dc]">
-      <div class="flex items-center justify-between pb-2 border-b border-[#c8e3dc]">
+    <div class="glass-card-solid rounded-3xl max-w-sm w-full p-6 space-y-4 border border-[#f9a8d4]">
+      <div class="flex items-center justify-between pb-2 border-b border-[#f9a8d4]">
         <h3 class="text-base font-black text-stone-800">🍎 Salud & Bienestar</h3>
         <button onclick="closeModal('modal-salud')" class="text-stone-400 font-bold cursor-pointer">✕</button>
       </div>
       <div class="space-y-3 text-xs">
         <input type="hidden" id="salud-edit-id">
-        <div><label class="font-bold text-stone-600 block mb-1">Fecha</label><input type="date" id="salud-date" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+        <div><label class="font-bold text-stone-600 block mb-1">Fecha</label><input type="date" id="salud-date" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
         <div class="grid grid-cols-2 gap-2">
-          <div><label class="font-bold text-stone-600 block mb-1">Agua (litros)</label><input type="number" step="0.1" id="salud-agua" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
-          <div><label class="font-bold text-stone-600 block mb-1">Sueño (horas)</label><input type="number" step="0.5" id="salud-sueno" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Agua (litros)</label><input type="number" step="0.1" id="salud-agua" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+          <div><label class="font-bold text-stone-600 block mb-1">Sueño (horas)</label><input type="number" step="0.5" id="salud-sueno" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="font-bold text-stone-600 block mb-1">Calidad Sueño</label>
-            <select id="salud-calidad-sueno" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+            <select id="salud-calidad-sueno" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800">
               <option value="Excelente 🌟">Excelente 🌟</option>
               <option value="Buena ✨">Buena ✨</option>
               <option value="Regular 💤">Regular 💤</option>
@@ -656,7 +655,7 @@
           </div>
           <div>
             <label class="font-bold text-stone-600 block mb-1">Estado de Ánimo</label>
-            <select id="salud-animo" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+            <select id="salud-animo" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800">
               <option value="Motivada 🔥">Motivada 🔥</option>
               <option value="Feliz 😊">Feliz 😊</option>
               <option value="Tranquila 🧘‍♀️">Tranquila 🧘‍♀️</option>
@@ -676,10 +675,10 @@
             </select>
           </div>
         </div>
-        <div><label class="font-bold text-stone-600 block mb-1">Meditación (min)</label><input type="number" id="salud-med" class="w-full bg-white border border-[#c8e3dc] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
+        <div><label class="font-bold text-stone-600 block mb-1">Meditación (min)</label><input type="number" id="salud-med" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
         <div class="flex items-center gap-4 pt-1">
           <label class="flex items-center space-x-2 cursor-pointer">
-            <input type="checkbox" id="salud-dulce" class="accent-[#5fa89b] w-4 h-4 rounded">
+            <input type="checkbox" id="salud-dulce" class="accent-[#ec4899] w-4 h-4 rounded">
             <span class="font-bold text-stone-700">Comí dulce 🍫</span>
           </label>
           <label class="flex items-center space-x-2 cursor-pointer">
@@ -690,12 +689,12 @@
       </div>
       <div class="pt-2 flex justify-end space-x-2">
         <button onclick="closeModal('modal-salud')" class="px-4 py-2 border rounded-xl text-xs font-bold cursor-pointer">Cancelar</button>
-        <button onclick="saveSalud()" class="px-4 py-2 bg-[#5fa89b] text-white rounded-xl text-xs font-black cursor-pointer">Guardar</button>
+        <button onclick="saveSalud()" class="px-4 py-2 bg-[#ec4899] text-white rounded-xl text-xs font-black cursor-pointer">Guardar</button>
       </div>
     </div>
   </div>
 
-  <div id="toast" class="fixed bottom-5 right-5 z-50 bg-[#2c3e35] text-white px-4 py-2.5 rounded-2xl shadow-xl text-xs font-bold flex items-center space-x-2 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none border border-white/20">
+  <div id="toast" class="fixed bottom-5 right-5 z-50 bg-[#4a2c3d] text-white px-4 py-2.5 rounded-2xl shadow-xl text-xs font-bold flex items-center space-x-2 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none border border-white/20">
     <span>✨</span>
     <span id="toast-text">Acción completada</span>
   </div>
@@ -1038,12 +1037,12 @@
         seriesHtml += `
           <div class="flex items-center gap-2 mt-1 serie-item">
             <span class="text-[10px] font-bold text-stone-500 w-8">S${idx+1}</span>
-            <input type="number" placeholder="Peso" value="${s.peso || ''}" class="w-20 bg-white border border-[#c8e3dc] rounded-lg px-2 py-1 text-xs font-bold serie-peso">
-            <select class="bg-white border border-[#c8e3dc] rounded-lg px-1.5 py-1 text-xs font-bold serie-unidad">
+            <input type="number" placeholder="Peso" value="${s.peso || ''}" class="w-20 bg-white border border-[#f9a8d4] rounded-lg px-2 py-1 text-xs font-bold serie-peso">
+            <select class="bg-white border border-[#f9a8d4] rounded-lg px-1.5 py-1 text-xs font-bold serie-unidad">
               <option value="lbs" ${s.unidad==='lbs'?'selected':''}>Lbs</option>
               <option value="kg" ${s.unidad==='kg'?'selected':''}>Kg</option>
             </select>
-            <input type="number" placeholder="Reps" value="${s.reps || ''}" class="w-16 bg-white border border-[#c8e3dc] rounded-lg px-2 py-1 text-xs font-bold serie-reps">
+            <input type="number" placeholder="Reps" value="${s.reps || ''}" class="w-16 bg-white border border-[#f9a8d4] rounded-lg px-2 py-1 text-xs font-bold serie-reps">
             <label class="flex items-center gap-1 text-[11px] font-bold text-[#b492cd] cursor-pointer" title="Marcar como PR">
               <input type="checkbox" ${s.pr ? 'checked' : ''} class="accent-[#b492cd] w-3.5 h-3.5 serie-pr"> 👑 PR
             </label>
@@ -1052,14 +1051,14 @@
       });
 
       const card = document.createElement('div');
-      card.className = 'bg-white/70 p-3 rounded-2xl border border-[#c8e3dc] space-y-2 ejercicio-card';
+      card.className = 'bg-white/70 p-3 rounded-2xl border border-[#f9a8d4] space-y-2 ejercicio-card';
       card.innerHTML = `
         <div class="flex justify-between items-center">
           <input type="text" placeholder="Nombre Ejercicio (ej. Press Banca)" value="${ejName}" class="bg-transparent font-black text-stone-800 text-xs w-3/4 outline-none ejercicio-nombre">
           <button onclick="this.closest('.ejercicio-card').remove()" class="text-red-500 font-bold text-xs">Borrar</button>
         </div>
         <div class="series-list space-y-1">${seriesHtml}</div>
-        <button onclick="addSerieRow(this)" class="text-[10px] font-extrabold text-[#5fa89b] hover:underline mt-1 block">+ Añadir Serie</button>`;
+        <button onclick="addSerieRow(this)" class="text-[10px] font-extrabold text-[#ec4899] hover:underline mt-1 block">+ Añadir Serie</button>`;
       container.appendChild(card);
     }
 
@@ -1070,12 +1069,12 @@
       div.className = 'flex items-center gap-2 mt-1 serie-item';
       div.innerHTML = `
         <span class="text-[10px] font-bold text-stone-500 w-8">S${sIdx}</span>
-        <input type="number" placeholder="Peso" class="w-20 bg-white border border-[#c8e3dc] rounded-lg px-2 py-1 text-xs font-bold serie-peso">
-        <select class="bg-white border border-[#c8e3dc] rounded-lg px-1.5 py-1 text-xs font-bold serie-unidad">
+        <input type="number" placeholder="Peso" class="w-20 bg-white border border-[#f9a8d4] rounded-lg px-2 py-1 text-xs font-bold serie-peso">
+        <select class="bg-white border border-[#f9a8d4] rounded-lg px-1.5 py-1 text-xs font-bold serie-unidad">
           <option value="lbs">Lbs</option>
           <option value="kg">Kg</option>
         </select>
-        <input type="number" placeholder="Reps" class="w-16 bg-white border border-[#c8e3dc] rounded-lg px-2 py-1 text-xs font-bold serie-reps">
+        <input type="number" placeholder="Reps" class="w-16 bg-white border border-[#f9a8d4] rounded-lg px-2 py-1 text-xs font-bold serie-reps">
         <label class="flex items-center gap-1 text-[11px] font-bold text-[#b492cd] cursor-pointer" title="Marcar como PR">
           <input type="checkbox" class="accent-[#b492cd] w-3.5 h-3.5 serie-pr"> 👑 PR
         </label>
@@ -1396,7 +1395,7 @@
               ${p.nota ? `<p class="text-[10px] text-stone-500 italic">Nota: ${p.nota}</p>` : ''}
             </div>
             <div class="flex items-center gap-1">
-              <button onclick="editPesoLog(${p.id})" class="px-2 py-1 bg-white border border-[#c8e3dc] rounded-lg font-bold cursor-pointer">✏️</button>
+              <button onclick="editPesoLog(${p.id})" class="px-2 py-1 bg-white border border-[#f9a8d4] rounded-lg font-bold cursor-pointer">✏️</button>
               <button onclick="deleteBiometriaItem('pesos', ${p.id})" class="text-red-500 font-bold px-1.5 cursor-pointer">✕</button>
             </div>
           </div>`;
@@ -1420,7 +1419,7 @@
             <div class="flex justify-between items-center">
               <strong>📅 ${m.date}</strong>
               <div class="flex items-center gap-1">
-                <button onclick="editMedidasLog(${m.id})" class="px-2 py-1 bg-white border border-[#c8e3dc] rounded-lg font-bold cursor-pointer">✏️</button>
+                <button onclick="editMedidasLog(${m.id})" class="px-2 py-1 bg-white border border-[#f9a8d4] rounded-lg font-bold cursor-pointer">✏️</button>
                 <button onclick="deleteBiometriaItem('medidas', ${m.id})" class="text-red-500 font-bold px-1.5 cursor-pointer">✕</button>
               </div>
             </div>
@@ -1457,7 +1456,7 @@
             posesHtml += `
               <div class="space-y-1.5">
                 <span class="text-xs font-black text-stone-700 block text-center uppercase tracking-wider">${poseName}</span>
-                <div class="relative rounded-2xl overflow-hidden border border-[#c8e3dc] bg-white h-72 sm:h-96 group shadow-md">
+                <div class="relative rounded-2xl overflow-hidden border border-[#f9a8d4] bg-white h-72 sm:h-96 group shadow-md">
                   <img src="${photo.url}" alt="${poseName}" class="w-full h-full object-cover">
                   <button onclick="deleteBiometriaItem('fotos', ${photo.id})" class="absolute top-3 right-3 bg-red-500 text-white w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer shadow-lg">✕</button>
                 </div>
@@ -1466,14 +1465,14 @@
             posesHtml += `
               <div class="space-y-1.5">
                 <span class="text-xs font-bold text-stone-400 block text-center uppercase tracking-wider">${poseName} (Sin foto)</span>
-                <div class="rounded-2xl border border-dashed border-[#c8e3dc] bg-stone-50/50 h-72 sm:h-96 flex items-center justify-center text-stone-300 text-sm font-bold">·</div>
+                <div class="rounded-2xl border border-dashed border-[#f9a8d4] bg-stone-50/50 h-72 sm:h-96 flex items-center justify-center text-stone-300 text-sm font-bold">·</div>
               </div>`;
           }
         });
 
         grid.innerHTML += `
           <div class="glass-card p-5 rounded-3xl space-y-4">
-            <strong class="text-sm font-black text-stone-800 block pb-2 border-b border-[#c8e3dc]">📅 Fecha de Registro: ${date}</strong>
+            <strong class="text-sm font-black text-stone-800 block pb-2 border-b border-[#f9a8d4]">📅 Fecha de Registro: ${date}</strong>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
               ${posesHtml}
             </div>
@@ -1512,7 +1511,7 @@
 
       days.forEach(s => {
         const logged = maryData.pesos.some(p => p.date === s.dateStr);
-        let boxClass = logged ? 'bg-emerald-500/20 border-emerald-500 text-emerald-800 font-black' : 'bg-white border-[#c8e3dc] text-stone-400';
+        let boxClass = logged ? 'bg-pink-500/20 border-pink-400 text-emerald-800 font-black' : 'bg-white border-[#f9a8d4] text-stone-400';
         container.innerHTML += `
           <div class="flex flex-col items-center">
             <span class="text-[9px] font-bold text-stone-500 mb-1">${s.label} ${s.dayNum}</span>
@@ -1541,7 +1540,7 @@
             datasets: [{
               label: 'Peso (kg)',
               data: pesoFiltered.map(p => p.kg),
-              borderColor: '#5fa89b',
+              borderColor: '#ec4899',
               backgroundColor: 'rgba(95, 168, 155, 0.1)',
               borderWidth: 3,
               tension: 0.2,
@@ -1633,7 +1632,7 @@
               <p class="text-stone-600 mt-1">🔥 Calorías: <strong>${al.cal} kcal</strong> | 🥩 Prot: <strong>${al.prot}g</strong> | 🍚 Carb: <strong>${al.carb}g</strong> | 🥑 Grasa: <strong>${al.fat}g</strong></p>
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="editAlimentacion(${al.id})" class="px-2.5 py-1 bg-white border border-[#c8e3dc] rounded-xl font-bold cursor-pointer">✏️</button>
+              <button onclick="editAlimentacion(${al.id})" class="px-2.5 py-1 bg-white border border-[#f9a8d4] rounded-xl font-bold cursor-pointer">✏️</button>
               <button onclick="deleteItem('alimentacion', ${al.id})" class="text-red-500 font-bold px-2 cursor-pointer">✕</button>
             </div>
           </div>`;
@@ -1647,13 +1646,13 @@
       const avgFat = Math.round(days.reduce((a, d) => a + byDay[d].fat, 0) / n);
 
       totalsCard.innerHTML = `
-        <div class="glass-card-solid p-4 rounded-2xl mb-4 space-y-2 bg-emerald-50/50">
+        <div class="glass-card-solid p-4 rounded-2xl mb-4 space-y-2 bg-pink-50/50">
           <strong class="font-black text-stone-800 text-xs">📊 PROMEDIO DIARIO DEL RANGO (${days.length} día${days.length===1?'':'s'}):</strong>
           <div class="flex flex-wrap gap-3 font-bold text-stone-700 text-xs">
-            <span class="px-2.5 py-1 bg-white rounded-xl border border-[#c8e3dc]">🔥 ${avgCal} kcal/día</span>
-            <span class="px-2.5 py-1 bg-white rounded-xl border border-[#c8e3dc]">🥩 ${avgProt}g prot/día</span>
-            <span class="px-2.5 py-1 bg-white rounded-xl border border-[#c8e3dc]">🍚 ${avgCarb}g carb/día</span>
-            <span class="px-2.5 py-1 bg-white rounded-xl border border-[#c8e3dc]">🥑 ${avgFat}g grasa/día</span>
+            <span class="px-2.5 py-1 bg-white rounded-xl border border-[#f9a8d4]">🔥 ${avgCal} kcal/día</span>
+            <span class="px-2.5 py-1 bg-white rounded-xl border border-[#f9a8d4]">🥩 ${avgProt}g prot/día</span>
+            <span class="px-2.5 py-1 bg-white rounded-xl border border-[#f9a8d4]">🍚 ${avgCarb}g carb/día</span>
+            <span class="px-2.5 py-1 bg-white rounded-xl border border-[#f9a8d4]">🥑 ${avgFat}g grasa/día</span>
           </div>
         </div>`;
     }
@@ -1682,14 +1681,14 @@
               <p class="text-stone-600 mt-1">⏱️ ${c.min} min | 📍 ${c.km} km | 🔥 ${c.cal} kcal | 🫀 ${c.hr} lpm | ⚡ Ritmo: ${c.ritmo}</p>
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="editCardio(${c.id})" class="px-2.5 py-1 bg-white border border-[#c8e3dc] rounded-xl font-bold cursor-pointer">✏️</button>
+              <button onclick="editCardio(${c.id})" class="px-2.5 py-1 bg-white border border-[#f9a8d4] rounded-xl font-bold cursor-pointer">✏️</button>
               <button onclick="deleteItem('cardio', ${c.id})" class="text-red-500 font-bold px-2 cursor-pointer">✕</button>
             </div>
           </div>`;
       });
 
       totalsCard.innerHTML = `
-        <div class="glass-card-solid p-4 rounded-2xl mb-4 flex flex-wrap justify-between items-center text-xs bg-purple-50/50">
+        <div class="glass-card-solid p-4 rounded-2xl mb-4 flex flex-wrap justify-between items-center text-xs bg-pink-50/50">
           <strong class="font-black text-stone-800">📊 TOTALES DE CARDIO EN EL RANGO:</strong>
           <div class="flex gap-4 font-bold text-stone-700">
             <span>📍 Distancia: ${tKm.toFixed(2)} km</span>
@@ -1730,17 +1729,17 @@
       // Panel de PRs
       const prNames = Object.keys(prMap).sort();
       const filteredPrNames = filterEx ? prNames.filter(n => n.toLowerCase().includes(filterEx)) : prNames;
-      if (prBoard && filteredPrNames.length > 0) {
-        let prHtml = `<div class="glass-card-solid p-4 rounded-2xl space-y-3 bg-purple-50/40">
+      if (prBoard && filterEx && filteredPrNames.length > 0) {
+        let prHtml = `<div class="glass-card-solid p-4 rounded-2xl space-y-3 bg-pink-50/40">
           <h4 class="font-black text-stone-800 text-xs uppercase tracking-wider">👑 Tus PRs — Marca a superar</h4>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">`;
         filteredPrNames.forEach(n => {
           const p = prMap[n];
           const next = (p.peso * 1.025).toFixed(1);
-          prHtml += `<div class="bg-white border border-[#c8e3dc] rounded-xl p-3 text-xs">
+          prHtml += `<div class="bg-white border border-[#f9a8d4] rounded-xl p-3 text-xs">
             <div class="font-black text-stone-800">${n}</div>
             <div class="text-[#b492cd] font-bold mt-0.5">PR: ${p.peso} ${p.unidad} × ${p.reps} <span class="text-stone-400 font-medium">(${p.date})</span></div>
-            <div class="text-emerald-700 font-bold text-[11px] mt-1">🎯 A superar: ≥ ${next} ${p.unidad}</div>
+            <div class="text-pink-700 font-bold text-[11px] mt-1">🎯 A superar: ≥ ${next} ${p.unidad}</div>
           </div>`;
         });
         prHtml += `</div></div>`;
@@ -1762,10 +1761,10 @@
         (e.ejercicios || []).forEach((ej, idx) => {
           if (filterEx && !(ej.nombre || '').toLowerCase().includes(filterEx)) return;
           let sHtml = ej.series.map((s, sidx) => {
-            return `<span class="${s.pr ? 'bg-[#b492cd]/40 border-[#b492cd] text-[#42225c] font-black' : 'bg-white/80 border-[#c8e3dc] text-stone-700'} px-2 py-0.5 rounded border text-[10px] font-bold">S${sidx+1}: ${s.peso} ${s.unidad} × ${s.reps} reps ${s.pr ? '👑 PR' : ''}</span>`;
+            return `<span class="${s.pr ? 'bg-[#b492cd]/40 border-[#b492cd] text-[#42225c] font-black' : 'bg-white/80 border-[#f9a8d4] text-stone-700'} px-2 py-0.5 rounded border text-[10px] font-bold">S${sidx+1}: ${s.peso} ${s.unidad} × ${s.reps} reps ${s.pr ? '👑 PR' : ''}</span>`;
           }).join(' ');
           const prInfo = prMap[(ej.nombre || '').trim()];
-          const tip = prInfo ? `<span class="text-[10px] text-emerald-700 font-bold ml-1">(PR: ${prInfo.peso} ${prInfo.unidad})</span>` : '';
+          const tip = prInfo ? `<span class="text-[10px] text-pink-700 font-bold ml-1">(PR: ${prInfo.peso} ${prInfo.unidad})</span>` : '';
           ejHtml += `<div class="mt-1 text-stone-700"><strong>${idx+1}. ${ej.nombre}</strong>${tip} — ${sHtml}</div>`;
         });
 
@@ -1774,12 +1773,12 @@
             <div class="flex justify-between items-center">
               <strong class="text-sm font-black text-stone-800">💪 Rutina: ${e.rutina} (${e.date})</strong>
               <div class="flex items-center gap-2">
-                <button onclick="editEntrenamiento(${e.id})" class="px-2.5 py-1 bg-white border border-[#c8e3dc] rounded-xl font-bold cursor-pointer">✏️</button>
+                <button onclick="editEntrenamiento(${e.id})" class="px-2.5 py-1 bg-white border border-[#f9a8d4] rounded-xl font-bold cursor-pointer">✏️</button>
                 <button onclick="deleteItem('entrenamiento', ${e.id})" class="text-red-500 font-bold px-2 cursor-pointer">✕</button>
               </div>
             </div>
             <p class="text-stone-600">⏱️ Tiempo: <strong>${e.tiempo} min</strong> | 🔥 Calorías: <strong>${e.cal} kcal</strong> | 🫀 HR: <strong>${e.hr} lpm</strong> | ⚡ Esfuerzo RPE: <strong>${e.esfuerzo}/10</strong></p>
-            <div class="bg-white/50 p-2.5 rounded-xl border border-[#c8e3dc] space-y-1">${ejHtml}</div>
+            <div class="bg-white/50 p-2.5 rounded-xl border border-[#f9a8d4] space-y-1">${ejHtml}</div>
             <p class="text-stone-500 italic">📝 Notas: ${e.notas || 'Ninguna'}</p>
           </div>`;
       });
@@ -1812,14 +1811,14 @@
               <p class="text-stone-600 mt-1">💧 Agua: <strong>${sItem.agua} L</strong> | 😴 Sueño: <strong>${sItem.sueno} h (${sItem.calidadSueno})</strong> | 🧠 Ánimo: <strong>${sItem.animo}</strong> | 🧘 Med: <strong>${sItem.med}m</strong> | 🍫 Dulce: <strong>${sItem.dulce ? 'Sí' : 'No'}</strong> | 🩸 Periodo: <strong>${sItem.periodo ? 'Sí' : 'No'}</strong></p>
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="editSalud(${sItem.id})" class="px-2.5 py-1 bg-white border border-[#c8e3dc] rounded-xl font-bold cursor-pointer">✏️</button>
+              <button onclick="editSalud(${sItem.id})" class="px-2.5 py-1 bg-white border border-[#f9a8d4] rounded-xl font-bold cursor-pointer">✏️</button>
               <button onclick="deleteItem('salud', ${sItem.id})" class="text-red-500 font-bold px-2 cursor-pointer">✕</button>
             </div>
           </div>`;
       });
 
       totalsCard.innerHTML = `
-        <div class="glass-card-solid p-4 rounded-2xl mb-4 flex flex-wrap justify-between items-center text-xs bg-blue-50/50">
+        <div class="glass-card-solid p-4 rounded-2xl mb-4 flex flex-wrap justify-between items-center text-xs bg-fuchsia-50/50">
           <strong class="font-black text-stone-800">📊 TOTALES DE BIENESTAR EN EL RANGO:</strong>
           <div class="flex gap-4 font-bold text-stone-700">
             <span>💧 Agua total: ${tAgua.toFixed(1)} L</span>
@@ -1875,17 +1874,17 @@
         const hasMetasCal = dayAl.length > 0 && sumCal <= metas.calMax;
         const hasMetasProt = dayAl.length > 0 && sumProt >= metas.protMin;
 
-        let bgClass = 'bg-white/70 border border-[#c8e3dc] text-stone-700 font-bold';
+        let bgClass = 'bg-white/70 border border-[#f9a8d4] text-stone-700 font-bold';
         const countActive = (hasEntreno ? 1 : 0) + (hasCardio ? 1 : 0) + (hasMetasCal ? 1 : 0) + (hasMetasProt ? 1 : 0);
 
         if (countActive >= 2) {
           bgClass = 'bg-gradient-to-r from-emerald-500/30 to-[#b492cd]/30 border border-[#b492cd] text-stone-900 font-black shadow-xs';
         } else if (hasEntreno) {
-          bgClass = 'bg-emerald-500/25 border border-emerald-400 text-emerald-900 font-black';
+          bgClass = 'bg-pink-500/25 border border-emerald-400 text-emerald-900 font-black';
         } else if (hasCardio) {
           bgClass = 'bg-[#b492cd]/25 border border-[#b492cd] text-[#633a82] font-black';
         } else if (hasMetasCal || hasMetasProt) {
-          bgClass = 'bg-[#a4dbd0]/30 border border-[#5fa89b] text-[#2c3e35] font-black';
+          bgClass = 'bg-[#a4dbd0]/30 border border-[#ec4899] text-[#4a2c3d] font-black';
         }
 
         calView.innerHTML += `
@@ -1979,10 +1978,10 @@
               boxClass = 'bg-white/40 border-[#e5e5e5] text-stone-300';
               symbol = '·';
             } else if (occurred) {
-              boxClass = 'bg-emerald-500/20 border-emerald-500/60 text-emerald-800 font-black';
+              boxClass = 'bg-pink-500/20 border-pink-400/60 text-emerald-800 font-black';
               symbol = '✓';
             } else {
-              boxClass = 'bg-white border-[#c8e3dc] text-stone-300';
+              boxClass = 'bg-white border-[#f9a8d4] text-stone-300';
               symbol = '·';
             }
 
@@ -2000,7 +1999,7 @@
 
           let badgeHtml = '';
           if (fulfilled) {
-            badgeHtml = `<div class="px-3 py-1 rounded-xl bg-emerald-500/20 border border-emerald-500 text-emerald-800 font-black text-xs whitespace-nowrap">🎉 ¡Completado (${totalCount}/${g.targetValue})!</div>`;
+            badgeHtml = `<div class="px-3 py-1 rounded-xl bg-pink-500/20 border border-pink-400 text-emerald-800 font-black text-xs whitespace-nowrap">🎉 ¡Completado (${totalCount}/${g.targetValue})!</div>`;
           } else if (isLastDayOfWeek) {
             badgeHtml = `<div class="px-3 py-1 rounded-xl bg-red-500/10 border border-red-400 text-red-600 font-bold text-xs whitespace-nowrap">No cumplida (${totalCount}/${g.targetValue})</div>`;
           } else {
@@ -2017,13 +2016,13 @@
             const isFuture = w.dateStr > todayStr;
             const status = isFuture ? 'empty' : getDailyMetricStatus(g.metricType, w.dateStr, g.targetValue);
 
-            let boxClass = 'bg-white border-[#c8e3dc] text-stone-300';
+            let boxClass = 'bg-white border-[#f9a8d4] text-stone-300';
             let symbol = '·';
             if (isFuture) {
               boxClass = 'bg-white/40 border-[#e5e5e5] text-stone-300';
               symbol = '·';
             } else if (status === 'ok') {
-              boxClass = 'bg-emerald-500/20 border-emerald-500/60 text-emerald-800 font-black';
+              boxClass = 'bg-pink-500/20 border-pink-400/60 text-emerald-800 font-black';
               symbol = '✓';
             } else if (status === 'fail') {
               boxClass = 'bg-red-500/20 border-red-500/60 text-red-600 font-black';
@@ -2078,7 +2077,7 @@
         </div>
         <div class="glass-card p-4 rounded-2xl space-y-1">
           <span class="text-[10px] font-extrabold text-stone-500 uppercase">Proteína Promedio</span>
-          <p class="text-xl font-black text-[#5fa89b]">${avgProt} g</p>
+          <p class="text-xl font-black text-[#ec4899]">${avgProt} g</p>
         </div>
         <div class="glass-card p-4 rounded-2xl space-y-1">
           <span class="text-[10px] font-extrabold text-stone-500 uppercase">Cardio Total</span>
@@ -2107,7 +2106,7 @@
         const salud = fSalud.find(x => x.date === d);
 
         let html = `<div class="glass-card p-4 rounded-2xl space-y-2 text-xs">
-          <strong class="text-sm font-black text-stone-800 block pb-1 border-b border-[#c8e3dc]">📅 Fecha: ${d}</strong>`;
+          <strong class="text-sm font-black text-stone-800 block pb-1 border-b border-[#f9a8d4]">📅 Fecha: ${d}</strong>`;
 
         if (alList.length > 0) {
           const sumCal = alList.reduce((a,b)=>a+b.cal,0);
@@ -2171,6 +2170,23 @@
       });
 
       navigator.clipboard.writeText(report).then(() => showToast('¡Reporte copiado para WhatsApp! 📋'));
+    }
+
+    
+    function copyFitnessReport() {
+      const from = document.getElementById('res-from')?.value || '';
+      const to = document.getElementById('res-to')?.value || '';
+      const nl = String.fromCharCode(10);
+      const fAl = (maryData.alimentacion||[]).filter(x => (!from||x.date>=from)&&(!to||x.date<=to));
+      const fCardio = (maryData.cardio||[]).filter(x => (!from||x.date>=from)&&(!to||x.date<=to));
+      const fEntreno = (maryData.entrenamiento||[]).filter(x => (!from||x.date>=from)&&(!to||x.date<=to));
+      const fSalud = (maryData.salud||[]).filter(x => (!from||x.date>=from)&&(!to||x.date<=to));
+      let report = '🍎 INFORME FITNESS' + nl + 'Desde: ' + from + ' Hasta: ' + to + nl + nl;
+      report += 'Entrenos: ' + fEntreno.length + nl;
+      report += 'Sesiones cardio: ' + fCardio.length + nl;
+      report += 'Registros comida: ' + fAl.length + nl;
+      report += 'Registros bienestar: ' + fSalud.length + nl;
+      navigator.clipboard.writeText(report).then(()=>showToast('Informe copiado')).catch(()=>prompt('Copia:', report));
     }
 
     document.addEventListener('DOMContentLoaded', initApp);

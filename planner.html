@@ -371,6 +371,28 @@
         <p id="review-areas-empty" class="text-xs text-stone-400 text-center py-3">Aún no has creado áreas. Ej: Empatía, Autocontrol, Trato hacia otros…</p>
       </div>
 
+      <!-- DIARIO DEL DÍA -->
+      <div class="glass-card rounded-3xl p-6 space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-[#ebd7e3]">
+          <div>
+            <h3 class="text-xs font-black uppercase tracking-wider text-stone-800">📔 Diario del día</h3>
+            <p class="text-[10px] text-stone-500">Cómo te fue hoy — se guarda con la fecha seleccionada</p>
+          </div>
+        </div>
+        <textarea id="diario-text" rows="4" oninput="saveDiario(this.value)" placeholder="Escribe cómo te fue, cómo te sentiste, qué pasó..." class="w-full bg-white/70 border border-[#ebd7e3] rounded-2xl p-3 text-xs font-medium text-stone-800 focus:outline-none resize-none"></textarea>
+      </div>
+
+      <!-- BUSCAR EN DIARIOS -->
+      <div class="glass-card rounded-3xl p-6 space-y-3">
+        <h3 class="text-xs font-black uppercase tracking-wider text-stone-800">🔍 Buscar en diarios</h3>
+        <div class="flex flex-wrap gap-2">
+          <input type="text" id="diario-search" placeholder="Ej. deprimida, feliz, trabajo..." class="flex-1 min-w-[160px] bg-white border border-[#ebd7e3] rounded-xl px-3 py-2 text-xs font-bold">
+          <button onclick="searchDiarios()" class="px-4 py-2 bg-[#b492cd] text-white font-bold text-xs rounded-xl cursor-pointer">Buscar</button>
+        </div>
+        <div id="diario-search-results" class="space-y-2 text-xs"></div>
+      </div>
+
+
     </div>
 
     <!-- VISTA REPORTES Y ANÁLISIS DE PATRONES -->
@@ -1166,6 +1188,77 @@
       if (!currentData.reviewScores[id]) currentData.reviewScores[id] = { score: 5, note: '', hacia: '' };
       currentData.reviewScores[id][field] = value;
       saveDay();
+    }
+
+    
+    function saveDiario(val) {
+      if (!currentData) return;
+      currentData.diario = val;
+      if (typeof saveDay === 'function') saveDay();
+      else {
+        try {
+          localStorage.setItem(getStorageKey(currentDate), JSON.stringify(currentData));
+          if (typeof db !== 'undefined' && db) db.collection('mary_planner').doc(currentDate).set(currentData);
+        } catch(e) {}
+      }
+    }
+
+    function loadDiarioIntoUI() {
+      const el = document.getElementById('diario-text');
+      if (!el || !currentData) return;
+      el.value = currentData.diario || '';
+    }
+
+    function searchDiarios() {
+      const q = (document.getElementById('diario-search')?.value || '').trim().toLowerCase();
+      const box = document.getElementById('diario-search-results');
+      if (!box) return;
+      if (!q) { box.innerHTML = '<p class="text-stone-400">Escribe una palabra para buscar.</p>'; return; }
+      const results = [];
+      // scan localStorage keys
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (!k || k.indexOf('MARY_DAILY_PLANNER') === -1) continue;
+        try {
+          const data = JSON.parse(localStorage.getItem(k));
+          const text = (data && data.diario) ? String(data.diario) : '';
+          if (text.toLowerCase().indexOf(q) !== -1) {
+            const date = k.replace(/^.*PLANNER[^_]*_?/, '').replace('MARY_DAILY_PLANNER_FIRESTORE_', '').replace('MARY_DAILY_PLANNER_', '');
+            results.push({ date: data.date || date, text: text });
+          }
+        } catch(e) {}
+      }
+      // also try known prefix
+      if (typeof STORAGE_PREFIX !== 'undefined') {
+        // already covered by loop
+      }
+      results.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+      if (results.length === 0) {
+        box.innerHTML = '<p class="text-stone-400">No hay días con esa palabra.</p>';
+        return;
+      }
+      box.innerHTML = results.map(r => {
+        const snippet = r.text.length > 180 ? r.text.slice(0,180) + '…' : r.text;
+        return '<div class="bg-white/80 border border-[#ebd7e3] rounded-xl p-3"><button onclick="jumpToDiarioDay(\'' + r.date + '\')" class="font-black text-[#b492cd] cursor-pointer">📅 ' + r.date + '</button><p class="text-stone-600 mt-1 whitespace-pre-wrap">' + snippet.replace(/</g,'&lt;') + '</p></div>';
+      }).join('');
+    }
+
+    function jumpToDiarioDay(dateStr) {
+      const inp = document.getElementById('planner-date') || document.getElementById('global-date') || document.querySelector('input[type=date]');
+      if (inp) {
+        inp.value = dateStr;
+        if (typeof handleDateChange === 'function') handleDateChange(dateStr);
+        else if (typeof changeDate === 'function') changeDate(dateStr);
+        else if (typeof loadDay === 'function') loadDay(dateStr);
+        else {
+          currentDate = dateStr;
+          currentData = loadDayData(dateStr);
+          if (typeof renderAll === 'function') renderAll();
+          else if (typeof renderPlanner === 'function') renderPlanner();
+          loadDiarioIntoUI();
+        }
+      }
+      showToast && showToast('Día ' + dateStr);
     }
 
     function renderReviewAreas() {
