@@ -47,11 +47,12 @@
       width: var(--sidebar-w);
       background: linear-gradient(180deg, #5e4b6e 0%, #4d3b5c 50%, #3d2c4a 100%);
       color: white;
+      /* z-index set below */
       display: flex;
       flex-direction: column;
       position: fixed;
       top: 0; left: 0; bottom: 0;
-      z-index: 50;
+      z-index: 220;
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       box-shadow: 8px 0 30px rgba(93, 75, 110, 0.25);
     }
@@ -123,12 +124,27 @@
       align-items: center;
       justify-content: space-between;
       padding: 0.65rem 1rem;
+      padding-top: max(0.65rem, env(safe-area-inset-top));
       background: linear-gradient(90deg, #5e4b6e, #4d3b5c);
       color: white;
-      position: sticky;
-      top: 0;
-      z-index: 40;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
       box-shadow: 0 2px 12px rgba(93, 75, 110, 0.3);
+      pointer-events: auto;
+    }
+    #topbar button {
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+      position: relative;
+      z-index: 201;
     }
 
     #content-area {
@@ -258,7 +274,8 @@
       inset: 0;
       background: rgba(61, 44, 61, 0.45);
       backdrop-filter: blur(4px);
-      z-index: 45;
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 210;
     }
 
     #sidebar-overlay.show { display: block; }
@@ -266,8 +283,8 @@
     /* ========== RESPONSIVE ========== */
     @media (max-width: 900px) {
       #sidebar { transform: translateX(-100%); }
-      #sidebar.open { transform: translateX(0); }
-      #main-wrap { margin-left: 0; }
+      #sidebar.open { transform: translateX(0); box-shadow: 8px 0 30px rgba(0,0,0,0.35); }
+      #main-wrap { margin-left: 0; padding-top: calc(52px + env(safe-area-inset-top, 0px)); }
       #topbar { display: flex; }
     }
 
@@ -329,7 +346,7 @@
   <div id="main-wrap">
     <!-- Mobile top bar -->
     <div id="topbar">
-      <button onclick="toggleSidebar()" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-lg leading-none">☰</button>
+      <button type="button" id="btn-menu" onclick="toggleSidebar(event)" ontouchend="toggleSidebar(event)" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-lg leading-none" aria-label="Menú">☰</button>
       <div class="flex items-center gap-2">
         <span class="text-sm font-black tracking-wider">MARY</span>
         <span class="text-pink-200 text-xs font-bold">💗</span>
@@ -461,16 +478,28 @@
       history.replaceState(null, '', '#' + viewId);
     }
 
-    function toggleSidebar() {
+    function toggleSidebar(e) {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
       const sb = document.getElementById('sidebar');
       const ov = document.getElementById('sidebar-overlay');
-      sb.classList.toggle('open');
-      ov.classList.toggle('show');
+      if (!sb) return;
+      const opening = !sb.classList.contains('open');
+      sb.classList.toggle('open', opening);
+      if (ov) ov.classList.toggle('show', opening);
+      // Evita que el iframe “robe” toques mientras el menú está abierto
+      document.querySelectorAll('.module-frame').forEach(function(f) {
+        f.style.pointerEvents = opening ? 'none' : 'auto';
+      });
     }
 
     function closeSidebar() {
-      document.getElementById('sidebar').classList.remove('open');
-      document.getElementById('sidebar-overlay').classList.remove('show');
+      const sb = document.getElementById('sidebar');
+      const ov = document.getElementById('sidebar-overlay');
+      if (sb) sb.classList.remove('open');
+      if (ov) ov.classList.remove('show');
+      document.querySelectorAll('.module-frame').forEach(function(f) {
+        f.style.pointerEvents = 'auto';
+      });
     }
 
     // On load: respect hash or default to dashboard
