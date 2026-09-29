@@ -6,6 +6,8 @@
   <title>MARY · Cierre & Insights</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -16,91 +18,162 @@
         linear-gradient(135deg, #fdf2f8 0%, #fce7f3 45%, #f3e8ff 100%);
       color: #4a2c3d; min-height: 100vh; margin: 0;
     }
-    .glass { background: rgba(255,255,255,0.92); backdrop-filter: blur(14px); border: 1px solid rgba(249,168,212,0.45); box-shadow: 0 10px 28px rgba(120,80,100,0.07); }
+    .glass { background: rgba(255,255,255,0.94); backdrop-filter: blur(14px); border: 1px solid rgba(249,168,212,0.45); box-shadow: 0 10px 28px rgba(120,80,100,0.07); }
+    .chart-box { position: relative; width: 100%; height: 220px; max-width: 100%; overflow: hidden; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col antialiased">
   <header class="bg-gradient-to-r from-[#c879a8] via-[#d9a7c7] to-[#b492cd] text-white sticky top-0 z-40 shadow-lg">
-    <div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
-      <div class="flex items-center gap-2">
-        <div class="w-10 h-10 rounded-2xl bg-white/25 flex items-center justify-center font-black">📊</div>
-        <div>
-          <h1 class="text-sm font-black tracking-wide uppercase">Cierre & Insights</h1>
-          <p class="text-[10px] text-white/85">Compara periodos · por área · Notion</p>
-        </div>
+    <div class="max-w-4xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+      <div>
+        <h1 class="text-sm font-black tracking-wide uppercase">📊 Cierre & Insights</h1>
+        <p class="text-[10px] text-white/85">Elige dos periodos y compara</p>
       </div>
-      <button onclick="copyCierre()" class="px-3 py-1.5 bg-white text-pink-700 rounded-xl text-xs font-black cursor-pointer">📋 Copiar cierre</button>
+      <div class="flex gap-2">
+        <button onclick="loadAll().then(render)" class="px-3 py-1.5 bg-white/20 border border-white/40 rounded-xl text-xs font-bold cursor-pointer">↻ Recargar datos</button>
+        <button onclick="copyCierre()" class="px-3 py-1.5 bg-white text-pink-700 rounded-xl text-xs font-black cursor-pointer">📋 Copiar cierre</button>
+      </div>
     </div>
   </header>
 
-  <main class="flex-1 max-w-5xl mx-auto w-full p-4 space-y-4">
+  <main class="flex-1 max-w-4xl mx-auto w-full p-4 space-y-4">
+    <div id="data-status" class="text-[10px] text-stone-500 px-1"></div>
+
     <div class="glass rounded-2xl p-4 space-y-3">
-      <h3 class="font-black text-stone-800 text-sm">📅 Periodo A (actual)</h3>
+      <h3 class="font-black text-stone-800 text-sm">1️⃣ Periodo A — el que quieres analizar</h3>
+      <div class="flex flex-wrap gap-2 text-xs">
+        <button type="button" onclick="presetA('week')" class="px-2.5 py-1 bg-pink-100 text-pink-700 rounded-lg font-bold cursor-pointer">Esta semana</button>
+        <button type="button" onclick="presetA('last3w')" class="px-2.5 py-1 bg-pink-50 text-pink-700 rounded-lg font-bold cursor-pointer">Últimas 3 semanas</button>
+        <button type="button" onclick="presetA('month')" class="px-2.5 py-1 bg-fuchsia-100 text-fuchsia-700 rounded-lg font-bold cursor-pointer">Este mes</button>
+        <button type="button" onclick="presetA('last3m')" class="px-2.5 py-1 bg-fuchsia-50 text-fuchsia-700 rounded-lg font-bold cursor-pointer">Últimos 3 meses</button>
+      </div>
       <div class="flex flex-wrap gap-2 items-center text-xs">
-        <button onclick="presetA('week')" class="px-2.5 py-1 bg-pink-100 text-pink-700 rounded-lg font-bold cursor-pointer">Esta semana</button>
-        <button onclick="presetA('last3w')" class="px-2.5 py-1 bg-pink-50 text-pink-700 rounded-lg font-bold cursor-pointer">Últimas 3 semanas</button>
-        <button onclick="presetA('month')" class="px-2.5 py-1 bg-fuchsia-100 text-fuchsia-700 rounded-lg font-bold cursor-pointer">Este mes</button>
-        <button onclick="presetA('last3m')" class="px-2.5 py-1 bg-fuchsia-50 text-fuchsia-700 rounded-lg font-bold cursor-pointer">Últimos 3 meses</button>
         <span class="font-bold text-stone-600">Desde</span>
-        <input type="date" id="a-from" onchange="render()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
+        <input type="date" id="a-from" class="bg-white border border-pink-200 rounded-xl px-2 py-1.5 font-bold">
         <span class="font-bold text-stone-600">Hasta</span>
-        <input type="date" id="a-to" onchange="render()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
+        <input type="date" id="a-to" class="bg-white border border-pink-200 rounded-xl px-2 py-1.5 font-bold">
       </div>
     </div>
 
     <div class="glass rounded-2xl p-4 space-y-3">
-      <h3 class="font-black text-stone-800 text-sm">📅 Periodo B (comparar con)</h3>
-      <div class="flex flex-wrap gap-2 items-center text-xs">
-        <button onclick="presetB('prevEqual')" class="px-2.5 py-1 bg-purple-100 text-purple-800 rounded-lg font-bold cursor-pointer">Periodo anterior igual</button>
-        <button onclick="presetB('prevWeek')" class="px-2.5 py-1 bg-purple-50 text-purple-800 rounded-lg font-bold cursor-pointer">Semana pasada</button>
-        <button onclick="presetB('prevMonth')" class="px-2.5 py-1 bg-purple-50 text-purple-800 rounded-lg font-bold cursor-pointer">Mes pasado</button>
-        <span class="font-bold text-stone-600">Desde</span>
-        <input type="date" id="b-from" onchange="render()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
-        <span class="font-bold text-stone-600">Hasta</span>
-        <input type="date" id="b-to" onchange="render()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
+      <h3 class="font-black text-stone-800 text-sm">2️⃣ Periodo B — con qué lo comparas</h3>
+      <div class="flex flex-wrap gap-2 text-xs">
+        <button type="button" onclick="presetB('prevEqual')" class="px-2.5 py-1 bg-purple-100 text-purple-800 rounded-lg font-bold cursor-pointer">Mismo tamaño, justo antes</button>
+        <button type="button" onclick="presetB('prevWeek')" class="px-2.5 py-1 bg-purple-50 text-purple-800 rounded-lg font-bold cursor-pointer">Semana pasada</button>
+        <button type="button" onclick="presetB('prevMonth')" class="px-2.5 py-1 bg-purple-50 text-purple-800 rounded-lg font-bold cursor-pointer">Mes pasado</button>
       </div>
-      <p class="text-[10px] text-stone-500">Ej: A = septiembre, B = agosto · o A = últimas 3 semanas y B = las 3 anteriores (botón “Periodo anterior igual”).</p>
+      <div class="flex flex-wrap gap-2 items-center text-xs">
+        <span class="font-bold text-stone-600">Desde</span>
+        <input type="date" id="b-from" class="bg-white border border-pink-200 rounded-xl px-2 py-1.5 font-bold">
+        <span class="font-bold text-stone-600">Hasta</span>
+        <input type="date" id="b-to" class="bg-white border border-pink-200 rounded-xl px-2 py-1.5 font-bold">
+      </div>
+      <p class="text-[10px] text-stone-500">Ejemplo: A = 1–30 septiembre · B = 1–31 agosto. O A = esta semana · B = “Mismo tamaño, justo antes”.</p>
     </div>
+
+    <button type="button" onclick="render()" class="w-full py-3 bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white font-black text-sm rounded-2xl shadow-md cursor-pointer">
+      🔍 Filtrar y comparar A vs B
+    </button>
 
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="kpis"></div>
-
     <div class="glass rounded-2xl p-4 space-y-2">
-      <h3 class="font-black text-stone-800 text-sm">✨ Comparación general</h3>
-      <div id="compare-general" class="text-xs space-y-1.5"></div>
+      <h3 class="font-black text-stone-800 text-sm">✨ Resumen A vs B</h3>
+      <div id="compare-general" class="text-xs space-y-1"></div>
     </div>
 
+    <!-- POKER -->
     <div class="glass rounded-2xl p-4 space-y-3">
       <h3 class="font-black text-stone-800 text-sm">♠️ Póker</h3>
-      <div id="compare-poker" class="text-xs space-y-1.5"></div>
-      <canvas id="chart-poker" height="150"></canvas>
+      <div id="compare-poker" class="text-xs space-y-1"></div>
+      <div class="flex flex-wrap gap-2 items-center text-xs">
+        <span class="font-bold text-stone-600">Gráfica:</span>
+        <select id="sel-poker-chart" onchange="drawPokerChart()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
+          <option value="hours">Horas de grind</option>
+          <option value="games">Games</option>
+          <option value="cev">cEV</option>
+          <option value="level">Nivel de sesión</option>
+          <option value="focus">Focus</option>
+          <option value="mindset">Mindset</option>
+        </select>
+      </div>
+      <div class="chart-box"><canvas id="chart-poker"></canvas></div>
     </div>
 
+    <!-- FITNESS -->
     <div class="glass rounded-2xl p-4 space-y-3">
       <h3 class="font-black text-stone-800 text-sm">🍎 Fitness</h3>
-      <div id="compare-fitness" class="text-xs space-y-1.5"></div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <canvas id="chart-fit-train" height="140"></canvas>
-        <canvas id="chart-fit-macros" height="140"></canvas>
+      <div id="compare-fitness" class="text-xs space-y-1"></div>
+      <div class="flex flex-wrap gap-2 items-center text-xs">
+        <span class="font-bold text-stone-600">Gráfica:</span>
+        <select id="sel-fit-chart" onchange="drawFitChart()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
+          <option value="entreno">Entrenos fuerza</option>
+          <option value="cardio">Cardio</option>
+          <option value="kcal">Calorías / día</option>
+          <option value="prot">Proteína / día</option>
+        </select>
       </div>
+      <div class="chart-box"><canvas id="chart-fit"></canvas></div>
     </div>
 
+    <!-- BIENESTAR -->
     <div class="glass rounded-2xl p-4 space-y-3">
       <h3 class="font-black text-stone-800 text-sm">🧘 Bienestar</h3>
-      <div id="compare-wellness" class="text-xs space-y-1.5"></div>
-      <canvas id="chart-wellness" height="140"></canvas>
+      <div id="compare-wellness" class="text-xs space-y-1"></div>
+      <div class="flex flex-wrap gap-2 items-center text-xs">
+        <span class="font-bold text-stone-600">Gráfica:</span>
+        <select id="sel-well-chart" onchange="drawWellChart()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
+          <option value="agua">Agua (L)</option>
+          <option value="sueno">Sueño (h)</option>
+          <option value="animo">Estado de ánimo</option>
+        </select>
+      </div>
+      <div class="chart-box"><canvas id="chart-well"></canvas></div>
     </div>
 
+    <!-- GASTOS -->
     <div class="glass rounded-2xl p-4 space-y-3">
       <h3 class="font-black text-stone-800 text-sm">💸 Gastos</h3>
-      <div id="compare-gastos" class="text-xs space-y-1.5"></div>
-      <canvas id="chart-gastos" height="140"></canvas>
+      <div id="compare-gastos" class="text-xs space-y-1"></div>
+      <div class="flex flex-wrap gap-2 items-center text-xs">
+        <span class="font-bold text-stone-600">Gráfica:</span>
+        <select id="sel-gas-chart" onchange="drawGasChart()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
+          <option value="ambos">Ingresos y egresos</option>
+          <option value="egreso">Solo egresos</option>
+          <option value="ingreso">Solo ingresos</option>
+        </select>
+      </div>
+      <div class="chart-box"><canvas id="chart-gas"></canvas></div>
     </div>
-
-    <p class="text-[10px] text-stone-400 text-center pb-6">Datos del mismo navegador donde registras. Captura gráficas para Notion + botón Copiar cierre.</p>
   </main>
 
   <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCnhvfyXpwJdYOQFCvsyHDhgW9F3X7ARR4",
+      authDomain: "marpk-816dd.firebaseapp.com",
+      projectId: "marpk-816dd",
+      storageBucket: "marpk-816dd.firebasestorage.app",
+      messagingSenderId: "189644122232",
+      appId: "1:189644122232:web:ed7894f1510a373d44658d"
+    };
+    let db = null;
+    try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); } catch(e) {}
+
+    const POKE_KEY = 'MARPK_POKER_DATA_V14';
+    const FIT_KEY = 'MARY_FITNESS_DATA_V9';
+    const GAS_KEY = 'MARY_GASTOS_V1';
+
+    let pokerData = { grindSessions: [] };
+    let fitData = { entrenamiento: [], alimentacion: [], salud: [], cardio: [] };
+    let gasData = [];
+    let lastA = null, lastB = null;
     let charts = {};
+
+    const ANIMO_SCORE = {
+      'Feliz 😊': 9, 'Motivada 💪': 9, 'Energética ⚡': 8, 'Tranquila 😌': 7, 'Neutra 😐': 5,
+      'Pensativa 🤔': 5, 'Cansada 😴': 4, 'Ansiosa 😰': 3, 'Desmotivada 😔': 2, 'Bajoneada 😞': 2,
+      'Apática 😶': 2, 'Estresada 😣': 3, 'Irritable 😤': 3
+    };
+
     function fmt(d) {
       return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     }
@@ -109,6 +182,65 @@
       x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x;
     }
     function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate()+n); return x; }
+
+    async function loadAll() {
+      // Local first
+      try {
+        const raw = localStorage.getItem(POKE_KEY);
+        if (raw) pokerData = Object.assign({ grindSessions: [] }, JSON.parse(raw));
+      } catch(e) {}
+      try {
+        const raw = localStorage.getItem(FIT_KEY);
+        if (raw) fitData = Object.assign({ entrenamiento: [], alimentacion: [], salud: [], cardio: [] }, JSON.parse(raw));
+      } catch(e) {}
+      try {
+        gasData = JSON.parse(localStorage.getItem(GAS_KEY) || '[]');
+      } catch(e) { gasData = []; }
+
+      // Scan any other keys as fallback
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        try {
+          const v = JSON.parse(localStorage.getItem(k));
+          if (v && Array.isArray(v.grindSessions) && v.grindSessions.length > (pokerData.grindSessions||[]).length)
+            pokerData = v;
+          if (v && (v.entrenamiento || v.alimentacion) && (!(fitData.entrenamiento||[]).length || (v.entrenamiento||[]).length > (fitData.entrenamiento||[]).length))
+            fitData = v;
+        } catch(e) {}
+      }
+
+      // Firebase
+      if (db) {
+        try {
+          const doc = await db.collection('mapkr').doc('poker_data').get();
+          if (doc.exists) {
+            const d = doc.data();
+            if (d && Array.isArray(d.grindSessions) && d.grindSessions.length >= (pokerData.grindSessions||[]).length)
+              pokerData = d;
+          }
+        } catch(e) {}
+        try {
+          const doc = await db.collection('mary_fitness').doc('user_data').get();
+          if (doc.exists) {
+            const d = doc.data();
+            if (d) fitData = Object.assign(fitData, d);
+          }
+        } catch(e) {}
+        try {
+          const doc = await db.collection('mary_gastos').doc('all').get();
+          if (doc.exists && doc.data().items) gasData = doc.data().items;
+        } catch(e) {}
+      }
+
+      const nP = (pokerData.grindSessions||[]).length;
+      const nE = (fitData.entrenamiento||[]).length;
+      const nA = (fitData.alimentacion||[]).length;
+      const nS = (fitData.salud||[]).length;
+      const nG = gasData.length;
+      document.getElementById('data-status').textContent =
+        'Datos cargados → Póker: ' + nP + ' sesiones · Fitness: ' + nE + ' entreno, ' + nA + ' comida, ' + nS + ' bienestar · Gastos: ' + nG +
+        (nP+nE+nA+nS+nG === 0 ? '  ⚠️ No se encontraron datos en este dispositivo. Abre Póker/Fitness/Gastos en esta misma app y vuelve a pulsar Recargar.' : '');
+    }
 
     function presetA(type) {
       const now = new Date();
@@ -128,13 +260,12 @@
         document.getElementById('a-from').value = fmt(f);
         document.getElementById('a-to').value = fmt(now);
       }
-      presetB('prevEqual');
     }
 
     function presetB(type) {
       const af = document.getElementById('a-from').value;
       const at = document.getElementById('a-to').value;
-      if (!af || !at) return;
+      if (!af || !at) { alert('Primero elige el Periodo A'); return; }
       const f = new Date(af+'T00:00:00');
       const t = new Date(at+'T00:00:00');
       const days = Math.round((t - f) / 86400000) + 1;
@@ -150,12 +281,9 @@
         document.getElementById('b-to').value = fmt(addDays(prevMon, 6));
       } else if (type === 'prevMonth') {
         const y = f.getFullYear(), m = f.getMonth();
-        const pf = new Date(y, m-1, 1);
-        const pt = new Date(y, m, 0);
-        document.getElementById('b-from').value = fmt(pf);
-        document.getElementById('b-to').value = fmt(pt);
+        document.getElementById('b-from').value = fmt(new Date(y, m-1, 1));
+        document.getElementById('b-to').value = fmt(new Date(y, m, 0));
       }
-      render();
     }
 
     function inRange(date, from, to) {
@@ -164,83 +292,58 @@
       if (to && date > to) return false;
       return true;
     }
-
-    function getPokerSessions() {
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        try {
-          const v = JSON.parse(localStorage.getItem(k));
-          if (v && Array.isArray(v.grindSessions)) return v.grindSessions;
-          if (v && v.appData && Array.isArray(v.appData.grindSessions)) return v.appData.grindSessions;
-        } catch(e) {}
-      }
-      return [];
-    }
-    function getGastos() {
-      try { return JSON.parse(localStorage.getItem('MARY_GASTOS_V1') || '[]'); } catch(e) { return []; }
-    }
-    function getFitness() {
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        try {
-          const v = JSON.parse(localStorage.getItem(k));
-          if (v && (v.entrenamiento || v.alimentacion || v.salud || v.cardio)) return v;
-        } catch(e) {}
-      }
-      return { entrenamiento: [], alimentacion: [], salud: [], cardio: [] };
-    }
-
     function avg(arr) {
       if (!arr.length) return null;
       return arr.reduce((a,b)=>a+b,0) / arr.length;
     }
 
     function stats(from, to) {
-      const sessions = getPokerSessions().filter(s => inRange(s.date, from, to));
-      const gastos = getGastos().filter(g => inRange(g.fecha, from, to));
-      const fit = getFitness();
-      const entrenos = (fit.entrenamiento||[]).filter(x => inRange(x.date, from, to));
-      const cardio = (fit.cardio||[]).filter(x => inRange(x.date, from, to));
-      const alim = (fit.alimentacion||[]).filter(x => inRange(x.date, from, to));
-      const salud = (fit.salud||[]).filter(x => inRange(x.date, from, to));
+      const sessions = (pokerData.grindSessions||[]).filter(s => inRange(s.date, from, to));
+      const gastos = gasData.filter(g => inRange(g.fecha, from, to));
+      const entrenos = (fitData.entrenamiento||[]).filter(x => inRange(x.date, from, to));
+      const cardio = (fitData.cardio||[]).filter(x => inRange(x.date, from, to));
+      const alim = (fitData.alimentacion||[]).filter(x => inRange(x.date, from, to));
+      const salud = (fitData.salud||[]).filter(x => inRange(x.date, from, to));
 
       let grindH=0, studyH=0, games=0, money=0;
-      const focuses=[], mindsets=[], levels=[], cevs=[];
+      const focuses=[], mindsets=[], levels=[];
+      let cevAcc=0, gSum=0;
       sessions.forEach(s => {
-        grindH += s.hours||0; studyH += s.studyHours||0; games += s.games||0;
+        grindH += +s.hours||0; studyH += +s.studyHours||0; games += +s.games||0;
         money += parseFloat(s.money)||0;
         if (s.focus!=null) focuses.push(+s.focus);
         if (s.mindset!=null) mindsets.push(+s.mindset);
         if (s.sessionLevel!=null) levels.push(+s.sessionLevel);
-        if (s.cev!=null) cevs.push(+s.cev);
+        if (s.cev!=null && (+s.games||0)>0) { cevAcc += (+s.cev)*(+s.games); gSum += +s.games; }
       });
-      let cevW = null, gSum = 0, cevAcc = 0;
-      sessions.forEach(s => {
-        const g = s.games||0; if (g>0 && s.cev!=null) { cevAcc += (+s.cev)*g; gSum += g; }
-      });
-      if (gSum>0) cevW = cevAcc/gSum; else cevW = avg(cevs);
 
       const byDay = {};
       alim.forEach(a => {
         if (!byDay[a.date]) byDay[a.date] = { cal:0, prot:0 };
-        byDay[a.date].cal += a.cal||0;
-        byDay[a.date].prot += a.prot||0;
+        byDay[a.date].cal += +a.cal||0;
+        byDay[a.date].prot += +a.prot||0;
       });
       const dayCals = Object.values(byDay).map(d => d.cal);
       const dayProts = Object.values(byDay).map(d => d.prot);
-      const aguas = salud.map(s => s.agua||0).filter(x => x>0);
-      const suenos = salud.map(s => s.sueno||0).filter(x => x>0);
+      const aguas = salud.map(s => +s.agua||0).filter(x => x>0);
+      const suenos = salud.map(s => +s.sueno||0).filter(x => x>0);
+      const animoScores = salud.map(s => {
+        if (s.animoScore!=null) return +s.animoScore;
+        if (s.animo && ANIMO_SCORE[s.animo]!=null) return ANIMO_SCORE[s.animo];
+        return null;
+      }).filter(x => x!=null);
       const animos = salud.map(s => s.animo).filter(Boolean);
 
       let ing=0, egr=0;
-      gastos.forEach(g => { if (g.tipo==='ingreso') ing+=g.monto; else egr+=g.monto; });
+      gastos.forEach(g => { if (g.tipo==='ingreso') ing+=+g.monto; else egr+=+g.monto; });
 
       return {
         from, to, sessions: sessions.length, grindH, studyH, games, money,
-        focusAvg: avg(focuses), mindAvg: avg(mindsets), levelAvg: avg(levels), cevAvg: cevW,
+        focusAvg: avg(focuses), mindAvg: avg(mindsets), levelAvg: avg(levels),
+        cevAvg: gSum>0 ? cevAcc/gSum : null,
         entrenos: entrenos.length, cardio: cardio.length,
         calAvg: avg(dayCals), protAvg: avg(dayProts),
-        aguaAvg: avg(aguas), suenoAvg: avg(suenos), animos,
+        aguaAvg: avg(aguas), suenoAvg: avg(suenos), animoAvg: avg(animoScores), animos,
         ing, egr, balance: ing-egr,
         sessionsList: sessions, gastosList: gastos,
         entrenosList: entrenos, cardioList: cardio, alimByDay: byDay, saludList: salud
@@ -251,25 +354,24 @@
       if (cur==null && prev==null) return '<span class="text-stone-400">sin datos</span>';
       if (prev==null || prev===0) {
         if (cur==null || cur===0) return '<span class="text-stone-400">—</span>';
-        return '<span class="px-2 py-0.5 rounded-lg font-bold bg-pink-50 text-pink-700">nuevo dato</span>';
+        return '<span class="px-2 py-0.5 rounded-lg font-bold bg-pink-50 text-pink-700">nuevo</span>';
       }
-      const c = +cur, p = +prev;
-      const diff = c - p;
-      const pct = Math.round((diff / Math.abs(p)) * 100);
-      const improved = higherIsBetter ? diff > 0 : diff < 0;
-      if (Math.abs(diff) < 0.0001 || pct === 0) return '<span class="px-2 py-0.5 rounded-lg font-bold bg-stone-100 text-stone-600">igual → 0%</span>';
-      if (improved) return '<span class="px-2 py-0.5 rounded-lg font-bold bg-emerald-100 text-emerald-800">mejoró ↑ ' + Math.abs(pct) + '%</span>';
-      return '<span class="px-2 py-0.5 rounded-lg font-bold bg-red-100 text-red-700">desmejoró ↓ ' + Math.abs(pct) + '%</span>';
+      const diff = +cur - +prev;
+      const pct = Math.round((diff / Math.abs(+prev)) * 100);
+      if (Math.abs(diff)<0.0001 || pct===0) return '<span class="px-2 py-0.5 rounded-lg font-bold bg-stone-100 text-stone-600">igual</span>';
+      const improved = higherIsBetter ? diff>0 : diff<0;
+      if (improved) return '<span class="px-2 py-0.5 rounded-lg font-bold bg-emerald-100 text-emerald-800">mejoró ↑'+Math.abs(pct)+'%</span>';
+      return '<span class="px-2 py-0.5 rounded-lg font-bold bg-red-100 text-red-700">desmejoró ↓'+Math.abs(pct)+'%</span>';
     }
 
     function row(label, cur, prev, higherIsBetter, fmtFn) {
-      const f = fmtFn || (x => x==null ? '—' : (typeof x === 'number' ? (Number.isInteger(x)?x:x.toFixed(1)) : x));
-      return '<div class="flex flex-wrap items-center justify-between gap-2 py-1 border-b border-pink-100">' +
-        '<span class="text-stone-600">' + label + '</span>' +
-        '<span class="font-bold text-stone-800">A: ' + f(cur) + ' · B: ' + f(prev) + ' ' + badge(cur, prev, higherIsBetter) + '</span></div>';
+      const f = fmtFn || (x => x==null?'—':(typeof x==='number'?(Number.isInteger(x)?x:x.toFixed(1)):x));
+      return '<div class="flex flex-wrap items-center justify-between gap-2 py-1.5 border-b border-pink-50">' +
+        '<span class="text-stone-600">'+label+'</span>' +
+        '<span class="font-bold text-stone-800 text-right">A: '+f(cur)+' &nbsp;·&nbsp; B: '+f(prev)+' '+badge(cur,prev,higherIsBetter)+'</span></div>';
     }
 
-    function destroyChart(id) {
+    function destroy(id) {
       if (charts[id]) { try { charts[id].destroy(); } catch(e) {} charts[id]=null; }
     }
 
@@ -285,169 +387,205 @@
       const at = document.getElementById('a-to').value;
       const bf = document.getElementById('b-from').value;
       const bt = document.getElementById('b-to').value;
-      if (!af || !at || !bf || !bt) return;
+      if (!af||!at||!bf||!bt) { alert('Completa las fechas de A y B'); return; }
 
-      const A = stats(af, at);
-      const B = stats(bf, bt);
+      lastA = stats(af, at);
+      lastB = stats(bf, bt);
+      const A = lastA, B = lastB;
 
       document.getElementById('kpis').innerHTML =
         '<div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">Grind A</span><p class="text-lg font-black text-pink-600">'+A.grindH.toFixed(1)+'h</p></div>' +
-        '<div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">cEV A</span><p class="text-lg font-black text-stone-800">'+(A.cevAvg!=null?A.cevAvg.toFixed(1):'—')+'</p></div>' +
-        '<div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">Nivel sesión A</span><p class="text-lg font-black text-fuchsia-600">'+(A.levelAvg!=null?A.levelAvg.toFixed(1):'—')+'</p></div>' +
+        '<div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">cEV A</span><p class="text-lg font-black">'+(A.cevAvg!=null?A.cevAvg.toFixed(1):'—')+'</p></div>' +
+        '<div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">Nivel A</span><p class="text-lg font-black text-fuchsia-600">'+(A.levelAvg!=null?A.levelAvg.toFixed(1):'—')+'</p></div>' +
         '<div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">Balance $ A</span><p class="text-lg font-black '+(A.balance>=0?'text-emerald-600':'text-pink-600')+'">'+A.balance.toFixed(2)+'</p></div>';
 
       document.getElementById('compare-general').innerHTML =
-        '<p class="text-stone-500 mb-2">A: <strong>'+af+' → '+at+'</strong> | B: <strong>'+bf+' → '+bt+'</strong></p>' +
-        row('Horas grind', A.grindH, B.grindH, true, x => x.toFixed(1)+'h') +
+        '<p class="text-stone-500 mb-2"><strong class="text-pink-600">A</strong> '+af+' → '+at+' &nbsp;|&nbsp; <strong class="text-purple-700">B</strong> '+bf+' → '+bt+'</p>' +
+        row('Horas grind', A.grindH, B.grindH, true, x=>x.toFixed(1)+'h') +
         row('Games', A.games, B.games, true) +
-        row('Egresos', A.egr, B.egr, false, x => x.toFixed(2)) +
-        row('Entrenos', A.entrenos, B.entrenos, true);
+        row('Entrenos', A.entrenos, B.entrenos, true) +
+        row('Egresos $', A.egr, B.egr, false, x=>x.toFixed(2));
 
       document.getElementById('compare-poker').innerHTML =
-        row('Grind (h)', A.grindH, B.grindH, true, x => x.toFixed(1)) +
-        row('Estudio (h)', A.studyH, B.studyH, true, x => x.toFixed(1)) +
+        row('Grind (h)', A.grindH, B.grindH, true, x=>x.toFixed(1)) +
+        row('Estudio (h)', A.studyH, B.studyH, true, x=>x.toFixed(1)) +
         row('Games', A.games, B.games, true) +
-        row('cEV promedio', A.cevAvg, B.cevAvg, true, x => x==null?'—':x.toFixed(1)) +
-        row('Focus avg', A.focusAvg, B.focusAvg, true, x => x==null?'—':x.toFixed(1)+'/10') +
-        row('Mindset avg', A.mindAvg, B.mindAvg, true, x => x==null?'—':x.toFixed(1)+'/10') +
-        row('Nivel sesión avg', A.levelAvg, B.levelAvg, true, x => x==null?'—':x.toFixed(1)+'/10') +
-        row('$ sesiones', A.money, B.money, true, x => x.toFixed(2)) +
-        row('Sesiones', A.sessions, B.sessions, true);
+        row('cEV', A.cevAvg, B.cevAvg, true, x=>x==null?'—':x.toFixed(1)) +
+        row('Focus', A.focusAvg, B.focusAvg, true, x=>x==null?'—':x.toFixed(1)+'/10') +
+        row('Mindset', A.mindAvg, B.mindAvg, true, x=>x==null?'—':x.toFixed(1)+'/10') +
+        row('Nivel sesión', A.levelAvg, B.levelAvg, true, x=>x==null?'—':x.toFixed(1)+'/10') +
+        row('$', A.money, B.money, true, x=>x.toFixed(2));
 
       document.getElementById('compare-fitness').innerHTML =
-        row('Entrenos fuerza', A.entrenos, B.entrenos, true) +
+        row('Fuerza', A.entrenos, B.entrenos, true) +
         row('Cardio', A.cardio, B.cardio, true) +
-        row('Calorías avg/día', A.calAvg, B.calAvg, false, x => x==null?'—':Math.round(x)+' kcal') +
-        row('Proteína avg/día', A.protAvg, B.protAvg, true, x => x==null?'—':Math.round(x)+' g');
+        row('Kcal avg/día', A.calAvg, B.calAvg, false, x=>x==null?'—':Math.round(x)) +
+        row('Prot avg/día', A.protAvg, B.protAvg, true, x=>x==null?'—':Math.round(x)+'g');
 
       document.getElementById('compare-wellness').innerHTML =
-        row('Agua avg (L)', A.aguaAvg, B.aguaAvg, true, x => x==null?'—':x.toFixed(1)+' L') +
-        row('Sueño avg (h)', A.suenoAvg, B.suenoAvg, true, x => x==null?'—':x.toFixed(1)+' h') +
-        '<p class="text-stone-500 pt-1">Ánimos A: '+(A.animos.length?A.animos.join(' · '):'—')+'</p>' +
-        '<p class="text-stone-500">Ánimos B: '+(B.animos.length?B.animos.join(' · '):'—')+'</p>';
+        row('Agua (L)', A.aguaAvg, B.aguaAvg, true, x=>x==null?'—':x.toFixed(1)) +
+        row('Sueño (h)', A.suenoAvg, B.suenoAvg, true, x=>x==null?'—':x.toFixed(1)) +
+        row('Ánimo (score)', A.animoAvg, B.animoAvg, true, x=>x==null?'—':x.toFixed(1)+'/10');
 
       document.getElementById('compare-gastos').innerHTML =
-        row('Ingresos', A.ing, B.ing, true, x => x.toFixed(2)) +
-        row('Egresos', A.egr, B.egr, false, x => x.toFixed(2)) +
-        row('Balance', A.balance, B.balance, true, x => x.toFixed(2));
+        row('Ingresos', A.ing, B.ing, true, x=>x.toFixed(2)) +
+        row('Egresos', A.egr, B.egr, false, x=>x.toFixed(2)) +
+        row('Balance', A.balance, B.balance, true, x=>x.toFixed(2));
 
-      const days = daysBetween(af, at);
-      const short = days.map(d => d.slice(5));
+      drawPokerChart();
+      drawFitChart();
+      drawWellChart();
+      drawGasChart();
+    }
 
-      destroyChart('poker');
-      charts.poker = new Chart(document.getElementById('chart-poker'), {
-        type: 'bar',
-        data: {
-          labels: short,
-          datasets: [
-            { label: 'Horas', data: days.map(d => A.sessionsList.filter(s=>s.date===d).reduce((a,s)=>a+(s.hours||0),0)), backgroundColor: 'rgba(236,72,153,0.55)' },
-            { label: 'cEV', data: days.map(d => { const s=A.sessionsList.find(x=>x.date===d); return s&&s.cev!=null?+s.cev:null; }), type: 'line', borderColor: '#b492cd', tension: 0.3, spanGaps: true },
-            { label: 'Nivel', data: days.map(d => { const s=A.sessionsList.find(x=>x.date===d); return s&&s.sessionLevel!=null?+s.sessionLevel:null; }), type: 'line', borderColor: '#c879a8', tension: 0.3, spanGaps: true }
-          ]
-        },
-        options: { plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } } }
-      });
-
-      destroyChart('fitTrain');
-      charts.fitTrain = new Chart(document.getElementById('chart-fit-train'), {
-        type: 'bar',
-        data: {
-          labels: short,
-          datasets: [
-            { label: 'Fuerza', data: days.map(d => A.entrenosList.filter(x=>x.date===d).length), backgroundColor: 'rgba(236,72,153,0.5)' },
-            { label: 'Cardio', data: days.map(d => A.cardioList.filter(x=>x.date===d).length), backgroundColor: 'rgba(180,146,205,0.5)' }
-          ]
-        },
-        options: { plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } } }
-      });
-
-      destroyChart('fitMacros');
-      charts.fitMacros = new Chart(document.getElementById('chart-fit-macros'), {
+    function makeLineChart(canvasId, labels, datasets) {
+      destroy(canvasId);
+      const ctx = document.getElementById(canvasId);
+      charts[canvasId] = new Chart(ctx, {
         type: 'line',
-        data: {
-          labels: short,
-          datasets: [
-            { label: 'Kcal', data: days.map(d => A.alimByDay[d]?A.alimByDay[d].cal:null), borderColor: '#ec4899', tension: 0.3, spanGaps: true },
-            { label: 'Prot (g)', data: days.map(d => A.alimByDay[d]?A.alimByDay[d].prot:null), borderColor: '#b492cd', tension: 0.3, spanGaps: true }
-          ]
-        },
-        options: { plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } } }
-      });
-
-      destroyChart('well');
-      charts.well = new Chart(document.getElementById('chart-wellness'), {
-        type: 'line',
-        data: {
-          labels: short,
-          datasets: [
-            { label: 'Agua L', data: days.map(d => { const s=A.saludList.find(x=>x.date===d); return s?s.agua:null; }), borderColor: '#38bdf8', tension: 0.3, spanGaps: true },
-            { label: 'Sueño h', data: days.map(d => { const s=A.saludList.find(x=>x.date===d); return s?s.sueno:null; }), borderColor: '#b492cd', tension: 0.3, spanGaps: true }
-          ]
-        },
-        options: { plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } } }
-      });
-
-      destroyChart('gastos');
-      charts.gastos = new Chart(document.getElementById('chart-gastos'), {
-        type: 'line',
-        data: {
-          labels: short,
-          datasets: [{
-            label: 'Egresos',
-            data: days.map(d => A.gastosList.filter(g=>g.fecha===d&&g.tipo==='egreso').reduce((a,g)=>a+g.monto,0)),
-            borderColor: '#ec4899', backgroundColor: 'rgba(236,72,153,0.12)', fill: true, tension: 0.3
-          }]
-        },
-        options: { plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } } }
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } },
+          scales: { x: { ticks: { maxRotation: 45, font: { size: 9 } } } }
+        }
       });
     }
 
+    function drawPokerChart() {
+      if (!lastA) return;
+      const days = daysBetween(lastA.from, lastA.to);
+      const short = days.map(d => d.slice(5));
+      const mode = document.getElementById('sel-poker-chart').value;
+      let data, label, color = '#ec4899';
+      if (mode === 'hours') {
+        label = 'Horas'; data = days.map(d => lastA.sessionsList.filter(s=>s.date===d).reduce((a,s)=>a+(+s.hours||0),0));
+      } else if (mode === 'games') {
+        label = 'Games'; data = days.map(d => lastA.sessionsList.filter(s=>s.date===d).reduce((a,s)=>a+(+s.games||0),0));
+      } else if (mode === 'cev') {
+        label = 'cEV'; data = days.map(d => { const s=lastA.sessionsList.find(x=>x.date===d); return s&&s.cev!=null?+s.cev:null; });
+      } else if (mode === 'level') {
+        label = 'Nivel'; data = days.map(d => { const s=lastA.sessionsList.find(x=>x.date===d); return s&&s.sessionLevel!=null?+s.sessionLevel:null; });
+      } else if (mode === 'focus') {
+        label = 'Focus'; data = days.map(d => { const s=lastA.sessionsList.find(x=>x.date===d); return s&&s.focus!=null?+s.focus:null; });
+      } else {
+        label = 'Mindset'; data = days.map(d => { const s=lastA.sessionsList.find(x=>x.date===d); return s&&s.mindset!=null?+s.mindset:null; });
+      }
+      makeLineChart('chart-poker', short, [{
+        label: label + ' (periodo A)',
+        data, borderColor: color, backgroundColor: 'rgba(236,72,153,0.12)', fill: true, tension: 0.3, spanGaps: true
+      }]);
+    }
+
+    function drawFitChart() {
+      if (!lastA) return;
+      const days = daysBetween(lastA.from, lastA.to);
+      const short = days.map(d => d.slice(5));
+      const mode = document.getElementById('sel-fit-chart').value;
+      let data, label;
+      if (mode === 'entreno') {
+        label = 'Entrenos'; data = days.map(d => lastA.entrenosList.filter(x=>x.date===d).length);
+      } else if (mode === 'cardio') {
+        label = 'Cardio'; data = days.map(d => lastA.cardioList.filter(x=>x.date===d).length);
+      } else if (mode === 'kcal') {
+        label = 'Kcal'; data = days.map(d => lastA.alimByDay[d]?lastA.alimByDay[d].cal:null);
+      } else {
+        label = 'Prot g'; data = days.map(d => lastA.alimByDay[d]?lastA.alimByDay[d].prot:null);
+      }
+      makeLineChart('chart-fit', short, [{
+        label: label + ' (periodo A)',
+        data, borderColor: '#b492cd', backgroundColor: 'rgba(180,146,205,0.15)', fill: true, tension: 0.3, spanGaps: true
+      }]);
+    }
+
+    function drawWellChart() {
+      if (!lastA) return;
+      const days = daysBetween(lastA.from, lastA.to);
+      const short = days.map(d => d.slice(5));
+      const mode = document.getElementById('sel-well-chart').value;
+      let data, label;
+      if (mode === 'agua') {
+        label = 'Agua L';
+        data = days.map(d => { const s=lastA.saludList.find(x=>x.date===d); return s?+s.agua||null:null; });
+      } else if (mode === 'sueno') {
+        label = 'Sueño h';
+        data = days.map(d => { const s=lastA.saludList.find(x=>x.date===d); return s?+s.sueno||null:null; });
+      } else {
+        label = 'Ánimo (1-10)';
+        data = days.map(d => {
+          const s = lastA.saludList.find(x=>x.date===d);
+          if (!s) return null;
+          if (s.animoScore!=null) return +s.animoScore;
+          if (s.animo && ANIMO_SCORE[s.animo]!=null) return ANIMO_SCORE[s.animo];
+          return null;
+        });
+      }
+      makeLineChart('chart-well', short, [{
+        label: label + ' (periodo A)',
+        data, borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.12)', fill: true, tension: 0.3, spanGaps: true
+      }]);
+    }
+
+    function drawGasChart() {
+      if (!lastA) return;
+      const days = daysBetween(lastA.from, lastA.to);
+      const short = days.map(d => d.slice(5));
+      const mode = document.getElementById('sel-gas-chart').value;
+      const egr = days.map(d => lastA.gastosList.filter(g=>g.fecha===d&&g.tipo==='egreso').reduce((a,g)=>a+(+g.monto||0),0));
+      const ing = days.map(d => lastA.gastosList.filter(g=>g.fecha===d&&g.tipo==='ingreso').reduce((a,g)=>a+(+g.monto||0),0));
+      const datasets = [];
+      if (mode === 'ambos' || mode === 'egreso')
+        datasets.push({ label: 'Egresos', data: egr, borderColor: '#ec4899', backgroundColor: 'rgba(236,72,153,0.12)', fill: true, tension: 0.3 });
+      if (mode === 'ambos' || mode === 'ingreso')
+        datasets.push({ label: 'Ingresos', data: ing, borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,0.12)', fill: true, tension: 0.3 });
+      makeLineChart('chart-gas', short, datasets);
+    }
+
     function copyCierre() {
-      const af = document.getElementById('a-from').value;
-      const at = document.getElementById('a-to').value;
-      const bf = document.getElementById('b-from').value;
-      const bt = document.getElementById('b-to').value;
-      const A = stats(af, at), B = stats(bf, bt);
+      if (!lastA || !lastB) { alert('Primero pulsa Filtrar y comparar'); return; }
+      const A = lastA, B = lastB;
       const nl = String.fromCharCode(10);
       function line(label, a, b, goodUp) {
         let tag = '';
-        if (a!=null && b!=null && b!==0 && a!=='—' && b!=='—') {
+        if (a!=null && b!=null && +b!==0) {
           const pct = Math.round(((+a-+b)/Math.abs(+b))*100);
           const imp = goodUp ? (+a>+b) : (+a<+b);
-          if (pct===0) tag = ' (igual)';
-          else if (imp) tag = ' (mejoró ' + Math.abs(pct) + '%)';
-          else tag = ' (desmejoró ' + Math.abs(pct) + '%)';
+          tag = pct===0 ? ' (igual)' : (imp ? ' (mejoró '+Math.abs(pct)+'%)' : ' (desmejoró '+Math.abs(pct)+'%)');
         }
-        return label + ': A ' + a + ' | B ' + b + tag + nl;
+        return label+': A '+a+' | B '+b+tag+nl;
       }
-      let r = '📊 CIERRE MARY LIFE' + nl;
-      r += 'Periodo A: ' + af + ' → ' + at + nl;
-      r += 'Periodo B: ' + bf + ' → ' + bt + nl + nl;
-      r += '♠️ PÓKER' + nl;
+      let r = '📊 CIERRE MARY LIFE'+nl;
+      r += 'A: '+A.from+' → '+A.to+nl+'B: '+B.from+' → '+B.to+nl+nl;
+      r += '♠️ PÓKER'+nl;
       r += line('Grind h', A.grindH.toFixed(1), B.grindH.toFixed(1), true);
       r += line('Estudio h', A.studyH.toFixed(1), B.studyH.toFixed(1), true);
       r += line('Games', A.games, B.games, true);
       r += line('cEV', A.cevAvg!=null?A.cevAvg.toFixed(1):'—', B.cevAvg!=null?B.cevAvg.toFixed(1):'—', true);
       r += line('Focus', A.focusAvg!=null?A.focusAvg.toFixed(1):'—', B.focusAvg!=null?B.focusAvg.toFixed(1):'—', true);
       r += line('Mindset', A.mindAvg!=null?A.mindAvg.toFixed(1):'—', B.mindAvg!=null?B.mindAvg.toFixed(1):'—', true);
-      r += line('Nivel sesión', A.levelAvg!=null?A.levelAvg.toFixed(1):'—', B.levelAvg!=null?B.levelAvg.toFixed(1):'—', true);
-      r += line('$', A.money.toFixed(2), B.money.toFixed(2), true);
-      r += nl + '🍎 FITNESS' + nl;
+      r += line('Nivel', A.levelAvg!=null?A.levelAvg.toFixed(1):'—', B.levelAvg!=null?B.levelAvg.toFixed(1):'—', true);
+      r += nl+'🍎 FITNESS'+nl;
       r += line('Entrenos', A.entrenos, B.entrenos, true);
       r += line('Cardio', A.cardio, B.cardio, true);
-      r += line('Kcal avg', A.calAvg!=null?Math.round(A.calAvg):'—', B.calAvg!=null?Math.round(B.calAvg):'—', false);
-      r += line('Prot avg', A.protAvg!=null?Math.round(A.protAvg):'—', B.protAvg!=null?Math.round(B.protAvg):'—', true);
-      r += nl + '🧘 BIENESTAR' + nl;
-      r += line('Agua L', A.aguaAvg!=null?A.aguaAvg.toFixed(1):'—', B.aguaAvg!=null?B.aguaAvg.toFixed(1):'—', true);
-      r += line('Sueño h', A.suenoAvg!=null?A.suenoAvg.toFixed(1):'—', B.suenoAvg!=null?B.suenoAvg.toFixed(1):'—', true);
-      r += nl + '💸 GASTOS' + nl;
+      r += line('Kcal', A.calAvg!=null?Math.round(A.calAvg):'—', B.calAvg!=null?Math.round(B.calAvg):'—', false);
+      r += line('Prot', A.protAvg!=null?Math.round(A.protAvg):'—', B.protAvg!=null?Math.round(B.protAvg):'—', true);
+      r += nl+'🧘 BIENESTAR'+nl;
+      r += line('Agua', A.aguaAvg!=null?A.aguaAvg.toFixed(1):'—', B.aguaAvg!=null?B.aguaAvg.toFixed(1):'—', true);
+      r += line('Sueño', A.suenoAvg!=null?A.suenoAvg.toFixed(1):'—', B.suenoAvg!=null?B.suenoAvg.toFixed(1):'—', true);
+      r += line('Ánimo', A.animoAvg!=null?A.animoAvg.toFixed(1):'—', B.animoAvg!=null?B.animoAvg.toFixed(1):'—', true);
+      r += nl+'💸 GASTOS'+nl;
       r += line('Ingresos', A.ing.toFixed(2), B.ing.toFixed(2), true);
       r += line('Egresos', A.egr.toFixed(2), B.egr.toFixed(2), false);
       r += line('Balance', A.balance.toFixed(2), B.balance.toFixed(2), true);
       navigator.clipboard.writeText(r).then(function(){ alert('Cierre copiado'); }).catch(function(){ prompt('Copia:', r); });
     }
 
-    presetA('week');
+    loadAll().then(function() {
+      presetA('week');
+      presetB('prevEqual');
+      render();
+    });
   </script>
 </body>
 </html>
