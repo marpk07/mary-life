@@ -548,7 +548,25 @@
           </div>
           <div>
             <label class="font-bold text-stone-500 block mb-1">Notas generales</label>
-            <input type="text" id="grind-notes" placeholder="Otras notas..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-medium text-stone-800">
+            <div class="space-y-2 pt-1 border-t border-pink-100">
+              <p class="text-[10px] font-black uppercase tracking-wider text-pink-600">📝 Comentario de sesión (para Reporte Martín)</p>
+              <div>
+                <label class="text-[10px] font-bold text-stone-600">Rendimiento</label>
+                <textarea id="grind-rendimiento" rows="3" placeholder="Cómo fue el juego base, calma, varianza..." class="w-full bg-white border border-pink-200 rounded-xl p-3 text-xs font-medium text-stone-800 resize-y min-h-[72px]"></textarea>
+              </div>
+              <div>
+                <label class="text-[10px] font-bold text-stone-600">Fuga detectada</label>
+                <textarea id="grind-fuga" rows="3" placeholder="Qué leak o fallo notaste..." class="w-full bg-white border border-pink-200 rounded-xl p-3 text-xs font-medium text-stone-800 resize-y min-h-[72px]"></textarea>
+              </div>
+              <div>
+                <label class="text-[10px] font-bold text-stone-600">Acción inmediata</label>
+                <textarea id="grind-accion" rows="3" placeholder="Qué vas a corregir o revisar..." class="w-full bg-white border border-pink-200 rounded-xl p-3 text-xs font-medium text-stone-800 resize-y min-h-[72px]"></textarea>
+              </div>
+              <div>
+                <label class="text-[10px] font-bold text-stone-600">Otras notas</label>
+                <textarea id="grind-notes" rows="2" placeholder="Extra opcional..." class="w-full bg-white border border-pink-200 rounded-xl p-3 text-xs font-medium text-stone-800 resize-y min-h-[56px]"></textarea>
+              </div>
+            </div>
           </div>
           <div>
             <label class="font-bold text-stone-500 block mb-1">📸 Adjuntar Imagen / Gráfica de la Sesión</label>
@@ -902,6 +920,9 @@
       document.getElementById('grind-hands').value = '';
       const gan = document.getElementById('grind-animo'); if (gan) gan.value = 'Neutra 😐';
       document.getElementById('grind-notes').value = '';
+      const grn = document.getElementById('grind-rendimiento'); if (grn) grn.value = '';
+      const gfn = document.getElementById('grind-fuga'); if (gfn) gfn.value = '';
+      const gac = document.getElementById('grind-accion'); if (gac) gac.value = '';
       const gm = document.getElementById('grind-money'); if (gm) gm.value = '';
       ['cd-correccion','cd-multitask','cd-tilt-check','cd-sueno'].forEach(function(id) {
         const el = document.getElementById(id); if (el) el.checked = false;
@@ -941,6 +962,9 @@
       document.getElementById('grind-hands').value = existing.hands || '';
       const gan = document.getElementById('grind-animo'); if (gan) gan.value = existing.animo || 'Neutra 😐';
       document.getElementById('grind-notes').value = existing.notes || '';
+      const gr = document.getElementById('grind-rendimiento'); if (gr) gr.value = existing.rendimiento || '';
+      const gf = document.getElementById('grind-fuga'); if (gf) gf.value = existing.fuga || '';
+      const gac2 = document.getElementById('grind-accion'); if (gac2) gac2.value = existing.accionInmediata || '';
       const gm = document.getElementById('grind-money'); if (gm) gm.value = existing.money ?? '';
 
       const el_cd_correccion = document.getElementById('cd-correccion'); if (el_cd_correccion) el_cd_correccion.checked = !!existing.cdCorreccion;
@@ -999,7 +1023,10 @@
         hands: parseInt(document.getElementById('grind-hands').value || 0),
         animo: (document.getElementById('grind-animo')||{value:'Neutra'}).value,
         money: parseFloat((document.getElementById('grind-money')||{value:0}).value || 0),
-        notes: document.getElementById('grind-notes').value,
+        notes: (document.getElementById('grind-notes')||{value:''}).value,
+        rendimiento: (document.getElementById('grind-rendimiento')||{value:''}).value,
+        fuga: (document.getElementById('grind-fuga')||{value:''}).value,
+        accionInmediata: (document.getElementById('grind-accion')||{value:''}).value,
         cdCorreccion: !!(document.getElementById('cd-correccion')||{}).checked,
         cdMultitask: !!(document.getElementById('cd-multitask')||{}).checked,
         cdTiltCheck: !!(document.getElementById('cd-tilt-check')||{}).checked,
@@ -1821,28 +1848,32 @@
 
     
     function copyMartinReport() {
-      // Reporte diario de entrega — solo el día seleccionado (fecha global)
       const day = (document.getElementById('global-date') && document.getElementById('global-date').value) || currentDate;
       const s = appData.grindSessions.find(x => x.date === day);
       const nl = String.fromCharCode(10);
-      let report = '📋 REPORTE MARTÍN' + nl;
-      report += 'Fecha: ' + day + nl + nl;
+      // Markdown **negrita** funciona al pegar en Notion
+      let report = '**📋 REPORTE MARTÍN**' + nl;
+      report += '**Fecha:** ' + day + nl + nl;
       if (!s) {
         report += 'Sin sesión registrada este día.' + nl;
       } else {
-        report += 'Horas de grind: ' + (s.hours || 0) + ' h' + nl;
-        report += 'Total de games: ' + (s.games || 0) + nl;
-        report += 'Focus: ' + (s.focus != null ? s.focus : '-') + '/10' + nl;
-        report += 'Nivel de la sesión: ' + (s.sessionLevel != null ? s.sessionLevel : '-') + '/10' + nl;
-        report += 'Mindset: ' + (s.mindset != null ? s.mindset : '-') + '/10' + nl;
-        report += 'Comentario: ' + (s.notes || s.cdSensations || '—') + nl;
+        report += '**Horas de grind:** ' + (s.hours || 0) + ' h' + nl;
+        report += '**Total de games:** ' + (s.games || 0) + nl;
+        report += '**Focus:** ' + (s.focus != null ? s.focus : '-') + '/10' + nl;
+        report += '**Nivel de la sesión:** ' + (s.sessionLevel != null ? s.sessionLevel : '-') + '/10' + nl;
+        report += '**Mindset:** ' + (s.mindset != null ? s.mindset : '-') + '/10' + nl + nl;
+        report += '**Rendimiento:**' + nl + (s.rendimiento || '—') + nl + nl;
+        report += '**Fuga detectada:**' + nl + (s.fuga || '—') + nl + nl;
+        report += '**Acción inmediata:**' + nl + (s.accionInmediata || '—') + nl;
+        if (s.notes) report += nl + '**Otras notas:**' + nl + s.notes + nl;
       }
       navigator.clipboard.writeText(report).then(function() {
-        showToast('Reporte Martín copiado');
+        showToast('Reporte Martín copiado (negrita para Notion)');
       }).catch(function() {
         prompt('Copia el reporte:', report);
       });
     }
+
 
     function copyNotionSummary() {
       const from = document.getElementById('report-from').value;
