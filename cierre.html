@@ -21,118 +21,141 @@
 </head>
 <body class="min-h-screen flex flex-col antialiased">
   <header class="bg-gradient-to-r from-[#c879a8] via-[#d9a7c7] to-[#b492cd] text-white sticky top-0 z-40 shadow-lg">
-    <div class="max-w-4xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
       <div class="flex items-center gap-2">
         <div class="w-10 h-10 rounded-2xl bg-white/25 flex items-center justify-center font-black">📊</div>
         <div>
           <h1 class="text-sm font-black tracking-wide uppercase">Cierre & Insights</h1>
-          <p class="text-[10px] text-white/85">Semana / mes · comparación · Notion</p>
+          <p class="text-[10px] text-white/85">Compara periodos · por área · Notion</p>
         </div>
       </div>
       <button onclick="copyCierre()" class="px-3 py-1.5 bg-white text-pink-700 rounded-xl text-xs font-black cursor-pointer">📋 Copiar cierre</button>
     </div>
   </header>
 
-  <main class="flex-1 max-w-4xl mx-auto w-full p-4 space-y-4">
-    <div class="glass rounded-2xl p-3 flex flex-wrap gap-2 items-center text-xs">
-      <span class="font-bold text-stone-600">Modo</span>
-      <select id="mode" onchange="onModeChange()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
-        <option value="week">Semana</option>
-        <option value="month">Mes</option>
-      </select>
-      <span class="font-bold text-stone-600">Desde</span>
-      <input type="date" id="from" onchange="render()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
-      <span class="font-bold text-stone-600">Hasta</span>
-      <input type="date" id="to" onchange="render()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
-      <button onclick="setThisWeek()" class="px-2 py-1 bg-pink-100 text-pink-700 rounded-lg font-bold cursor-pointer">Esta semana</button>
-      <button onclick="setThisMonth()" class="px-2 py-1 bg-fuchsia-100 text-fuchsia-700 rounded-lg font-bold cursor-pointer">Este mes</button>
+  <main class="flex-1 max-w-5xl mx-auto w-full p-4 space-y-4">
+    <div class="glass rounded-2xl p-4 space-y-3">
+      <h3 class="font-black text-stone-800 text-sm">📅 Periodo A (actual)</h3>
+      <div class="flex flex-wrap gap-2 items-center text-xs">
+        <button onclick="presetA('week')" class="px-2.5 py-1 bg-pink-100 text-pink-700 rounded-lg font-bold cursor-pointer">Esta semana</button>
+        <button onclick="presetA('last3w')" class="px-2.5 py-1 bg-pink-50 text-pink-700 rounded-lg font-bold cursor-pointer">Últimas 3 semanas</button>
+        <button onclick="presetA('month')" class="px-2.5 py-1 bg-fuchsia-100 text-fuchsia-700 rounded-lg font-bold cursor-pointer">Este mes</button>
+        <button onclick="presetA('last3m')" class="px-2.5 py-1 bg-fuchsia-50 text-fuchsia-700 rounded-lg font-bold cursor-pointer">Últimos 3 meses</button>
+        <span class="font-bold text-stone-600">Desde</span>
+        <input type="date" id="a-from" onchange="render()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
+        <span class="font-bold text-stone-600">Hasta</span>
+        <input type="date" id="a-to" onchange="render()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
+      </div>
+    </div>
+
+    <div class="glass rounded-2xl p-4 space-y-3">
+      <h3 class="font-black text-stone-800 text-sm">📅 Periodo B (comparar con)</h3>
+      <div class="flex flex-wrap gap-2 items-center text-xs">
+        <button onclick="presetB('prevEqual')" class="px-2.5 py-1 bg-purple-100 text-purple-800 rounded-lg font-bold cursor-pointer">Periodo anterior igual</button>
+        <button onclick="presetB('prevWeek')" class="px-2.5 py-1 bg-purple-50 text-purple-800 rounded-lg font-bold cursor-pointer">Semana pasada</button>
+        <button onclick="presetB('prevMonth')" class="px-2.5 py-1 bg-purple-50 text-purple-800 rounded-lg font-bold cursor-pointer">Mes pasado</button>
+        <span class="font-bold text-stone-600">Desde</span>
+        <input type="date" id="b-from" onchange="render()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
+        <span class="font-bold text-stone-600">Hasta</span>
+        <input type="date" id="b-to" onchange="render()" class="bg-white border border-pink-200 rounded-xl px-2 py-1 font-bold">
+      </div>
+      <p class="text-[10px] text-stone-500">Ej: A = septiembre, B = agosto · o A = últimas 3 semanas y B = las 3 anteriores (botón “Periodo anterior igual”).</p>
     </div>
 
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="kpis"></div>
 
     <div class="glass rounded-2xl p-4 space-y-2">
-      <h3 class="font-black text-stone-800 text-sm">📈 Comparación con periodo anterior</h3>
-      <div id="compare" class="text-xs space-y-1"></div>
+      <h3 class="font-black text-stone-800 text-sm">✨ Comparación general</h3>
+      <div id="compare-general" class="text-xs space-y-1.5"></div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div class="glass rounded-2xl p-4">
-        <h4 class="font-black text-xs text-stone-800 mb-2">♠️ Póker (horas / games)</h4>
-        <canvas id="chart-poker" height="160"></canvas>
-      </div>
-      <div class="glass rounded-2xl p-4">
-        <h4 class="font-black text-xs text-stone-800 mb-2">💸 Gastos (egresos diarios)</h4>
-        <canvas id="chart-gastos" height="160"></canvas>
+    <div class="glass rounded-2xl p-4 space-y-3">
+      <h3 class="font-black text-stone-800 text-sm">♠️ Póker</h3>
+      <div id="compare-poker" class="text-xs space-y-1.5"></div>
+      <canvas id="chart-poker" height="150"></canvas>
+    </div>
+
+    <div class="glass rounded-2xl p-4 space-y-3">
+      <h3 class="font-black text-stone-800 text-sm">🍎 Fitness</h3>
+      <div id="compare-fitness" class="text-xs space-y-1.5"></div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <canvas id="chart-fit-train" height="140"></canvas>
+        <canvas id="chart-fit-macros" height="140"></canvas>
       </div>
     </div>
 
-    <div class="glass rounded-2xl p-4 space-y-2 text-xs" id="detail"></div>
-    <p class="text-[10px] text-stone-400 text-center">Lee datos guardados en este dispositivo (Póker, Gastos, Planner). Si usas la app unificada en el mismo navegador, verás el resumen aquí.</p>
+    <div class="glass rounded-2xl p-4 space-y-3">
+      <h3 class="font-black text-stone-800 text-sm">🧘 Bienestar</h3>
+      <div id="compare-wellness" class="text-xs space-y-1.5"></div>
+      <canvas id="chart-wellness" height="140"></canvas>
+    </div>
+
+    <div class="glass rounded-2xl p-4 space-y-3">
+      <h3 class="font-black text-stone-800 text-sm">💸 Gastos</h3>
+      <div id="compare-gastos" class="text-xs space-y-1.5"></div>
+      <canvas id="chart-gastos" height="140"></canvas>
+    </div>
+
+    <p class="text-[10px] text-stone-400 text-center pb-6">Datos del mismo navegador donde registras. Captura gráficas para Notion + botón Copiar cierre.</p>
   </main>
 
   <script>
-    let chartPoker = null, chartGastos = null;
-
+    let charts = {};
+    function fmt(d) {
+      return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    }
     function startOfWeek(d) {
       const x = new Date(d); const day = (x.getDay()+6)%7;
       x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x;
     }
-    function fmt(d) {
-      return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    }
-    function setThisWeek() {
-      const mon = startOfWeek(new Date());
-      const sun = new Date(mon); sun.setDate(mon.getDate()+6);
-      document.getElementById('from').value = fmt(mon);
-      document.getElementById('to').value = fmt(sun);
-      document.getElementById('mode').value = 'week';
-      render();
-    }
-    function setThisMonth() {
-      const n = new Date();
-      document.getElementById('from').value = n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-01';
-      document.getElementById('to').value = fmt(n);
-      document.getElementById('mode').value = 'month';
-      render();
-    }
-    function onModeChange() {
-      if (document.getElementById('mode').value === 'week') setThisWeek();
-      else setThisMonth();
-    }
+    function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate()+n); return x; }
 
-    function loadJSON(key) {
-      try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch(e) { return null; }
-    }
-
-    // Try common keys used by our apps
-    function getPokerSessions() {
-      // poker may store under various keys - scan
-      const found = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (!k) continue;
-        try {
-          const v = JSON.parse(localStorage.getItem(k));
-          if (v && Array.isArray(v.grindSessions)) return v.grindSessions;
-          if (v && v.appData && Array.isArray(v.appData.grindSessions)) return v.appData.grindSessions;
-        } catch(e) {}
+    function presetA(type) {
+      const now = new Date();
+      if (type === 'week') {
+        const mon = startOfWeek(now);
+        document.getElementById('a-from').value = fmt(mon);
+        document.getElementById('a-to').value = fmt(addDays(mon, 6));
+      } else if (type === 'last3w') {
+        const mon = startOfWeek(now);
+        document.getElementById('a-from').value = fmt(addDays(mon, -14));
+        document.getElementById('a-to').value = fmt(addDays(mon, 6));
+      } else if (type === 'month') {
+        document.getElementById('a-from').value = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-01';
+        document.getElementById('a-to').value = fmt(now);
+      } else if (type === 'last3m') {
+        const f = new Date(now.getFullYear(), now.getMonth()-2, 1);
+        document.getElementById('a-from').value = fmt(f);
+        document.getElementById('a-to').value = fmt(now);
       }
-      return found;
+      presetB('prevEqual');
     }
 
-    function getGastos() {
-      try { return JSON.parse(localStorage.getItem('MARY_GASTOS_V1') || '[]'); } catch(e) { return []; }
-    }
-
-    function getFitness() {
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        try {
-          const v = JSON.parse(localStorage.getItem(k));
-          if (v && (v.entrenamiento || v.alimentacion)) return v;
-        } catch(e) {}
+    function presetB(type) {
+      const af = document.getElementById('a-from').value;
+      const at = document.getElementById('a-to').value;
+      if (!af || !at) return;
+      const f = new Date(af+'T00:00:00');
+      const t = new Date(at+'T00:00:00');
+      const days = Math.round((t - f) / 86400000) + 1;
+      if (type === 'prevEqual') {
+        const pt = addDays(f, -1);
+        const pf = addDays(pt, -(days-1));
+        document.getElementById('b-from').value = fmt(pf);
+        document.getElementById('b-to').value = fmt(pt);
+      } else if (type === 'prevWeek') {
+        const mon = startOfWeek(f);
+        const prevMon = addDays(mon, -7);
+        document.getElementById('b-from').value = fmt(prevMon);
+        document.getElementById('b-to').value = fmt(addDays(prevMon, 6));
+      } else if (type === 'prevMonth') {
+        const y = f.getFullYear(), m = f.getMonth();
+        const pf = new Date(y, m-1, 1);
+        const pt = new Date(y, m, 0);
+        document.getElementById('b-from').value = fmt(pf);
+        document.getElementById('b-to').value = fmt(pt);
       }
-      return null;
+      render();
     }
 
     function inRange(date, from, to) {
@@ -142,134 +165,289 @@
       return true;
     }
 
-    function prevRange(from, to) {
-      const f = new Date(from+'T00:00:00');
-      const t = new Date(to+'T00:00:00');
-      const days = Math.round((t - f) / 86400000) + 1;
-      const pt = new Date(f); pt.setDate(f.getDate() - 1);
-      const pf = new Date(pt); pf.setDate(pt.getDate() - days + 1);
-      return { from: fmt(pf), to: fmt(pt) };
+    function getPokerSessions() {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        try {
+          const v = JSON.parse(localStorage.getItem(k));
+          if (v && Array.isArray(v.grindSessions)) return v.grindSessions;
+          if (v && v.appData && Array.isArray(v.appData.grindSessions)) return v.appData.grindSessions;
+        } catch(e) {}
+      }
+      return [];
+    }
+    function getGastos() {
+      try { return JSON.parse(localStorage.getItem('MARY_GASTOS_V1') || '[]'); } catch(e) { return []; }
+    }
+    function getFitness() {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        try {
+          const v = JSON.parse(localStorage.getItem(k));
+          if (v && (v.entrenamiento || v.alimentacion || v.salud || v.cardio)) return v;
+        } catch(e) {}
+      }
+      return { entrenamiento: [], alimentacion: [], salud: [], cardio: [] };
+    }
+
+    function avg(arr) {
+      if (!arr.length) return null;
+      return arr.reduce((a,b)=>a+b,0) / arr.length;
     }
 
     function stats(from, to) {
       const sessions = getPokerSessions().filter(s => inRange(s.date, from, to));
       const gastos = getGastos().filter(g => inRange(g.fecha, from, to));
       const fit = getFitness();
-      let grindH = 0, studyH = 0, games = 0, money = 0, focusSum = 0, focusN = 0;
+      const entrenos = (fit.entrenamiento||[]).filter(x => inRange(x.date, from, to));
+      const cardio = (fit.cardio||[]).filter(x => inRange(x.date, from, to));
+      const alim = (fit.alimentacion||[]).filter(x => inRange(x.date, from, to));
+      const salud = (fit.salud||[]).filter(x => inRange(x.date, from, to));
+
+      let grindH=0, studyH=0, games=0, money=0;
+      const focuses=[], mindsets=[], levels=[], cevs=[];
       sessions.forEach(s => {
-        grindH += s.hours || 0;
-        studyH += s.studyHours || 0;
-        games += s.games || 0;
-        money += parseFloat(s.money) || 0;
-        if (s.focus != null) { focusSum += s.focus; focusN++; }
+        grindH += s.hours||0; studyH += s.studyHours||0; games += s.games||0;
+        money += parseFloat(s.money)||0;
+        if (s.focus!=null) focuses.push(+s.focus);
+        if (s.mindset!=null) mindsets.push(+s.mindset);
+        if (s.sessionLevel!=null) levels.push(+s.sessionLevel);
+        if (s.cev!=null) cevs.push(+s.cev);
       });
-      let ing = 0, egr = 0;
-      gastos.forEach(g => { if (g.tipo==='ingreso') ing += g.monto; else egr += g.monto; });
-      let entrenos = 0, cardio = 0;
-      if (fit) {
-        entrenos = (fit.entrenamiento||[]).filter(x => inRange(x.date, from, to)).length;
-        cardio = (fit.cardio||[]).filter(x => inRange(x.date, from, to)).length;
-      }
+      let cevW = null, gSum = 0, cevAcc = 0;
+      sessions.forEach(s => {
+        const g = s.games||0; if (g>0 && s.cev!=null) { cevAcc += (+s.cev)*g; gSum += g; }
+      });
+      if (gSum>0) cevW = cevAcc/gSum; else cevW = avg(cevs);
+
+      const byDay = {};
+      alim.forEach(a => {
+        if (!byDay[a.date]) byDay[a.date] = { cal:0, prot:0 };
+        byDay[a.date].cal += a.cal||0;
+        byDay[a.date].prot += a.prot||0;
+      });
+      const dayCals = Object.values(byDay).map(d => d.cal);
+      const dayProts = Object.values(byDay).map(d => d.prot);
+      const aguas = salud.map(s => s.agua||0).filter(x => x>0);
+      const suenos = salud.map(s => s.sueno||0).filter(x => x>0);
+      const animos = salud.map(s => s.animo).filter(Boolean);
+
+      let ing=0, egr=0;
+      gastos.forEach(g => { if (g.tipo==='ingreso') ing+=g.monto; else egr+=g.monto; });
+
       return {
-        sessions: sessions.length, grindH, studyH, games, money,
-        focusAvg: focusN ? (focusSum/focusN) : null,
-        ing, egr, balance: ing - egr, entrenos, cardio,
-        sessionsList: sessions, gastosList: gastos
+        from, to, sessions: sessions.length, grindH, studyH, games, money,
+        focusAvg: avg(focuses), mindAvg: avg(mindsets), levelAvg: avg(levels), cevAvg: cevW,
+        entrenos: entrenos.length, cardio: cardio.length,
+        calAvg: avg(dayCals), protAvg: avg(dayProts),
+        aguaAvg: avg(aguas), suenoAvg: avg(suenos), animos,
+        ing, egr, balance: ing-egr,
+        sessionsList: sessions, gastosList: gastos,
+        entrenosList: entrenos, cardioList: cardio, alimByDay: byDay, saludList: salud
       };
     }
 
-    function delta(cur, prev, inv) {
-      if (prev === 0 && cur === 0) return '—';
-      if (prev === 0) return cur > 0 ? '↑ nuevo' : '—';
-      const pct = Math.round(((cur - prev) / Math.abs(prev)) * 100);
-      const up = inv ? pct < 0 : pct > 0;
-      const arrow = pct > 0 ? '↑' : (pct < 0 ? '↓' : '→');
-      return arrow + ' ' + Math.abs(pct) + '%';
+    function badge(cur, prev, higherIsBetter) {
+      if (cur==null && prev==null) return '<span class="text-stone-400">sin datos</span>';
+      if (prev==null || prev===0) {
+        if (cur==null || cur===0) return '<span class="text-stone-400">—</span>';
+        return '<span class="px-2 py-0.5 rounded-lg font-bold bg-pink-50 text-pink-700">nuevo dato</span>';
+      }
+      const c = +cur, p = +prev;
+      const diff = c - p;
+      const pct = Math.round((diff / Math.abs(p)) * 100);
+      const improved = higherIsBetter ? diff > 0 : diff < 0;
+      if (Math.abs(diff) < 0.0001 || pct === 0) return '<span class="px-2 py-0.5 rounded-lg font-bold bg-stone-100 text-stone-600">igual → 0%</span>';
+      if (improved) return '<span class="px-2 py-0.5 rounded-lg font-bold bg-emerald-100 text-emerald-800">mejoró ↑ ' + Math.abs(pct) + '%</span>';
+      return '<span class="px-2 py-0.5 rounded-lg font-bold bg-red-100 text-red-700">desmejoró ↓ ' + Math.abs(pct) + '%</span>';
     }
 
-    function render() {
-      const from = document.getElementById('from').value;
-      const to = document.getElementById('to').value;
-      if (!from || !to) return;
-      const cur = stats(from, to);
-      const pr = prevRange(from, to);
-      const prev = stats(pr.from, pr.to);
+    function row(label, cur, prev, higherIsBetter, fmtFn) {
+      const f = fmtFn || (x => x==null ? '—' : (typeof x === 'number' ? (Number.isInteger(x)?x:x.toFixed(1)) : x));
+      return '<div class="flex flex-wrap items-center justify-between gap-2 py-1 border-b border-pink-100">' +
+        '<span class="text-stone-600">' + label + '</span>' +
+        '<span class="font-bold text-stone-800">A: ' + f(cur) + ' · B: ' + f(prev) + ' ' + badge(cur, prev, higherIsBetter) + '</span></div>';
+    }
 
-      document.getElementById('kpis').innerHTML = `
-        <div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">Grind</span><p class="text-lg font-black text-pink-600">${cur.grindH.toFixed(1)}h</p></div>
-        <div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">Games</span><p class="text-lg font-black text-stone-800">${cur.games}</p></div>
-        <div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">Focus avg</span><p class="text-lg font-black text-fuchsia-600">${cur.focusAvg!=null?cur.focusAvg.toFixed(1):'—'}</p></div>
-        <div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">Balance $</span><p class="text-lg font-black ${cur.balance>=0?'text-emerald-600':'text-pink-600'}">${cur.balance.toFixed(2)}</p></div>`;
+    function destroyChart(id) {
+      if (charts[id]) { try { charts[id].destroy(); } catch(e) {} charts[id]=null; }
+    }
 
-      document.getElementById('compare').innerHTML = `
-        <p class="text-stone-500">Periodo anterior: <strong>${pr.from}</strong> → <strong>${pr.to}</strong></p>
-        <p>⏱️ Grind: ${cur.grindH.toFixed(1)}h vs ${prev.grindH.toFixed(1)}h <span class="font-bold">${delta(cur.grindH, prev.grindH)}</span></p>
-        <p>🎮 Games: ${cur.games} vs ${prev.games} <span class="font-bold">${delta(cur.games, prev.games)}</span></p>
-        <p>📚 Estudio: ${cur.studyH.toFixed(1)}h vs ${prev.studyH.toFixed(1)}h <span class="font-bold">${delta(cur.studyH, prev.studyH)}</span></p>
-        <p>💸 Egresos: ${cur.egr.toFixed(2)} vs ${prev.egr.toFixed(2)} <span class="font-bold">${delta(cur.egr, prev.egr, true)}</span></p>
-        <p>💪 Entrenos: ${cur.entrenos} vs ${prev.entrenos} <span class="font-bold">${delta(cur.entrenos, prev.entrenos)}</span></p>
-        <p>🏃 Cardio: ${cur.cardio} vs ${prev.cardio} <span class="font-bold">${delta(cur.cardio, prev.cardio)}</span></p>`;
-
-      // charts by day
+    function daysBetween(from, to) {
       const days = [];
       const d0 = new Date(from+'T00:00:00'), d1 = new Date(to+'T00:00:00');
       for (let d = new Date(d0); d <= d1; d.setDate(d.getDate()+1)) days.push(fmt(d));
+      return days;
+    }
 
-      const grindByDay = days.map(day => cur.sessionsList.filter(s=>s.date===day).reduce((a,s)=>a+(s.hours||0),0));
-      const gamesByDay = days.map(day => cur.sessionsList.filter(s=>s.date===day).reduce((a,s)=>a+(s.games||0),0));
-      const egrByDay = days.map(day => cur.gastosList.filter(g=>g.fecha===day && g.tipo==='egreso').reduce((a,g)=>a+g.monto,0));
+    function render() {
+      const af = document.getElementById('a-from').value;
+      const at = document.getElementById('a-to').value;
+      const bf = document.getElementById('b-from').value;
+      const bt = document.getElementById('b-to').value;
+      if (!af || !at || !bf || !bt) return;
 
-      if (chartPoker) chartPoker.destroy();
-      if (chartGastos) chartGastos.destroy();
-      chartPoker = new Chart(document.getElementById('chart-poker'), {
+      const A = stats(af, at);
+      const B = stats(bf, bt);
+
+      document.getElementById('kpis').innerHTML =
+        '<div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">Grind A</span><p class="text-lg font-black text-pink-600">'+A.grindH.toFixed(1)+'h</p></div>' +
+        '<div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">cEV A</span><p class="text-lg font-black text-stone-800">'+(A.cevAvg!=null?A.cevAvg.toFixed(1):'—')+'</p></div>' +
+        '<div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">Nivel sesión A</span><p class="text-lg font-black text-fuchsia-600">'+(A.levelAvg!=null?A.levelAvg.toFixed(1):'—')+'</p></div>' +
+        '<div class="glass rounded-2xl p-3 text-center"><span class="text-[10px] font-bold text-stone-500">Balance $ A</span><p class="text-lg font-black '+(A.balance>=0?'text-emerald-600':'text-pink-600')+'">'+A.balance.toFixed(2)+'</p></div>';
+
+      document.getElementById('compare-general').innerHTML =
+        '<p class="text-stone-500 mb-2">A: <strong>'+af+' → '+at+'</strong> | B: <strong>'+bf+' → '+bt+'</strong></p>' +
+        row('Horas grind', A.grindH, B.grindH, true, x => x.toFixed(1)+'h') +
+        row('Games', A.games, B.games, true) +
+        row('Egresos', A.egr, B.egr, false, x => x.toFixed(2)) +
+        row('Entrenos', A.entrenos, B.entrenos, true);
+
+      document.getElementById('compare-poker').innerHTML =
+        row('Grind (h)', A.grindH, B.grindH, true, x => x.toFixed(1)) +
+        row('Estudio (h)', A.studyH, B.studyH, true, x => x.toFixed(1)) +
+        row('Games', A.games, B.games, true) +
+        row('cEV promedio', A.cevAvg, B.cevAvg, true, x => x==null?'—':x.toFixed(1)) +
+        row('Focus avg', A.focusAvg, B.focusAvg, true, x => x==null?'—':x.toFixed(1)+'/10') +
+        row('Mindset avg', A.mindAvg, B.mindAvg, true, x => x==null?'—':x.toFixed(1)+'/10') +
+        row('Nivel sesión avg', A.levelAvg, B.levelAvg, true, x => x==null?'—':x.toFixed(1)+'/10') +
+        row('$ sesiones', A.money, B.money, true, x => x.toFixed(2)) +
+        row('Sesiones', A.sessions, B.sessions, true);
+
+      document.getElementById('compare-fitness').innerHTML =
+        row('Entrenos fuerza', A.entrenos, B.entrenos, true) +
+        row('Cardio', A.cardio, B.cardio, true) +
+        row('Calorías avg/día', A.calAvg, B.calAvg, false, x => x==null?'—':Math.round(x)+' kcal') +
+        row('Proteína avg/día', A.protAvg, B.protAvg, true, x => x==null?'—':Math.round(x)+' g');
+
+      document.getElementById('compare-wellness').innerHTML =
+        row('Agua avg (L)', A.aguaAvg, B.aguaAvg, true, x => x==null?'—':x.toFixed(1)+' L') +
+        row('Sueño avg (h)', A.suenoAvg, B.suenoAvg, true, x => x==null?'—':x.toFixed(1)+' h') +
+        '<p class="text-stone-500 pt-1">Ánimos A: '+(A.animos.length?A.animos.join(' · '):'—')+'</p>' +
+        '<p class="text-stone-500">Ánimos B: '+(B.animos.length?B.animos.join(' · '):'—')+'</p>';
+
+      document.getElementById('compare-gastos').innerHTML =
+        row('Ingresos', A.ing, B.ing, true, x => x.toFixed(2)) +
+        row('Egresos', A.egr, B.egr, false, x => x.toFixed(2)) +
+        row('Balance', A.balance, B.balance, true, x => x.toFixed(2));
+
+      const days = daysBetween(af, at);
+      const short = days.map(d => d.slice(5));
+
+      destroyChart('poker');
+      charts.poker = new Chart(document.getElementById('chart-poker'), {
         type: 'bar',
         data: {
-          labels: days.map(d => d.slice(5)),
+          labels: short,
           datasets: [
-            { label: 'Horas', data: grindByDay, backgroundColor: 'rgba(236,72,153,0.55)' },
-            { label: 'Games/10', data: gamesByDay.map(g => g/10), backgroundColor: 'rgba(180,146,205,0.55)' }
+            { label: 'Horas', data: days.map(d => A.sessionsList.filter(s=>s.date===d).reduce((a,s)=>a+(s.hours||0),0)), backgroundColor: 'rgba(236,72,153,0.55)' },
+            { label: 'cEV', data: days.map(d => { const s=A.sessionsList.find(x=>x.date===d); return s&&s.cev!=null?+s.cev:null; }), type: 'line', borderColor: '#b492cd', tension: 0.3, spanGaps: true },
+            { label: 'Nivel', data: days.map(d => { const s=A.sessionsList.find(x=>x.date===d); return s&&s.sessionLevel!=null?+s.sessionLevel:null; }), type: 'line', borderColor: '#c879a8', tension: 0.3, spanGaps: true }
           ]
         },
         options: { plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } } }
       });
-      chartGastos = new Chart(document.getElementById('chart-gastos'), {
-        type: 'line',
+
+      destroyChart('fitTrain');
+      charts.fitTrain = new Chart(document.getElementById('chart-fit-train'), {
+        type: 'bar',
         data: {
-          labels: days.map(d => d.slice(5)),
-          datasets: [{ label: 'Egresos', data: egrByDay, borderColor: '#ec4899', backgroundColor: 'rgba(236,72,153,0.15)', fill: true, tension: 0.3 }]
+          labels: short,
+          datasets: [
+            { label: 'Fuerza', data: days.map(d => A.entrenosList.filter(x=>x.date===d).length), backgroundColor: 'rgba(236,72,153,0.5)' },
+            { label: 'Cardio', data: days.map(d => A.cardioList.filter(x=>x.date===d).length), backgroundColor: 'rgba(180,146,205,0.5)' }
+          ]
         },
         options: { plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } } }
       });
 
-      document.getElementById('detail').innerHTML = `
-        <h3 class="font-black text-stone-800 text-sm">📌 Detalle del periodo</h3>
-        <p>Sesiones de póker: <strong>${cur.sessions}</strong> · Estudio: <strong>${cur.studyH.toFixed(1)}h</strong> · $ póker: <strong>${cur.money.toFixed(2)}</strong></p>
-        <p>Ingresos: <strong>${cur.ing.toFixed(2)}</strong> · Egresos: <strong>${cur.egr.toFixed(2)}</strong></p>
-        <p>Fitness — fuerza: <strong>${cur.entrenos}</strong> · cardio: <strong>${cur.cardio}</strong></p>
-        <p class="text-stone-400 pt-2">Tip: captura las gráficas (screenshot) y pégalas en Notion junto al texto del cierre.</p>`;
+      destroyChart('fitMacros');
+      charts.fitMacros = new Chart(document.getElementById('chart-fit-macros'), {
+        type: 'line',
+        data: {
+          labels: short,
+          datasets: [
+            { label: 'Kcal', data: days.map(d => A.alimByDay[d]?A.alimByDay[d].cal:null), borderColor: '#ec4899', tension: 0.3, spanGaps: true },
+            { label: 'Prot (g)', data: days.map(d => A.alimByDay[d]?A.alimByDay[d].prot:null), borderColor: '#b492cd', tension: 0.3, spanGaps: true }
+          ]
+        },
+        options: { plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } } }
+      });
+
+      destroyChart('well');
+      charts.well = new Chart(document.getElementById('chart-wellness'), {
+        type: 'line',
+        data: {
+          labels: short,
+          datasets: [
+            { label: 'Agua L', data: days.map(d => { const s=A.saludList.find(x=>x.date===d); return s?s.agua:null; }), borderColor: '#38bdf8', tension: 0.3, spanGaps: true },
+            { label: 'Sueño h', data: days.map(d => { const s=A.saludList.find(x=>x.date===d); return s?s.sueno:null; }), borderColor: '#b492cd', tension: 0.3, spanGaps: true }
+          ]
+        },
+        options: { plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } } }
+      });
+
+      destroyChart('gastos');
+      charts.gastos = new Chart(document.getElementById('chart-gastos'), {
+        type: 'line',
+        data: {
+          labels: short,
+          datasets: [{
+            label: 'Egresos',
+            data: days.map(d => A.gastosList.filter(g=>g.fecha===d&&g.tipo==='egreso').reduce((a,g)=>a+g.monto,0)),
+            borderColor: '#ec4899', backgroundColor: 'rgba(236,72,153,0.12)', fill: true, tension: 0.3
+          }]
+        },
+        options: { plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } } }
+      });
     }
 
     function copyCierre() {
-      const from = document.getElementById('from').value;
-      const to = document.getElementById('to').value;
-      const cur = stats(from, to);
-      const pr = prevRange(from, to);
-      const prev = stats(pr.from, pr.to);
+      const af = document.getElementById('a-from').value;
+      const at = document.getElementById('a-to').value;
+      const bf = document.getElementById('b-from').value;
+      const bt = document.getElementById('b-to').value;
+      const A = stats(af, at), B = stats(bf, bt);
       const nl = String.fromCharCode(10);
-      let r = '📊 CIERRE MARY LIFE' + nl + 'Periodo: ' + from + ' → ' + to + nl + nl;
+      function line(label, a, b, goodUp) {
+        let tag = '';
+        if (a!=null && b!=null && b!==0 && a!=='—' && b!=='—') {
+          const pct = Math.round(((+a-+b)/Math.abs(+b))*100);
+          const imp = goodUp ? (+a>+b) : (+a<+b);
+          if (pct===0) tag = ' (igual)';
+          else if (imp) tag = ' (mejoró ' + Math.abs(pct) + '%)';
+          else tag = ' (desmejoró ' + Math.abs(pct) + '%)';
+        }
+        return label + ': A ' + a + ' | B ' + b + tag + nl;
+      }
+      let r = '📊 CIERRE MARY LIFE' + nl;
+      r += 'Periodo A: ' + af + ' → ' + at + nl;
+      r += 'Periodo B: ' + bf + ' → ' + bt + nl + nl;
       r += '♠️ PÓKER' + nl;
-      r += 'Grind: ' + cur.grindH.toFixed(1) + 'h (antes ' + prev.grindH.toFixed(1) + 'h)' + nl;
-      r += 'Games: ' + cur.games + ' (antes ' + prev.games + ')' + nl;
-      r += 'Estudio: ' + cur.studyH.toFixed(1) + 'h · Focus avg: ' + (cur.focusAvg!=null?cur.focusAvg.toFixed(1):'—') + nl;
-      r += '$ sesiones: ' + cur.money.toFixed(2) + nl + nl;
-      r += '💸 DINERO' + nl;
-      r += 'Ingresos: ' + cur.ing.toFixed(2) + ' · Egresos: ' + cur.egr.toFixed(2) + ' · Balance: ' + cur.balance.toFixed(2) + nl + nl;
-      r += '🍎 FITNESS' + nl;
-      r += 'Entrenos: ' + cur.entrenos + ' · Cardio: ' + cur.cardio + nl;
-      navigator.clipboard.writeText(r).then(()=>alert('Cierre copiado — pégalo en Notion')).catch(()=>prompt('Copia:', r));
+      r += line('Grind h', A.grindH.toFixed(1), B.grindH.toFixed(1), true);
+      r += line('Estudio h', A.studyH.toFixed(1), B.studyH.toFixed(1), true);
+      r += line('Games', A.games, B.games, true);
+      r += line('cEV', A.cevAvg!=null?A.cevAvg.toFixed(1):'—', B.cevAvg!=null?B.cevAvg.toFixed(1):'—', true);
+      r += line('Focus', A.focusAvg!=null?A.focusAvg.toFixed(1):'—', B.focusAvg!=null?B.focusAvg.toFixed(1):'—', true);
+      r += line('Mindset', A.mindAvg!=null?A.mindAvg.toFixed(1):'—', B.mindAvg!=null?B.mindAvg.toFixed(1):'—', true);
+      r += line('Nivel sesión', A.levelAvg!=null?A.levelAvg.toFixed(1):'—', B.levelAvg!=null?B.levelAvg.toFixed(1):'—', true);
+      r += line('$', A.money.toFixed(2), B.money.toFixed(2), true);
+      r += nl + '🍎 FITNESS' + nl;
+      r += line('Entrenos', A.entrenos, B.entrenos, true);
+      r += line('Cardio', A.cardio, B.cardio, true);
+      r += line('Kcal avg', A.calAvg!=null?Math.round(A.calAvg):'—', B.calAvg!=null?Math.round(B.calAvg):'—', false);
+      r += line('Prot avg', A.protAvg!=null?Math.round(A.protAvg):'—', B.protAvg!=null?Math.round(B.protAvg):'—', true);
+      r += nl + '🧘 BIENESTAR' + nl;
+      r += line('Agua L', A.aguaAvg!=null?A.aguaAvg.toFixed(1):'—', B.aguaAvg!=null?B.aguaAvg.toFixed(1):'—', true);
+      r += line('Sueño h', A.suenoAvg!=null?A.suenoAvg.toFixed(1):'—', B.suenoAvg!=null?B.suenoAvg.toFixed(1):'—', true);
+      r += nl + '💸 GASTOS' + nl;
+      r += line('Ingresos', A.ing.toFixed(2), B.ing.toFixed(2), true);
+      r += line('Egresos', A.egr.toFixed(2), B.egr.toFixed(2), false);
+      r += line('Balance', A.balance.toFixed(2), B.balance.toFixed(2), true);
+      navigator.clipboard.writeText(r).then(function(){ alert('Cierre copiado'); }).catch(function(){ prompt('Copia:', r); });
     }
 
-    setThisWeek();
+    presetA('week');
   </script>
 </body>
 </html>
