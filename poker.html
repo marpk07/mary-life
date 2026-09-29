@@ -726,6 +726,12 @@
     let activeTabId = 'resumen';
     let currentDate = new Date().toISOString().slice(0, 10);
 
+    function avgMetric(sessions, key) {
+      const vals = sessions.map(s => s[key]).filter(v => v != null && v !== '' && !isNaN(+v)).map(Number);
+      if (!vals.length) return null;
+      return vals.reduce((a,b)=>a+b,0) / vals.length;
+    }
+
     function getTodayString() {
       const now = new Date();
       return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -946,8 +952,8 @@
       
       document.getElementById('modal-wu-env').checked = !!existing.wuEnv;
       document.getElementById('modal-wu-mind').checked = !!existing.wuMind;
-      document.getElementById('modal-wu-energy').value = existing.wuEnergy || 8;
-      document.getElementById('modal-wu-focus').value = existing.wuFocus || 8;
+      document.getElementById('modal-wu-energy').value = existing.wuEnergy != null ? existing.wuEnergy : '';
+      document.getElementById('modal-wu-focus').value = existing.wuFocus != null ? existing.wuFocus : '';
       document.getElementById('modal-wu-intention').value = existing.wuIntention || '';
       const wud = document.getElementById('modal-wu-done'); if (wud) wud.checked = !!existing.wuDone;
       const cdd = document.getElementById('modal-cd-done'); if (cdd) cdd.checked = !!existing.cdDone;
@@ -955,9 +961,9 @@
       document.getElementById('grind-hours').value = existing.hours || '';
       document.getElementById('grind-games').value = existing.games || '';
       document.getElementById('grind-cev').value = existing.cev || '';
-      document.getElementById('grind-focus').value = existing.focus || 8;
-      document.getElementById('grind-mindset').value = existing.mindset || 8;
-      const gsl = document.getElementById('grind-session-level'); if (gsl) gsl.value = existing.sessionLevel || 7;
+      document.getElementById('grind-focus').value = existing.focus != null ? existing.focus : '';
+      document.getElementById('grind-mindset').value = existing.mindset != null ? existing.mindset : '';
+      const gsl = document.getElementById('grind-session-level'); if (gsl) gsl.value = existing.sessionLevel != null ? existing.sessionLevel : '';
       document.getElementById('grind-study').value = existing.studyHours || '';
       document.getElementById('grind-hands').value = existing.hands || '';
       const gan = document.getElementById('grind-animo'); if (gan) gan.value = existing.animo || 'Neutra 😐';
@@ -1016,9 +1022,9 @@
         hours: parseFloat(document.getElementById('grind-hours').value || 0),
         games: parseInt(document.getElementById('grind-games').value || 0),
         cev: parseFloat(document.getElementById('grind-cev').value || 0),
-        focus: parseInt(document.getElementById('grind-focus').value || 8),
-        mindset: parseInt(document.getElementById('grind-mindset').value || 8),
-        sessionLevel: parseInt((document.getElementById('grind-session-level')||{value:7}).value || 7),
+        focus: (function(){ const v=document.getElementById('grind-focus').value; return v===''||v==null?null:parseInt(v,10); })(),
+        mindset: (function(){ const v=document.getElementById('grind-mindset').value; return v===''||v==null?null:parseInt(v,10); })(),
+        sessionLevel: (function(){ const el=document.getElementById('grind-session-level'); const v=el?el.value:''; return v===''||v==null?null:parseInt(v,10); })(),
         studyHours: parseFloat(document.getElementById('grind-study').value || 0),
         hands: parseInt(document.getElementById('grind-hands').value || 0),
         animo: (document.getElementById('grind-animo')||{value:'Neutra'}).value,
