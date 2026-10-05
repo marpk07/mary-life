@@ -72,6 +72,10 @@
           <option value="all">Todas categorías</option>
         </select>
       </div>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" onclick="forceSeedAnalisis()" class="px-3 py-1.5 bg-fuchsia-100 text-fuchsia-800 rounded-xl text-xs font-black cursor-pointer">📥 Cargar análisis 2–4 oct (USD)</button>
+        <button type="button" onclick="openMovModal()" class="px-3 py-1.5 bg-pink-500 text-white rounded-xl text-xs font-black cursor-pointer">+ Movimiento</button>
+      </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="kpis"></div>
       <p class="text-[10px] text-stone-500 px-1" id="conv-hint"></p>
       <div class="glass rounded-2xl p-4 space-y-2">
@@ -85,7 +89,8 @@
             <option value="moneda">Por moneda</option>
           </select>
         </div>
-        <div class="chart-box"><canvas id="chart-main"></canvas></div>
+        <div class="chart-box"><div id="cat-summary" class="text-xs space-y-1"></div>
+        <canvas id="chart-main"></canvas></div>
       </div>
       <div id="list" class="space-y-2"></div>
       <p id="empty" class="text-xs text-stone-400 text-center py-4">Sin movimientos en este rango.</p>
@@ -157,19 +162,22 @@
   <div id="modal-rates" class="fixed inset-0 hidden items-center justify-center p-4 modal-bg">
     <div class="glass rounded-3xl max-w-md w-full p-5 space-y-3">
       <div class="flex justify-between"><h3 class="font-black text-sm">💱 Tasas de cambio</h3><button type="button" onclick="closeModal('modal-rates')" class="font-bold text-stone-400 cursor-pointer">✕</button></div>
-      <p class="text-[10px] text-stone-500">Pon cuánto vale 1 EUR y 1 USD en bolívares (o la tasa que uses). Se usa solo para ver equivalentes; cada movimiento guarda su moneda original.</p>
+      <p class="text-[10px] text-stone-500">Por defecto <strong>no se convierte nada</strong>. Cada movimiento se guarda en la moneda que elijas (dólares, euros o Bs) y los totales van <strong>separados por moneda</strong>.<br><br>Si quieres ver un equivalente orientativo, activa la casilla y pon <strong>tú</strong> la tasa del día (cambia seguido; la app no la actualiza sola).</p>
+      <label class="flex items-center gap-2 text-xs font-bold text-stone-700 cursor-pointer">
+        <input type="checkbox" id="rate-show-equiv" class="rounded"> Mostrar equivalentes (opcional)
+      </label>
       <div class="space-y-2 text-xs">
         <div><label class="font-bold text-stone-600">1 EUR = ¿cuántos USD?</label>
           <input type="number" step="0.0001" id="rate-eur-usd" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold" placeholder="ej. 1.08">
         </div>
-        <div><label class="font-bold text-stone-600">1 USD = ¿cuántos Bs?</label>
-          <input type="number" step="0.01" id="rate-usd-ves" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold" placeholder="ej. 36.5">
+        <div><label class="font-bold text-stone-600">1 USD = ¿cuántos Bs? (tasa que uses hoy)</label>
+          <input type="number" step="0.01" id="rate-usd-ves" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold" placeholder="la de hoy">
         </div>
-        <div><label class="font-bold text-stone-600">1 EUR = ¿cuántos Bs? (opcional; si vacío se calcula)</label>
+        <div><label class="font-bold text-stone-600">1 EUR = ¿cuántos Bs? (opcional)</label>
           <input type="number" step="0.01" id="rate-eur-ves" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold" placeholder="auto">
         </div>
       </div>
-      <button type="button" onclick="saveRates()" class="w-full py-2 bg-pink-500 text-white rounded-xl font-black text-xs cursor-pointer">Guardar tasas</button>
+      <button type="button" onclick="saveRates()" class="w-full py-2 bg-pink-500 text-white rounded-xl font-black text-xs cursor-pointer">Guardar</button>
     </div>
   </div>
 
@@ -202,10 +210,12 @@
         <div><label class="font-bold text-stone-600">Categoría</label>
           <input type="text" id="mov-cat" list="cat-list" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold" placeholder="Hogar, Personal, Alimentación…">
           <datalist id="cat-list">
-            <option value="Alimentación"><option value="Hogar"><option value="Personal"><option value="Transporte">
-            <option value="Salud"><option value="Gym"><option value="Suscripciones"><option value="Deudas">
-            <option value="Ocio"><option value="Ropa"><option value="Trabajo"><option value="Ingreso trabajo">
-            <option value="Cambio moneda"><option value="Otro">
+            <option value="Trabajo"><option value="Farmacia"><option value="Ropa">
+            <option value="Personal"><option value="Comida"><option value="Café">
+            <option value="Mamá"><option value="Suscripciones"><option value="Gym">
+            <option value="Transporte"><option value="Regalos"><option value="Efectivo">
+            <option value="Ahorro"><option value="Préstamos"><option value="Deudas">
+            <option value="Hogar"><option value="Otros">
           </datalist>
         </div>
         <div><label class="font-bold text-stone-600">Nota</label>
@@ -351,7 +361,7 @@
       fijos: [],
       deudas: [],
       extras: {},
-      rates: { eurUsd: 1.08, usdVes: 40, eurVes: null }
+      rates: { showEquiv: false, eurUsd: null, usdVes: null, eurVes: null }
     };
     let chartMain = null, chartPlan = null;
 
@@ -369,8 +379,10 @@
     function convert(amount, from, to) {
       if (!from || !to || from === to) return +amount || 0;
       const r = data.rates || {};
-      const eurUsd = +r.eurUsd || 1.08;
-      const usdVes = +r.usdVes || 40;
+      // Sin tasas configuradas, no inventar: devolver solo si misma moneda
+      if (r.eurUsd == null && r.usdVes == null) return from === to ? (+amount || 0) : (+amount || 0);
+      const eurUsd = +r.eurUsd || 1;
+      const usdVes = +r.usdVes || 1;
       const eurVes = r.eurVes != null && r.eurVes !== '' ? +r.eurVes : eurUsd * usdVes;
       // a USD base
       let usd = +amount || 0;
@@ -392,6 +404,11 @@
       }
       return '≈ ' + convert(amount,'VES','EUR').toFixed(2) + ' EUR · ' + convert(amount,'VES','USD').toFixed(2) + ' USD';
     }
+
+    const CATEGORIAS = [
+      'Trabajo','Farmacia','Ropa','Personal','Comida','Café','Mamá','Suscripciones',
+      'Gym','Transporte','Regalos','Efectivo','Ahorro','Préstamos','Deudas','Hogar','Otros'
+    ];
 
     function load() {
       try {
@@ -496,19 +513,21 @@
     // —— Rates ——
     function openRates() {
       const r = data.rates || {};
-      document.getElementById('rate-eur-usd').value = r.eurUsd != null ? r.eurUsd : 1.08;
-      document.getElementById('rate-usd-ves').value = r.usdVes != null ? r.usdVes : 40;
+      document.getElementById('rate-eur-usd').value = r.eurUsd != null ? r.eurUsd : '';
+      document.getElementById('rate-usd-ves').value = r.usdVes != null ? r.usdVes : '';
       document.getElementById('rate-eur-ves').value = r.eurVes != null ? r.eurVes : '';
+      document.getElementById('rate-show-equiv').checked = !!r.showEquiv;
       openModal('modal-rates');
     }
     function saveRates() {
       data.rates = {
-        eurUsd: parseFloat(document.getElementById('rate-eur-usd').value) || 1.08,
-        usdVes: parseFloat(document.getElementById('rate-usd-ves').value) || 40,
+        showEquiv: document.getElementById('rate-show-equiv').checked,
+        eurUsd: document.getElementById('rate-eur-usd').value === '' ? null : parseFloat(document.getElementById('rate-eur-usd').value),
+        usdVes: document.getElementById('rate-usd-ves').value === '' ? null : parseFloat(document.getElementById('rate-usd-ves').value),
         eurVes: document.getElementById('rate-eur-ves').value === '' ? null : parseFloat(document.getElementById('rate-eur-ves').value)
       };
       save(); closeModal('modal-rates'); renderAll();
-      alert('Tasas guardadas');
+      alert(data.rates.showEquiv ? 'Equivalentes activados con tus tasas' : 'Sin conversión automática. Solo moneda original.');
     }
 
     // —— Movimientos ——
@@ -535,11 +554,14 @@
       openModal('modal-mov');
     }
     function updateMovEquiv() {
+      const el = document.getElementById('mov-equiv');
+      if (!el) return;
+      // Solo si activaste "mostrar equivalentes" en Tasas (las tasas las pones TÚ; no son del mercado)
+      if (!(data.rates && data.rates.showEquiv)) { el.textContent = ''; return; }
       const monto = parseFloat(document.getElementById('mov-monto').value);
       const mon = document.getElementById('mov-moneda').value;
-      const el = document.getElementById('mov-equiv');
       if (isNaN(monto)) { el.textContent = ''; return; }
-      el.textContent = 'Equivalente: ' + equivLine(monto, mon);
+      el.textContent = 'Equiv. (tus tasas, no del mercado): ' + equivLine(monto, mon);
     }
     document.addEventListener('input', function(e) {
       if (e.target && (e.target.id === 'mov-monto' || e.target.id === 'mov-moneda')) updateMovEquiv();
@@ -628,8 +650,12 @@
         const v = convert(x.monto, x.moneda || 'EUR', 'EUR');
         if (x.tipo === 'ingreso') ingEur += v; else egrEur += v;
       });
-      document.getElementById('conv-hint').textContent =
-        'Suma aproximada en EUR (con tus tasas): ingresos ' + ingEur.toFixed(2) + ' € · egresos ' + egrEur.toFixed(2) + ' € · balance ' + (ingEur-egrEur).toFixed(2) + ' €';
+      const hint = document.getElementById('conv-hint');
+      if (data.rates && data.rates.showEquiv) {
+        hint.textContent = 'Suma orientativa en EUR (tus tasas, no del mercado): ingresos ' + ingEur.toFixed(2) + ' € · egresos ' + egrEur.toFixed(2) + ' € · balance ' + (ingEur-egrEur).toFixed(2) + ' €';
+      } else {
+        hint.textContent = 'Los totales son por moneda (EUR, USD, Bs por separado). No se mezcla ni se convierte solo.';
+      }
 
       const box = document.getElementById('list');
       const empty = document.getElementById('empty');
@@ -642,13 +668,34 @@
           box.innerHTML += '<div class="glass rounded-2xl p-3 flex justify-between items-start text-xs gap-2">' +
             '<div><div class="font-black">'+(x.tipo==='ingreso'?'💚':'💸')+' '+(x.cat||'Otro')+' · '+x.fecha+' · <span class="text-stone-500">'+mon+'</span></div>' +
             '<div class="text-stone-500">'+(x.nota||'')+'</div>' +
-            '<div class="text-[10px] text-stone-400 mt-0.5">'+equivLine(x.monto, mon)+'</div></div>' +
+            '</div>' +
             '<div class="flex flex-col items-end gap-1"><span class="font-black '+(x.tipo==='ingreso'?'text-emerald-600':'text-pink-600')+'">'+(x.tipo==='ingreso'?'+':'-')+fmtMoney(x.monto, mon)+'</span>' +
             '<div class="flex gap-1"><button type="button" onclick="openMovModal('+x.id+')" class="px-2 py-1 bg-white border border-pink-200 rounded-lg font-bold text-pink-600 cursor-pointer">✏️</button>' +
             '<button type="button" onclick="deleteMov('+x.id+')" class="text-red-500 font-bold cursor-pointer px-1">✕</button></div></div></div>';
         });
       }
       drawMainChart(list);
+      // Resumen por categoría (egresos del rango)
+      const catBox = document.getElementById('cat-summary');
+      if (catBox) {
+        const bag = {};
+        let totalE = 0;
+        list.filter(x => x.tipo === 'egreso').forEach(x => {
+          const k = x.cat || 'Otros';
+          bag[k] = (bag[k] || 0) + (+x.monto || 0);
+          totalE += (+x.monto || 0);
+        });
+        const sorted = Object.entries(bag).sort((a,b) => b[1]-a[1]);
+        if (!sorted.length) catBox.innerHTML = '';
+        else {
+          catBox.innerHTML = '<p class="font-black text-stone-700 mb-1">📊 Egresos por categoría (rango filtrado)</p>' +
+            sorted.map(([k,v]) => {
+              const pct = totalE ? Math.round(v/totalE*100) : 0;
+              return '<div class="flex justify-between gap-2 py-0.5 border-b border-pink-50"><span class="font-bold text-stone-600">'+k+'</span><span class="font-black text-pink-600">'+v.toFixed(1)+' <span class="text-stone-400 font-bold">('+pct+'%)</span></span></div>';
+            }).join('') +
+            '<div class="flex justify-between pt-1 font-black"><span>Total egresos</span><span class="text-pink-700">'+totalE.toFixed(1)+'</span></div>';
+        }
+      }
     }
     function drawMainChart(list) {
       if (chartMain) { try { chartMain.destroy(); } catch(e) {} }
@@ -658,7 +705,8 @@
         const byCat = {};
         list.filter(x => x.tipo==='egreso').forEach(x => {
           const key = x.cat || 'Otro';
-          byCat[key] = (byCat[key]||0) + convert(x.monto, x.moneda||'EUR', 'EUR');
+          // Preferir monto original en USD si la mayoría es USD; si no, dejar moneda original sumada sin convertir
+          byCat[key] = (byCat[key]||0) + (+x.monto || 0);
         });
         const labels = Object.keys(byCat);
         chartMain = new Chart(ctx, {
@@ -684,15 +732,15 @@
       const days = {};
       list.forEach(x => {
         if (!days[x.fecha]) days[x.fecha] = { ing:0, egr:0 };
-        const v = convert(x.monto, x.moneda||'EUR', 'EUR');
+        const v = (+x.monto || 0);
         if (x.tipo==='ingreso') days[x.fecha].ing += v; else days[x.fecha].egr += v;
       });
       const labels = Object.keys(days).sort();
       const datasets = [];
       if (mode==='ambos' || mode==='ingreso')
-        datasets.push({ label: 'Ingresos (EUR eq.)', data: labels.map(d=>days[d].ing), borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,0.15)', fill: true, tension: 0.3 });
+        datasets.push({ label: 'Ingresos', data: labels.map(d=>days[d].ing), borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,0.15)', fill: true, tension: 0.3 });
       if (mode==='ambos' || mode==='egreso')
-        datasets.push({ label: 'Egresos (EUR eq.)', data: labels.map(d=>days[d].egr), borderColor: '#ec4899', backgroundColor: 'rgba(236,72,153,0.12)', fill: true, tension: 0.3 });
+        datasets.push({ label: 'Egresos', data: labels.map(d=>days[d].egr), borderColor: '#ec4899', backgroundColor: 'rgba(236,72,153,0.12)', fill: true, tension: 0.3 });
       chartMain = new Chart(ctx, {
         type: 'line',
         data: { labels: labels.map(d=>d.slice(5)), datasets },
@@ -801,7 +849,7 @@
             '<div class="flex justify-between gap-2 items-start">' +
             '<div><div class="font-black">'+(isPaid?'✅':'⏳')+' '+d.nombre+'</div>' +
             '<div class="text-stone-500">'+(d.cat||'')+' · vence '+(d.fecha||'—')+(d.nota?' · '+d.nota:'')+'</div>' +
-            '<div class="text-[10px] text-stone-400">'+equivLine(d.monto, mon)+'</div></div>' +
+            '</div></div>' +
             '<div class="text-right"><div class="font-black text-pink-600">'+fmtMoney(d.monto, mon)+'</div>' +
             '<div class="flex gap-1 mt-1 justify-end">' +
             '<button type="button" onclick="toggleDebtPaid('+d.id+')" class="px-2 py-1 rounded-lg font-bold text-[10px] cursor-pointer '+(isPaid?'bg-stone-100 text-stone-600':'bg-emerald-100 text-emerald-700')+'">'+(isPaid?'Marcar pendiente':'Marcar pagada')+'</button>' +
@@ -1006,6 +1054,62 @@
 
     
 
+    
+    function seedAnalisisPokerOctubre() {
+      const already = (data.items || []).some(m => m.id >= 2026100201 && m.id <= 2026100499);
+      if (already) return;
+
+      const movs = [
+        { id: 2026100201, tipo: 'ingreso', concepto: 'Póker Binance', monto: 413, moneda: 'USD', fecha: '2026-10-02', cat: 'Trabajo', nota: 'Ingreso póker · 181 a Bs + 200 efectivo + 32 Martín' },
+        { id: 2026100202, tipo: 'egreso', concepto: 'Martín — termo Stanley', monto: 32, moneda: 'USD', fecha: '2026-10-02', cat: 'Regalos', nota: 'Regalo' },
+        { id: 2026100203, tipo: 'egreso', concepto: 'Retiro efectivo (señor)', monto: 200, moneda: 'USD', fecha: '2026-10-02', cat: 'Efectivo', nota: '140 en mano + 40 mamá debe' },
+        { id: 2026100204, tipo: 'egreso', concepto: 'Farmatodo (ticket grande)', monto: 39.4, moneda: 'USD', fecha: '2026-10-02', cat: 'Farmacia', nota: '37.851 Bs · aseo/snacks' },
+        { id: 2026100205, tipo: 'egreso', concepto: 'Leonas — leggings + ropa mamá', monto: 17.4, moneda: 'USD', fecha: '2026-10-02', cat: 'Ropa', nota: '16.673 Bs' },
+        { id: 2026100206, tipo: 'egreso', concepto: 'Perfume Factory', monto: 12.2, moneda: 'USD', fecha: '2026-10-02', cat: 'Personal', nota: '11.700 Bs' },
+        { id: 2026100207, tipo: 'egreso', concepto: 'Mr. Price (tarjeta)', monto: 11.5, moneda: 'USD', fecha: '2026-10-02', cat: 'Ropa', nota: '11.040 Bs' },
+        { id: 2026100208, tipo: 'egreso', concepto: 'Joyería / accesorios', monto: 10.5, moneda: 'USD', fecha: '2026-10-02', cat: 'Personal', nota: '10.052 Bs' },
+        { id: 2026100209, tipo: 'egreso', concepto: 'Café gimnasio', monto: 1.5, moneda: 'USD', fecha: '2026-10-02', cat: 'Café', nota: '1.461 Bs' },
+        { id: 2026100210, tipo: 'egreso', concepto: 'Refresco Farmatodo', monto: 1.0, moneda: 'USD', fecha: '2026-10-02', cat: 'Comida', nota: '932 Bs' },
+        { id: 2026100211, tipo: 'egreso', concepto: 'Comisión canales electrónicos', monto: 0.7, moneda: 'USD', fecha: '2026-10-02', cat: 'Otros', nota: '684 Bs' },
+        { id: 2026100301, tipo: 'egreso', concepto: 'Mamá — proteína + carne de soya', monto: 31.3, moneda: 'USD', fecha: '2026-10-03', cat: 'Mamá', nota: '30.300 Bs' },
+        { id: 2026100302, tipo: 'egreso', concepto: 'Mamá — comida', monto: 41.4, moneda: 'USD', fecha: '2026-10-03', cat: 'Mamá', nota: '40.000 Bs' },
+        { id: 2026100303, tipo: 'egreso', concepto: 'ChatGPT', monto: 8, moneda: 'USD', fecha: '2026-10-03', cat: 'Suscripciones', nota: 'Cambio 8 USD Binance' },
+        { id: 2026100304, tipo: 'egreso', concepto: 'Café gimnasio', monto: 1.5, moneda: 'USD', fecha: '2026-10-03', cat: 'Café', nota: '1.472 Bs' },
+        { id: 2026100305, tipo: 'egreso', concepto: 'Ocean Import', monto: 2.6, moneda: 'USD', fecha: '2026-10-03', cat: 'Otros', nota: '2.501 Bs' },
+        { id: 2026100306, tipo: 'egreso', concepto: 'Refresco Farmatodo', monto: 1.0, moneda: 'USD', fecha: '2026-10-03', cat: 'Comida', nota: '932 Bs' },
+        { id: 2026100401, tipo: 'egreso', concepto: 'Gasolina + toallitas moka', monto: 10, moneda: 'USD', fecha: '2026-10-04', cat: 'Transporte', nota: 'Del efectivo' },
+        { id: 2026100402, tipo: 'ingreso', concepto: 'Mamá — pago móvil (~10 USD)', monto: 10, moneda: 'USD', fecha: '2026-10-04', cat: 'Mamá', nota: '8.750 Bs' }
+      ];
+
+      data.items = (data.items || []).concat(movs);
+      if (!data.deudas) data.deudas = [];
+      if (!data.deudas.some(d => d.id === 2026100500)) {
+        data.deudas.push({
+          id: 2026100500, nombre: 'Mamá me debe (préstamo efectivo)', monto: 40, moneda: 'USD',
+          fecha: '2026-10-02', cat: 'Préstamos', estado: 'pendiente',
+          nota: 'De los 200 en efectivo', pagadaEn: null
+        });
+      }
+      try {
+        document.getElementById('from').value = '2026-10-02';
+        document.getElementById('to').value = '2026-10-04';
+        document.getElementById('filter-moneda').value = 'USD';
+      } catch (e) {}
+      save();
+    }
+
+    function forceSeedAnalisis() {
+      data.items = (data.items || []).filter(m => !(m.id >= 2026100201 && m.id <= 2026100499));
+      data.deudas = (data.deudas || []).filter(d => d.id !== 2026100500);
+      seedAnalisisPokerOctubre();
+      document.getElementById('from').value = '2026-10-02';
+      document.getElementById('to').value = '2026-10-04';
+      document.getElementById('filter-moneda').value = 'USD';
+      renderAll();
+      alert('Análisis 2–4 oct cargado en USD.\\nFiltra fechas y elige gráfica «Egresos por categoría».');
+    }
+
+
     function forceSeedOctubre() {
       // Quita compromisos previos del plan para no duplicar y vuelve a cargar
       data.deudas = (data.deudas || []).filter(d => !(d.id >= 2026100901 && d.id <= 2026103099));
@@ -1066,7 +1170,21 @@
     document.getElementById('debt-from').value = document.getElementById('from').value;
     document.getElementById('debt-to').value = document.getElementById('to').value;
     document.getElementById('plan-month').value = now.toISOString().slice(0,7);
+    const fc = document.getElementById('filter-cat');
+    if (fc && fc.options.length <= 1) {
+      CATEGORIAS.forEach(c => {
+        const o = document.createElement('option');
+        o.value = c; o.textContent = c;
+        fc.appendChild(o);
+      });
+    }
+    // also fill mov-cat if select
+    const dl = document.getElementById('cat-list');
+    if (dl) {
+      dl.innerHTML = CATEGORIAS.map(c => '<option value="'+c+'">').join('');
+    }
     load();
+    seedAnalisisPokerOctubre();
     seedOctubre2026IfEmpty();
     renderAll();
   </script>
