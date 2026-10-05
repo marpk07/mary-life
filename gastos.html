@@ -105,6 +105,7 @@
           <option value="pendiente">Pendientes</option>
           <option value="pagada">Pagadas</option>
         </select>
+        <button type="button" onclick="forceSeedOctubre()" class="px-3 py-1.5 bg-fuchsia-100 text-fuchsia-800 rounded-xl text-xs font-black cursor-pointer">📥 Plan octubre</button>
         <button type="button" onclick="openDebtModal()" class="ml-auto px-3 py-1.5 bg-pink-500 text-white rounded-xl text-xs font-black cursor-pointer">+ Deuda / pendiente</button>
       </div>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="debt-kpis"></div>
@@ -782,6 +783,7 @@
       function mini(bag) {
         return ['EUR','USD','VES'].filter(m=>bag[m]).map(m=>fmtMoney(bag[m],m)).join(' · ') || '—';
       }
+      // montos 0 se muestran como 'completar'
       document.getElementById('debt-kpis').innerHTML =
         '<div class="glass rounded-xl p-2 text-center"><span class="text-[9px] font-bold text-stone-500">Pendientes</span><p class="font-black text-pink-600 text-xs">'+pend.length+'</p><p class="text-[10px]">'+mini(sumP)+'</p></div>' +
         '<div class="glass rounded-xl p-2 text-center"><span class="text-[9px] font-bold text-stone-500">Pagadas</span><p class="font-black text-emerald-600 text-xs">'+paid.length+'</p><p class="text-[10px]">'+mini(sumPaid)+'</p></div>';
@@ -1002,6 +1004,60 @@
       navigator.clipboard.writeText(r).then(()=>alert('Reporte copiado')).catch(()=>prompt('Copia:', r));
     }
 
+    
+
+    function forceSeedOctubre() {
+      // Quita compromisos previos del plan para no duplicar y vuelve a cargar
+      data.deudas = (data.deudas || []).filter(d => !(d.id >= 2026100901 && d.id <= 2026103099));
+      data.extras = data.extras || {};
+      data.extras['2026-10'] = [];
+      seedOctubre2026IfEmpty();
+      renderAll();
+      alert('Plan de octubre cargado: 10 compromisos ($165) + comida estimada + Gym fijo');
+    }
+
+    function seedOctubre2026IfEmpty() {
+      // Plan semanal octubre 2026 (datos del plan que compartiste)
+      // Solo si aún no hay deudas de este plan (evita duplicar)
+      const already = (data.deudas || []).some(d => d.id >= 2026100901 && d.id <= 2026103099);
+      if (already) return;
+
+      const compromisos = [
+        { id: 2026100901, nombre: 'Cashea comida', monto: 30, moneda: 'USD', fecha: '2026-10-09', cat: 'Alimentación', estado: 'pendiente', nota: 'Fuente: Ahorros · Semana 1', pagadaEn: null },
+        { id: 2026101001, nombre: 'Renta', monto: 7, moneda: 'USD', fecha: '2026-10-10', cat: 'Hogar', estado: 'pendiente', nota: 'Fuente: Ahorros · Semana 1', pagadaEn: null },
+        { id: 2026101002, nombre: 'Cashea', monto: 10, moneda: 'USD', fecha: '2026-10-10', cat: 'Deudas', estado: 'pendiente', nota: 'Fuente: Ahorros · Semana 1', pagadaEn: null },
+        { id: 2026101501, nombre: 'María José', monto: 40, moneda: 'USD', fecha: '2026-10-15', cat: 'Deudas', estado: 'pendiente', nota: 'Fuente: Estructura 1.ª quincena · Semana 2', pagadaEn: null },
+        { id: 2026101601, nombre: 'Cashea Mr. Price', monto: 17, moneda: 'USD', fecha: '2026-10-16', cat: 'Deudas', estado: 'pendiente', nota: 'Fuente: Estructura 1.ª quincena · Semana 2', pagadaEn: null },
+        { id: 2026101602, nombre: 'Cashea accesorios', monto: 6, moneda: 'USD', fecha: '2026-10-16', cat: 'Personal', estado: 'pendiente', nota: 'Fuente: Estructura 1.ª quincena · Semana 2', pagadaEn: null },
+        { id: 2026102001, nombre: 'Gym', monto: 22, moneda: 'USD', fecha: '2026-10-20', cat: 'Gym', estado: 'pendiente', nota: 'Fuente: Estructura 1.ª quincena · ya contemplado en los $85', pagadaEn: null },
+        { id: 2026102401, nombre: 'Cashea Palacio', monto: 10, moneda: 'USD', fecha: '2026-10-24', cat: 'Deudas', estado: 'pendiente', nota: 'Fuente: Mamá (Bs) · tras pago quedan ~$10 en Bs', pagadaEn: null },
+        { id: 2026103001, nombre: 'Cashea Mr. Price', monto: 17, moneda: 'USD', fecha: '2026-10-30', cat: 'Deudas', estado: 'pendiente', nota: 'Fuente: Estructura 2.ª quincena · Semana 4', pagadaEn: null },
+        { id: 2026103002, nombre: 'Cashea accesorios', monto: 6, moneda: 'USD', fecha: '2026-10-30', cat: 'Personal', estado: 'pendiente', nota: 'Fuente: Estructura 2.ª quincena · Semana 4', pagadaEn: null }
+      ];
+
+      data.deudas = (data.deudas || []).concat(compromisos);
+
+      // Gym como fijo mensual si no existe
+      if (!data.fijos) data.fijos = [];
+      if (!data.fijos.some(f => /gym/i.test(f.nombre || ''))) {
+        data.fijos.push({ id: 2026100001, nombre: 'Gym', monto: 22, moneda: 'USD', cat: 'Gym', dia: 20 });
+      }
+
+      // Plan extras octubre: comida estimada por semana + objetivo ahorro
+      if (!data.extras) data.extras = {};
+      data.extras['2026-10'] = [
+        { id: 2026100191, nombre: 'Comida estimada S1 (5–11)', monto: 5, moneda: 'USD', nota: 'Ya tienes comida · $0–5' },
+        { id: 2026100192, nombre: 'Comida estimada S2 (12–18)', monto: 20, moneda: 'USD', nota: 'Cazón $8 · Huevos $7 · Perrarina $5' },
+        { id: 2026100193, nombre: 'Comida estimada S3 (19–25)', monto: 20, moneda: 'USD', nota: 'Solo si hace falta' },
+        { id: 2026100194, nombre: 'Comida estimada S4 (26–31)', monto: 18, moneda: 'USD', nota: 'Estimado $15–20' },
+        { id: 2026100195, nombre: 'Objetivo colchón efectivo octubre', monto: 150, moneda: 'USD', nota: 'Ahorro actual $140 + mamá $40 → potencial $180 · faltan $10 al objetivo' }
+      ];
+
+      // Nota de contexto en un ingreso estimado (opcional) — no lo marco como movimiento real
+      save();
+    }
+
+
     function renderAll() { renderMov(); renderDeudas(); renderFijos(); renderPlan(); }
 
     const now = new Date();
@@ -1011,8 +1067,8 @@
     document.getElementById('debt-to').value = document.getElementById('to').value;
     document.getElementById('plan-month').value = now.toISOString().slice(0,7);
     load();
+    seedOctubre2026IfEmpty();
     renderAll();
   </script>
 </body>
 </html>
-
