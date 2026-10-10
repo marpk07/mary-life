@@ -5,518 +5,620 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#b492cd">
+  <meta name="theme-color" content="#1a1225">
   <title>MARY · Life Suite</title>
-
-  <!-- Icono corazón rosado/morado para iPhone / Android -->
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%23f9a8d4'/><stop offset='50%25' stop-color='%23c879a8'/><stop offset='100%25' stop-color='%23b492cd'/></linearGradient></defs><rect width='100' height='100' rx='22' fill='url(%23g)'/><text x='50' y='58' font-size='52' text-anchor='middle' dominant-baseline='central'>💗</text></svg>">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%23f9a8d4'/><stop offset='100%25' stop-color='%23b492cd'/></linearGradient></defs><rect width='100' height='100' rx='22' fill='url(%23g)'/><text x='50' y='58' font-size='52' text-anchor='middle' dominant-baseline='central'>💗</text></svg>">
-
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%23f9a8d4'/><stop offset='100%25' stop-color='%23a78bfa'/></linearGradient></defs><rect width='100' height='100' rx='22' fill='url(%23g)'/><text x='50' y='58' font-size='48' text-anchor='middle' dominant-baseline='central'>💗</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%23f9a8d4'/><stop offset='100%25' stop-color='%23a78bfa'/></linearGradient></defs><rect width='100' height='100' rx='22' fill='url(%23g)'/><text x='50' y='58' font-size='48' text-anchor='middle' dominant-baseline='central'>💗</text></svg>">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-
     :root {
-      --pink-50: #fdf2f8;
-      --pink-100: #fce7f3;
-      --pink-200: #fbcfe8;
-      --pink-300: #f9a8d4;
-      --pink-400: #f472b6;
-      --pink-500: #ec4899;
-      --purple-400: #c084fc;
-      --purple-500: #b492cd;
-      --purple-600: #a37fb8;
-      --purple-700: #8b6fa3;
-      --rose-500: #c879a8;
-      --text: #3d2c3d;
-      --sidebar-w: 260px;
+      --bg: #0f0a14;
+      --bg2: #16101f;
+      --card: #1c1428;
+      --card2: #241b32;
+      --border: rgba(244, 114, 182, 0.18);
+      --pink: #f472b6;
+      --pink2: #ec4899;
+      --purple: #a78bfa;
+      --text: #f5eef8;
+      --muted: #a89bb5;
+      --sidebar-w: 268px;
     }
+    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); overflow: hidden; }
 
-    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #fcf8fa 0%, #f7f1f5 40%, #f3ecf5 100%);
-      color: var(--text);
-      overflow: hidden;
+    /* —— LOGIN —— */
+    #lock-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(244,114,182,0.18), transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(167,139,250,0.15), transparent 45%),
+        #0f0a14;
+      display: flex; align-items: center; justify-content: center; padding: 1.5rem;
     }
+    #lock-screen.hidden { display: none !important; }
+    .lock-card {
+      width: 100%; max-width: 360px;
+      background: rgba(28,20,40,0.92);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2rem 1.5rem;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+      text-align: center;
+    }
+    .lock-logo {
+      width: 72px; height: 72px; margin: 0 auto 1rem;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #f9a8d4, #c084fc);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      box-shadow: 0 8px 28px rgba(244,114,182,0.35);
+    }
+    .pin-dots { display: flex; gap: 12px; justify-content: center; margin: 1.25rem 0; }
+    .pin-dot {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid var(--pink); background: transparent; transition: 0.15s;
+    }
+    .pin-dot.filled { background: var(--pink); box-shadow: 0 0 12px rgba(244,114,182,0.6); }
+    .pin-pad {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 260px; margin: 0 auto;
+    }
+    .pin-key {
+      height: 54px; border-radius: 16px; border: 1px solid var(--border);
+      background: var(--card2); color: var(--text); font-weight: 800; font-size: 1.15rem;
+      cursor: pointer;
+    }
+    .pin-key:active { background: rgba(244,114,182,0.25); }
+    .pin-error { color: #fb7185; font-size: 0.75rem; font-weight: 700; min-height: 1.1rem; margin-top: 0.5rem; }
 
-    /* ========== SIDEBAR ========== */
+    /* —— SIDEBAR —— */
     #sidebar {
       width: var(--sidebar-w);
-      background: linear-gradient(180deg, #5e4b6e 0%, #4d3b5c 50%, #3d2c4a 100%);
+      background: linear-gradient(180deg, #1a1228 0%, #120c1c 100%);
+      border-right: 1px solid var(--border);
       color: white;
-      /* z-index set below */
-      display: flex;
-      flex-direction: column;
-      position: fixed;
-      top: 0; left: 0; bottom: 0;
-      z-index: 220;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 8px 0 30px rgba(93, 75, 110, 0.25);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 220;
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
     }
-
     #sidebar.closed { transform: translateX(-100%); }
 
-    .sidebar-logo {
-      padding: 1.25rem 1.25rem 1rem;
-      border-bottom: 1px solid rgba(255,255,255,0.12);
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
+    .profile-block {
+      padding: 1.25rem 1.1rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0.85rem;
     }
-
-    .sidebar-logo .icon {
-      width: 42px; height: 42px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #f9a8d4, #c879a8, #b492cd);
+    .avatar-wrap {
+      position: relative; width: 52px; height: 52px; flex-shrink: 0;
+    }
+    .avatar {
+      width: 52px; height: 52px; border-radius: 16px; object-fit: cover;
+      background: linear-gradient(135deg, #f9a8d4, #a78bfa);
+      border: 2px solid rgba(244,114,182,0.4);
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.35rem;
-      box-shadow: 0 4px 15px rgba(201, 123, 168, 0.45);
+      font-size: 1.4rem; font-weight: 800; color: white; overflow: hidden;
     }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-edit {
+      position: absolute; bottom: -4px; right: -4px;
+      width: 22px; height: 22px; border-radius: 8px;
+      background: var(--pink2); border: none; color: white; font-size: 10px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .profile-name { font-weight: 800; font-size: 0.95rem; line-height: 1.2; }
+    .profile-sub { font-size: 0.7rem; color: var(--muted); font-weight: 600; margin-top: 2px; }
+    .mode-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      margin-top: 6px; padding: 2px 8px; border-radius: 999px;
+      background: rgba(167,139,250,0.2); color: #c4b5fd;
+      font-size: 0.65rem; font-weight: 700;
+    }
+    .mode-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #34d399; }
 
+    .nav-scroll { flex: 1; overflow-y: auto; padding: 0.6rem 0; }
+    .nav-label {
+      padding: 0.5rem 1.15rem 0.25rem;
+      font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted);
+    }
     .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.7rem 1rem;
-      margin: 0.2rem 0.6rem;
-      border-radius: 14px;
-      font-size: 0.8125rem;
-      font-weight: 700;
-      color: rgba(255,255,255,0.78);
-      cursor: pointer;
-      transition: all 0.2s ease;
-      border: none;
-      background: transparent;
-      width: calc(100% - 1.2rem);
-      text-align: left;
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.65rem 1rem; margin: 0.15rem 0.55rem;
+      border-radius: 12px; font-size: 0.8125rem; font-weight: 700;
+      color: rgba(255,255,255,0.72); cursor: pointer;
+      border: none; background: transparent; width: calc(100% - 1.1rem); text-align: left;
+      transition: 0.18s;
     }
-
-    .nav-item:hover {
-      background: rgba(255,255,255,0.1);
-      color: white;
-    }
-
+    .nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
     .nav-item.active {
-      background: linear-gradient(135deg, #c879a8 0%, #b492cd 100%);
+      background: linear-gradient(135deg, rgba(236,72,153,0.35), rgba(167,139,250,0.3));
       color: white;
-      box-shadow: 0 4px 18px rgba(180, 146, 205, 0.45);
+      box-shadow: inset 0 0 0 1px rgba(244,114,182,0.25);
     }
+    .nav-item .emoji { font-size: 1.05rem; width: 1.4rem; text-align: center; }
 
-    .nav-item .emoji { font-size: 1.15rem; width: 1.5rem; text-align: center; }
+    .sidebar-foot {
+      padding: 0.75rem 1rem 1rem;
+      border-top: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 0.4rem;
+    }
+    .foot-btn {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.55rem 0.75rem; border-radius: 10px;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); font-size: 0.75rem; font-weight: 700; cursor: pointer;
+    }
+    .foot-btn:hover { background: rgba(255,255,255,0.05); color: white; }
 
-    /* ========== MAIN CONTENT ========== */
+    /* —— MAIN —— */
     #main-wrap {
-      margin-left: var(--sidebar-w);
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      margin-left: var(--sidebar-w); height: 100vh;
+      display: flex; flex-direction: column;
+      transition: margin-left 0.3s;
+      background: var(--bg);
     }
-
     #main-wrap.expanded { margin-left: 0; }
 
-    /* Top bar mobile */
     #topbar {
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.65rem 1rem;
-      padding-top: max(0.65rem, env(safe-area-inset-top));
-      background: linear-gradient(90deg, #5e4b6e, #4d3b5c);
-      color: white;
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 200;
-      box-shadow: 0 2px 12px rgba(93, 75, 110, 0.3);
-      pointer-events: auto;
+      display: none; align-items: center; justify-content: space-between;
+      padding: 0.6rem 1rem; padding-top: max(0.6rem, env(safe-area-inset-top));
+      background: rgba(15,10,20,0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
     }
     #topbar button {
-      min-width: 44px;
-      min-height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      touch-action: manipulation;
-      -webkit-user-select: none;
-      user-select: none;
-      position: relative;
-      z-index: 201;
+      min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      border-radius: 12px; color: white; font-size: 1.1rem;
     }
+    #topbar .title { font-weight: 800; font-size: 0.9rem; letter-spacing: 0.04em; }
 
-    #content-area {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .view {
-      position: absolute;
-      inset: 0;
-      display: none;
-      overflow: auto;
-    }
-
+    #content-area { flex: 1; position: relative; overflow: hidden; }
+    .view { position: absolute; inset: 0; display: none; overflow: auto; }
     .view.active { display: block; }
+    .module-frame { width: 100%; height: 100%; border: none; display: block; background: #fcf8fa; }
 
-    /* iframe full size */
-    .module-frame {
-      width: 100%;
-      height: 100%;
-      border: none;
-      display: block;
-      background: #fcf8fa;
-    }
-
-    /* ========== DASHBOARD ========== */
+    /* —— DASHBOARD —— */
     #view-dashboard {
       background:
-        radial-gradient(circle at 12% 18%, rgba(249, 168, 212, 0.22) 0%, transparent 42%),
-        radial-gradient(circle at 88% 82%, rgba(180, 146, 205, 0.2) 0%, transparent 45%),
-        linear-gradient(145deg, #fcf8fa 0%, #f7f1f5 50%, #f3ecf5 100%);
-      padding: 1.5rem;
+        radial-gradient(circle at 15% 10%, rgba(244,114,182,0.12), transparent 40%),
+        radial-gradient(circle at 90% 90%, rgba(167,139,250,0.1), transparent 40%),
+        var(--bg);
+      padding: 1.5rem 1.25rem 2.5rem;
       overflow-y: auto;
     }
-
-    .dash-header {
-      text-align: center;
-      margin-bottom: 1.75rem;
-      padding-top: 0.5rem;
+    .dash-top {
+      display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between;
+      gap: 1rem; margin-bottom: 1.5rem;
     }
-
-    .dash-header h1 {
-      font-size: 1.6rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #c879a8, #b492cd, #8b6fa3);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      letter-spacing: -0.02em;
+    .dash-greet h1 {
+      font-size: 1.45rem; font-weight: 800; margin: 0 0 0.25rem;
+      background: linear-gradient(90deg, #f9a8d4, #c4b5fd);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
     }
-
-    .dash-header p {
-      font-size: 0.8rem;
-      color: #8b6fa3;
-      font-weight: 600;
-      margin-top: 0.25rem;
+    .dash-greet p { margin: 0; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
+    .verse {
+      margin-top: 0.5rem; font-size: 0.75rem; color: #c4b5fd; font-weight: 600;
+      max-width: 420px; line-height: 1.4; opacity: 0.9;
     }
+    .kpi-row {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem; margin-bottom: 1.5rem;
+    }
+    .kpi {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1rem;
+    }
+    .kpi .label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    .kpi .value { font-size: 1.35rem; font-weight: 800; margin-top: 0.35rem; color: var(--pink); }
+    .kpi .hint { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; font-weight: 600; }
 
     .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.1rem;
-      max-width: 960px;
-      margin: 0 auto;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 0.9rem;
     }
-
     .area-card {
-      background: rgba(255,255,255,0.88);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(217, 167, 199, 0.45);
-      border-radius: 1.5rem;
-      padding: 1.35rem;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      box-shadow: 0 10px 28px rgba(120, 80, 100, 0.07);
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 1.15rem;
+      cursor: pointer; transition: 0.2s;
+      display: flex; flex-direction: column; gap: 0.45rem;
     }
-
     .area-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 16px 36px rgba(180, 146, 205, 0.18);
-      border-color: rgba(180, 146, 205, 0.55);
+      border-color: rgba(244,114,182,0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.25);
     }
-
-    .area-card .card-icon {
-      width: 48px; height: 48px;
-      border-radius: 14px;
+    .card-icon {
+      width: 42px; height: 42px; border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.5rem;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      font-size: 1.25rem; margin-bottom: 0.25rem;
+    }
+    .area-card h3 { margin: 0; font-size: 0.95rem; font-weight: 800; }
+    .area-card p { margin: 0; font-size: 0.75rem; color: var(--muted); font-weight: 500; line-height: 1.4; flex: 1; }
+    .enter-btn {
+      margin-top: 0.5rem; align-self: flex-start;
+      padding: 0.4rem 0.85rem; border-radius: 10px;
+      background: linear-gradient(135deg, #ec4899, #a78bfa);
+      border: none; color: white; font-size: 0.7rem; font-weight: 800; cursor: pointer;
     }
 
-    .area-card h3 {
-      font-size: 1rem;
-      font-weight: 800;
-      color: #3d2c3d;
+    /* Overlay mobile */
+    #overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 210; backdrop-filter: blur(2px);
+    }
+    #overlay.show { display: block; }
+
+    /* Profile modal */
+    #modal-profile {
+      display: none; position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,0.6); align-items: center; justify-content: center; padding: 1rem;
+    }
+    #modal-profile.open { display: flex; }
+    .modal-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 1.5rem; width: 100%; max-width: 360px;
     }
 
-    .area-card p {
-      font-size: 0.72rem;
-      color: #8b6fa3;
-      font-weight: 500;
-      line-height: 1.4;
-    }
-
-    .area-card .enter-btn {
-      margin-top: auto;
-      align-self: flex-start;
-      font-size: 0.7rem;
-      font-weight: 800;
-      padding: 0.4rem 0.9rem;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #c879a8, #b492cd);
-      color: white;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 3px 12px rgba(180, 146, 205, 0.35);
-    }
-
-    /* Overlay mobile when sidebar open */
-    #sidebar-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(61, 44, 61, 0.45);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      z-index: 210;
-    }
-
-    #sidebar-overlay.show { display: block; }
-
-    /* ========== RESPONSIVE ========== */
     @media (max-width: 900px) {
       #sidebar { transform: translateX(-100%); }
-      #sidebar.open { transform: translateX(0); box-shadow: 8px 0 30px rgba(0,0,0,0.35); }
-      #main-wrap { margin-left: 0; padding-top: calc(52px + env(safe-area-inset-top, 0px)); }
+      #sidebar.open { transform: translateX(0); }
+      #main-wrap { margin-left: 0; }
       #topbar { display: flex; }
+      #content-area { padding-top: calc(52px + env(safe-area-inset-top)); }
+      #view-dashboard { padding-top: 1rem; }
     }
-
-    /* Hide original headers inside iframes is not possible easily,
-       but the overall chrome is unified */
   </style>
 </head>
 <body>
 
-  <!-- SIDEBAR -->
+  <!-- ========== LOGIN / PIN ========== -->
+  <div id="lock-screen">
+    <div class="lock-card">
+      <div class="lock-logo">💗</div>
+      <h2 style="margin:0;font-size:1.25rem;font-weight:800;">MARY</h2>
+      <p style="margin:0.35rem 0 0;color:var(--muted);font-size:0.8rem;font-weight:600;">Life Suite · Personal OS</p>
+      <p id="lock-hint" style="margin:1rem 0 0;font-size:0.75rem;color:var(--muted);font-weight:600;">Ingresa tu PIN de 4 dígitos</p>
+      <div class="pin-dots" id="pin-dots">
+        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+      <div class="pin-error" id="pin-error"></div>
+      <div class="pin-pad" id="pin-pad">
+        <button type="button" class="pin-key" data-k="1">1</button>
+        <button type="button" class="pin-key" data-k="2">2</button>
+        <button type="button" class="pin-key" data-k="3">3</button>
+        <button type="button" class="pin-key" data-k="4">4</button>
+        <button type="button" class="pin-key" data-k="5">5</button>
+        <button type="button" class="pin-key" data-k="6">6</button>
+        <button type="button" class="pin-key" data-k="7">7</button>
+        <button type="button" class="pin-key" data-k="8">8</button>
+        <button type="button" class="pin-key" data-k="9">9</button>
+        <button type="button" class="pin-key" data-k="clear" style="font-size:0.7rem;">BORRAR</button>
+        <button type="button" class="pin-key" data-k="0">0</button>
+        <button type="button" class="pin-key" data-k="ok" style="font-size:0.7rem;">OK</button>
+      </div>
+      <p style="margin:1rem 0 0;font-size:0.65rem;color:var(--muted);">Primera vez: el PIN que elijas queda guardado en este dispositivo.</p>
+    </div>
+  </div>
+
+  <!-- Overlay mobile -->
+  <div id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- ========== SIDEBAR ========== -->
   <aside id="sidebar">
-    <div class="sidebar-logo">
-      <div class="icon">💗</div>
-      <div>
-        <div class="text-sm font-black tracking-wider uppercase leading-none">MARY</div>
-        <div class="text-[10px] font-medium text-pink-200/80 mt-0.5">Life Suite</div>
+    <div class="profile-block">
+      <div class="avatar-wrap">
+        <div class="avatar" id="avatar-el">M</div>
+        <button type="button" class="avatar-edit" onclick="document.getElementById('photo-input').click()" title="Cambiar foto">📷</button>
+        <input type="file" id="photo-input" accept="image/*" class="hidden" style="display:none" onchange="onPhoto(event)">
+      </div>
+      <div style="min-width:0;flex:1;">
+        <div class="profile-name" id="profile-name">Mary</div>
+        <div class="profile-sub">Life Suite</div>
+        <div class="mode-pill">Modo enfoque</div>
       </div>
     </div>
 
-    <nav class="flex-1 py-3 overflow-y-auto">
-      <button class="nav-item active" data-view="dashboard" onclick="navigateTo('dashboard')">
-        <span class="emoji">🏠</span> Dashboard
-      </button>
+    <div class="nav-scroll">
+      <div class="nav-label">Inicio</div>
+      <button type="button" class="nav-item active" data-view="dashboard" onclick="navigateTo('dashboard')"><span class="emoji">🏠</span> Dashboard</button>
 
-      <div class="px-4 pt-4 pb-1 text-[9px] font-black uppercase tracking-widest text-pink-200/50">Áreas de vida</div>
+      <div class="nav-label">Áreas</div>
+      <button type="button" class="nav-item" data-view="poker" onclick="navigateTo('poker')"><span class="emoji">♠️</span> Póker</button>
+      <button type="button" class="nav-item" data-view="fitness" onclick="navigateTo('fitness')"><span class="emoji">💪</span> Fitness</button>
+      <button type="button" class="nav-item" data-view="espiritual" onclick="navigateTo('espiritual')"><span class="emoji">🕊️</span> Espiritual</button>
+      <button type="button" class="nav-item" data-view="planner" onclick="navigateTo('planner')"><span class="emoji">📅</span> Daily Planner</button>
+      <button type="button" class="nav-item" data-view="pendientes" onclick="navigateTo('pendientes')"><span class="emoji">✅</span> Pendientes</button>
+      <button type="button" class="nav-item" data-view="gastos" onclick="navigateTo('gastos')"><span class="emoji">💸</span> Gastos</button>
+      <button type="button" class="nav-item" data-view="cierre" onclick="navigateTo('cierre')"><span class="emoji">📊</span> Cierres</button>
+    </div>
 
-      <button class="nav-item" data-view="poker" onclick="navigateTo('poker')">
-        <span class="emoji">♠️</span> Póker
-      </button>
-      <button class="nav-item" data-view="fitness" onclick="navigateTo('fitness')">
-        <span class="emoji">💪</span> Fitness
-      </button>
-      <button class="nav-item" data-view="espiritual" onclick="navigateTo('espiritual')">
-        <span class="emoji">🕊️</span> Espiritual
-      </button>
-      <button class="nav-item" data-view="planner" onclick="navigateTo('planner')">
-        <span class="emoji">📅</span> Daily Planner
-      </button>
-      <button class="nav-item" data-view="pendientes" onclick="navigateTo('pendientes')">
-        <span class="emoji">✅</span> Pendientes
-      </button>
-      <button class="nav-item" data-view="gastos" onclick="navigateTo('gastos')">
-        <span class="emoji">💸</span> Gastos
-      </button>
-      <button class="nav-item" data-view="cierre" onclick="navigateTo('cierre')">
-        <span class="emoji">📊</span> Cierre
-      </button>
-    </nav>
-
-    <div class="p-4 border-t border-white/10">
-      <p class="text-[10px] text-pink-200/60 text-center font-medium">"Todo lo puedo en Cristo"</p>
+    <div class="sidebar-foot">
+      <button type="button" class="foot-btn" onclick="openProfile()">✏️ Editar perfil</button>
+      <button type="button" class="foot-btn" onclick="lockApp()">🔒 Bloquear</button>
     </div>
   </aside>
 
-  <!-- Overlay for mobile -->
-  <div id="sidebar-overlay" onclick="closeSidebar()"></div>
-
-  <!-- MAIN -->
+  <!-- ========== MAIN ========== -->
   <div id="main-wrap">
-    <!-- Mobile top bar -->
     <div id="topbar">
-      <button type="button" id="btn-menu" onclick="toggleSidebar(event)" ontouchend="toggleSidebar(event)" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-lg leading-none" aria-label="Menú">☰</button>
-      <div class="flex items-center gap-2">
-        <span class="text-sm font-black tracking-wider">MARY</span>
-        <span class="text-pink-200 text-xs font-bold">💗</span>
-      </div>
-      <div class="w-9"></div>
+      <button type="button" id="btn-menu" onclick="toggleSidebar(event)" aria-label="Menú">☰</button>
+      <div class="title">MARY 💗</div>
+      <button type="button" onclick="lockApp()" aria-label="Bloquear">🔒</button>
     </div>
 
     <div id="content-area">
-
-      <!-- ========== DASHBOARD ========== -->
+      <!-- Dashboard -->
       <div id="view-dashboard" class="view active">
-        <div class="dash-header">
-          <h1>💗 Bienvenida a tu Life Suite</h1>
-          <p>Todas tus áreas de vida en un solo lugar</p>
+        <div class="dash-top">
+          <div class="dash-greet">
+            <h1>Bienvenida, <span id="greet-name">Mary</span></h1>
+            <p>Tu sistema personal · todo en un solo lugar</p>
+            <div class="verse">Sean hacedores de la palabra, y no tan solamente oidores. — Santiago 1:22</div>
+          </div>
+        </div>
+
+        <div class="kpi-row">
+          <div class="kpi">
+            <div class="label">Áreas</div>
+            <div class="value">7</div>
+            <div class="hint">Módulos activos</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Sesión</div>
+            <div class="value" style="font-size:1rem;color:#c4b5fd;" id="kpi-date">—</div>
+            <div class="hint">Hoy</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Acceso</div>
+            <div class="value" style="font-size:1rem;color:#34d399;">PIN</div>
+            <div class="hint">Protegido en este dispositivo</div>
+          </div>
         </div>
 
         <div class="cards-grid">
-          <!-- Poker -->
           <div class="area-card" onclick="navigateTo('poker')">
-            <div class="card-icon" style="background: linear-gradient(135deg, #5e4b6e, #c879a8);">♠️</div>
+            <div class="card-icon" style="background:linear-gradient(135deg,#4c1d95,#a78bfa);">♠️</div>
             <h3>Póker</h3>
-            <p>Sesiones, leaks, tridents, hábitos, estudio y reportes de grind.</p>
-            <button class="enter-btn">Entrar →</button>
+            <p>Sesiones, EV, mindset, leaks, estudio y reportes.</p>
+            <button class="enter-btn" type="button">Entrar →</button>
           </div>
-
-          <!-- Fitness -->
           <div class="area-card" onclick="navigateTo('fitness')">
-            <div class="card-icon" style="background: linear-gradient(135deg, #c879a8, #f9a8d4);">💪</div>
+            <div class="card-icon" style="background:linear-gradient(135deg,#9d174d,#f472b6);">💪</div>
             <h3>Fitness</h3>
-            <p>Alimentación, cardio, fuerza, peso, medidas, fotos y habit tracker.</p>
-            <button class="enter-btn">Entrar →</button>
+            <p>Rutinas Push/Pull/Piernas, comida, peso y movilidad.</p>
+            <button class="enter-btn" type="button">Entrar →</button>
           </div>
-
-          <!-- Espiritual -->
           <div class="area-card" onclick="navigateTo('espiritual')">
-            <div class="card-icon" style="background: linear-gradient(135deg, #f472b6, #c879a8);">🕊️</div>
-            <h3>Espacio Espiritual</h3>
-            <p>Diario devocional, estantería bíblica, calendario y planes de estudio.</p>
-            <button class="enter-btn">Entrar →</button>
+            <div class="card-icon" style="background:linear-gradient(135deg,#7c3aed,#c4b5fd);">🕊️</div>
+            <h3>Espiritual</h3>
+            <p>Devocional, lectura y espacio de fe.</p>
+            <button class="enter-btn" type="button">Entrar →</button>
           </div>
-
-          <!-- Planner -->
           <div class="area-card" onclick="navigateTo('planner')">
-            <div class="card-icon" style="background: linear-gradient(135deg, #b492cd, #c879a8);">📅</div>
+            <div class="card-icon" style="background:linear-gradient(135deg,#be185d,#f9a8d4);">📅</div>
             <h3>Daily Planner</h3>
-            <p>Schedule, top goals, to-do, hábitos, rutinas y meal plan diario.</p>
-            <button class="enter-btn">Entrar →</button>
+            <p>Día a día, hábitos, metas y diario breve.</p>
+            <button class="enter-btn" type="button">Entrar →</button>
           </div>
-
-          <!-- Pendientes -->
           <div class="area-card" onclick="navigateTo('pendientes')">
-            <div class="card-icon" style="background: linear-gradient(135deg, #c879a8, #b492cd);">✅</div>
+            <div class="card-icon" style="background:linear-gradient(135deg,#6d28d9,#ddd6fe);">✅</div>
             <h3>Pendientes</h3>
-            <p>Tareas, recordatorios, urgentes, subtareas y vista calendario.</p>
-            <button class="enter-btn">Entrar →</button>
+            <p>Tareas, urgencias y seguimiento.</p>
+            <button class="enter-btn" type="button">Entrar →</button>
           </div>
           <div class="area-card" onclick="navigateTo('gastos')">
-            <div class="card-icon" style="background: linear-gradient(135deg, #ec4899, #b492cd);">💸</div>
+            <div class="card-icon" style="background:linear-gradient(135deg,#9f1239,#fb7185);">💸</div>
             <h3>Gastos</h3>
-            <p>Ingresos, egresos, categorías y balance.</p>
-            <button class="enter-btn">Entrar →</button>
+            <p>USD · EUR · Bs · Cashea · categorías y gráficas.</p>
+            <button class="enter-btn" type="button">Entrar →</button>
           </div>
           <div class="area-card" onclick="navigateTo('cierre')">
-            <div class="card-icon" style="background: linear-gradient(135deg, #b492cd, #ec4899);">📊</div>
-            <h3>Cierre & Insights</h3>
-            <p>Resumen semanal/mensual y copiar a Notion.</p>
-            <button class="enter-btn">Entrar →</button>
+            <div class="card-icon" style="background:linear-gradient(135deg,#5b21b6,#a78bfa);">📊</div>
+            <h3>Cierres</h3>
+            <p>Comparativas semanales y mensuales por área.</p>
+            <button class="enter-btn" type="button">Entrar →</button>
           </div>
         </div>
-
-        <p class="text-center text-[11px] text-[#b492cd] font-semibold mt-8 opacity-70">
-          Elige un área o usa el menú lateral para navegar
-        </p>
       </div>
 
-      <!-- ========== MODULES (iframes) ========== -->
-      <div id="view-poker" class="view">
-        <iframe class="module-frame" src="poker.html" title="Póker" loading="lazy"></iframe>
-      </div>
+      <!-- Modules -->
+      <div id="view-poker" class="view"><iframe class="module-frame" src="poker.html" title="Póker"></iframe></div>
+      <div id="view-fitness" class="view"><iframe class="module-frame" src="fitness.html" title="Fitness"></iframe></div>
+      <div id="view-espiritual" class="view"><iframe class="module-frame" src="espiritual.html" title="Espiritual"></iframe></div>
+      <div id="view-planner" class="view"><iframe class="module-frame" src="planner.html" title="Planner"></iframe></div>
+      <div id="view-pendientes" class="view"><iframe class="module-frame" src="pendientes.html" title="Pendientes"></iframe></div>
+      <div id="view-gastos" class="view"><iframe class="module-frame" src="gastos.html" title="Gastos"></iframe></div>
+      <div id="view-cierre" class="view"><iframe class="module-frame" src="cierre.html" title="Cierres"></iframe></div>
+    </div>
+  </div>
 
-      <div id="view-fitness" class="view">
-        <iframe class="module-frame" src="fitness.html" title="Fitness" loading="lazy"></iframe>
+  <!-- Profile modal -->
+  <div id="modal-profile">
+    <div class="modal-card">
+      <h3 style="margin:0 0 1rem;font-weight:800;font-size:1rem;">Editar perfil</h3>
+      <label style="font-size:0.7rem;font-weight:700;color:var(--muted);">Nombre</label>
+      <input type="text" id="input-name" style="width:100%;margin:0.35rem 0 1rem;padding:0.65rem 0.85rem;border-radius:12px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-weight:700;">
+      <label style="font-size:0.7rem;font-weight:700;color:var(--muted);">Cambiar PIN (4 dígitos, opcional)</label>
+      <input type="password" id="input-pin" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="Nuevo PIN" style="width:100%;margin:0.35rem 0 1rem;padding:0.65rem 0.85rem;border-radius:12px;border:1px solid var(--border);background:var(--bg2);color:var(--text);font-weight:700;">
+      <div style="display:flex;gap:0.5rem;">
+        <button type="button" onclick="closeProfile()" style="flex:1;padding:0.65rem;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-weight:700;cursor:pointer;">Cancelar</button>
+        <button type="button" onclick="saveProfile()" style="flex:1;padding:0.65rem;border-radius:12px;border:none;background:linear-gradient(135deg,#ec4899,#a78bfa);color:white;font-weight:800;cursor:pointer;">Guardar</button>
       </div>
-
-      <div id="view-espiritual" class="view">
-        <iframe class="module-frame" src="espiritual.html" title="Espiritual" loading="lazy"></iframe>
-      </div>
-
-      <div id="view-planner" class="view">
-        <iframe class="module-frame" src="planner.html" title="Daily Planner" loading="lazy"></iframe>
-      </div>
-
-      <div id="view-pendientes" class="view">
-        <iframe class="module-frame" src="pendientes.html" title="Pendientes" loading="lazy"></iframe>
-      </div>
-      <div id="view-gastos" class="view">
-        <iframe class="module-frame" src="gastos.html" title="Gastos" loading="lazy"></iframe>
-      </div>
-      <div id="view-cierre" class="view">
-        <iframe class="module-frame" src="cierre.html" title="Cierre" loading="lazy"></iframe>
-      </div>
-
     </div>
   </div>
 
   <script>
-    const views = ['dashboard', 'poker', 'fitness', 'espiritual', 'planner', 'pendientes', 'gastos', 'cierre'];
+    const PROFILE_KEY = 'MARY_PROFILE_V1';
+    const PIN_KEY = 'MARY_PIN_V1';
+    const SESSION_KEY = 'MARY_SESSION_OK';
 
-    function navigateTo(viewId) {
-      // Hide all views
-      views.forEach(v => {
-        const el = document.getElementById('view-' + v);
-        if (el) el.classList.remove('active');
-      });
+    let pinBuffer = '';
+    let profile = { name: 'Mary', photo: null };
 
-      // Show target
-      const target = document.getElementById('view-' + viewId);
-      if (target) target.classList.add('active');
+    function loadProfile() {
+      try {
+        const p = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
+        profile = { name: p.name || 'Mary', photo: p.photo || null };
+      } catch (e) {}
+      applyProfile();
+    }
 
-      // Update nav active state
-      document.querySelectorAll('.nav-item').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.view === viewId);
-      });
+    function applyProfile() {
+      document.getElementById('profile-name').textContent = profile.name;
+      document.getElementById('greet-name').textContent = profile.name;
+      const av = document.getElementById('avatar-el');
+      if (profile.photo) {
+        av.innerHTML = '<img src="' + profile.photo + '" alt="">';
+      } else {
+        av.textContent = (profile.name || 'M').charAt(0).toUpperCase();
+      }
+    }
 
-      // Close sidebar on mobile
+    function onPhoto(e) {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        // compress a bit via canvas if huge
+        const img = new Image();
+        img.onload = () => {
+          const c = document.createElement('canvas');
+          const max = 256;
+          let w = img.width, h = img.height;
+          if (w > h && w > max) { h = h * max / w; w = max; }
+          else if (h > max) { w = w * max / h; h = max; }
+          c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          profile.photo = c.toDataURL('image/jpeg', 0.75);
+          localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+          applyProfile();
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(f);
+    }
+
+    function openProfile() {
+      document.getElementById('input-name').value = profile.name;
+      document.getElementById('input-pin').value = '';
+      document.getElementById('modal-profile').classList.add('open');
       closeSidebar();
+    }
+    function closeProfile() {
+      document.getElementById('modal-profile').classList.remove('open');
+    }
+    function saveProfile() {
+      const n = (document.getElementById('input-name').value || 'Mary').trim();
+      profile.name = n || 'Mary';
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      const newPin = (document.getElementById('input-pin').value || '').replace(/\D/g, '');
+      if (newPin.length === 4) {
+        localStorage.setItem(PIN_KEY, newPin);
+      }
+      applyProfile();
+      closeProfile();
+    }
 
-      // Update URL hash (optional, for refresh)
-      history.replaceState(null, '', '#' + viewId);
+    // —— PIN ——
+    function updateDots() {
+      document.querySelectorAll('#pin-dots .pin-dot').forEach((d, i) => {
+        d.classList.toggle('filled', i < pinBuffer.length);
+      });
+    }
+
+    function tryUnlock() {
+      const saved = localStorage.getItem(PIN_KEY);
+      const err = document.getElementById('pin-error');
+      if (!saved) {
+        // first time: set PIN
+        if (pinBuffer.length === 4) {
+          localStorage.setItem(PIN_KEY, pinBuffer);
+          sessionStorage.setItem(SESSION_KEY, '1');
+          err.textContent = '';
+          document.getElementById('lock-screen').classList.add('hidden');
+          pinBuffer = '';
+          updateDots();
+        }
+        return;
+      }
+      if (pinBuffer === saved) {
+        sessionStorage.setItem(SESSION_KEY, '1');
+        err.textContent = '';
+        document.getElementById('lock-screen').classList.add('hidden');
+        pinBuffer = '';
+        updateDots();
+      } else {
+        err.textContent = 'PIN incorrecto';
+        pinBuffer = '';
+        updateDots();
+      }
+    }
+
+    document.getElementById('pin-pad').addEventListener('click', (e) => {
+      const btn = e.target.closest('.pin-key');
+      if (!btn) return;
+      const k = btn.getAttribute('data-k');
+      const err = document.getElementById('pin-error');
+      err.textContent = '';
+      if (k === 'clear') { pinBuffer = ''; updateDots(); return; }
+      if (k === 'ok') { tryUnlock(); return; }
+      if (pinBuffer.length >= 4) return;
+      pinBuffer += k;
+      updateDots();
+      if (pinBuffer.length === 4) setTimeout(tryUnlock, 120);
+    });
+
+    function lockApp() {
+      sessionStorage.removeItem(SESSION_KEY);
+      pinBuffer = '';
+      updateDots();
+      document.getElementById('lock-screen').classList.remove('hidden');
+      closeSidebar();
+    }
+
+    function checkSession() {
+      const saved = localStorage.getItem(PIN_KEY);
+      const hint = document.getElementById('lock-hint');
+      if (!saved) {
+        hint.textContent = 'Crea tu PIN de 4 dígitos (solo este dispositivo)';
+      } else {
+        hint.textContent = 'Ingresa tu PIN de 4 dígitos';
+      }
+      if (sessionStorage.getItem(SESSION_KEY) === '1') {
+        document.getElementById('lock-screen').classList.add('hidden');
+      }
+    }
+
+    // —— NAV ——
+    function navigateTo(view) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      const el = document.getElementById('view-' + view);
+      if (el) el.classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-view') === view);
+      });
+      closeSidebar();
     }
 
     function toggleSidebar(e) {
       if (e) { e.preventDefault(); e.stopPropagation(); }
       const sb = document.getElementById('sidebar');
-      const ov = document.getElementById('sidebar-overlay');
-      if (!sb) return;
-      const opening = !sb.classList.contains('open');
-      sb.classList.toggle('open', opening);
-      if (ov) ov.classList.toggle('show', opening);
-      // Evita que el iframe “robe” toques mientras el menú está abierto
-      document.querySelectorAll('.module-frame').forEach(function(f) {
-        f.style.pointerEvents = opening ? 'none' : 'auto';
-      });
+      const ov = document.getElementById('overlay');
+      sb.classList.toggle('open');
+      ov.classList.toggle('show', sb.classList.contains('open'));
     }
-
     function closeSidebar() {
-      const sb = document.getElementById('sidebar');
-      const ov = document.getElementById('sidebar-overlay');
-      if (sb) sb.classList.remove('open');
-      if (ov) ov.classList.remove('show');
-      document.querySelectorAll('.module-frame').forEach(function(f) {
-        f.style.pointerEvents = 'auto';
-      });
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('overlay').classList.remove('show');
     }
 
-    // On load: respect hash or default to dashboard
-    window.addEventListener('DOMContentLoaded', () => {
-      const hash = (location.hash || '').replace('#', '');
-      if (views.includes(hash)) {
-        navigateTo(hash);
-      } else {
-        navigateTo('dashboard');
-      }
-    });
-
-    // Handle back/forward if needed
-    window.addEventListener('hashchange', () => {
-      const hash = (location.hash || '').replace('#', '');
-      if (views.includes(hash)) navigateTo(hash);
-    });
+    // init
+    document.getElementById('kpi-date').textContent = new Date().toLocaleDateString('es-VE', { weekday: 'short', day: 'numeric', month: 'short' });
+    loadProfile();
+    checkSession();
   </script>
 </body>
 </html>
+
