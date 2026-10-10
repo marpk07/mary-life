@@ -1,0 +1,10 @@
+/* Fix: barra MARY no tapa Gastos/Fitness/etc en movil */
+@media (max-width: 900px) {
+  #content-area {
+    padding-top: 0 !important;
+    margin-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
+    height: calc(100vh - 56px - env(safe-area-inset-top, 0px)) !important;
+  }
+  .view, .module-frame { height: 100% !important; min-height: 100% !important; }
+  #topbar { box-sizing: border-box; }
+}
