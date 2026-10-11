@@ -1,3 +1,19 @@
 <!DOCTYPE html>
-<!-- UPDATED BY GROK - if you see only this line the push failed -->
-<html><body><p>Actualizando gastos… recarga en 1 minuto</p></body></html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MARY Gastos</title>
+</head>
+<body style="font-family:system-ui;background:#fdf2f8;padding:2rem;color:#4a2c3d">
+<p id="msg">Cargando Gastos…</p>
+<script>
+fetch('gastos-app.html')
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+  .then(html => { document.open(); document.write(html); document.close(); })
+  .catch(e => {
+    document.getElementById('msg').textContent = 'Error cargando la app. Espera 1 minuto y recarga. ' + e;
+  });
+</script>
+</body>
+</html>
