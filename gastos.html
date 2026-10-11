@@ -1,22 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MARY Gastos</title>
-</head>
-<body style="font-family:system-ui;background:#fdf2f8;padding:2rem;color:#4a2c3d">
-<p id="msg">Cargando Gastos…</p>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MARY Gastos</title></head>
+<body style="font-family:system-ui;background:#fdf2f8;padding:2rem;color:#4a2c3d"><p id="msg">Cargando Gastos…</p>
 <script>
-Promise.all([fetch('gastos-p1.txt'), fetch('gastos-p2.txt')])
-  .then(async (rs) => {
-    for (const r of rs) { if (!r.ok) throw new Error(r.status + ' ' + r.url); }
-    const html = (await rs[0].text()) + (await rs[1].text());
-    document.open(); document.write(html); document.close();
-  })
-  .catch(e => {
-    document.getElementById('msg').textContent = 'Error: ' + e + ' — espera el deploy y recarga.';
-  });
-</script>
-</body>
-</html>
+const files=['gc0.txt', 'gc1.txt', 'gc2.txt', 'gc3.txt', 'gc4.txt', 'gc5.txt', 'gc6.txt'];
+Promise.all(files.map(f=>fetch(f).then(r=>{if(!r.ok)throw new Error(r.status+' '+f);return r.text();})))
+.then(parts=>{document.open();document.write(parts.join(''));document.close();})
+.catch(e=>{document.getElementById('msg').textContent='Error: '+e+' — espera 1 min y recarga';});
+</script></body></html>
