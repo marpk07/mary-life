@@ -65,13 +65,16 @@ color: #4a2c3d; min-height: 100vh; margin: 0;
 <div class="glass rounded-2xl p-4">
 <h3 class="font-black text-sm text-stone-800 mb-2">📅 Calendario del periodo</h3>
 <div id="inicio-cal" class="grid grid-cols-7 gap-1 text-center"></div>
-<p class="text-[10px] text-stone-400 mt-2 font-bold">Ámbar = pendiente · Verde = movimiento/pagado · Azul = ingreso</p>
+<p class="text-[10px] text-stone-400 mt-2 font-bold">Ámbar = yo debo · Violeta = me deben · Verde = pagado/egreso · Azul = ingreso · Toca un día para ver montos</p>
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-<div class="glass rounded-2xl p-4"><h3 class="font-black text-sm text-amber-700 mb-2">⏳ Por pagar</h3><div id="inicio-pendientes" class="space-y-1.5 text-xs"></div></div>
-<div class="glass rounded-2xl p-4"><h3 class="font-black text-sm text-emerald-700 mb-2">✅ Pagado / egresos</h3><div id="inicio-pagados" class="space-y-1.5 text-xs"></div></div>
+<div class="glass rounded-2xl p-4"><h3 class="font-black text-sm text-amber-700 mb-2">⏳ Por pagar <span class="text-[10px] font-bold text-stone-400">(yo debo)</span></h3><div id="inicio-pendientes" class="space-y-1.5 text-xs"></div></div>
+<div class="glass rounded-2xl p-4"><h3 class="font-black text-sm text-violet-700 mb-2">🤝 Me deben <span class="text-[10px] font-bold text-stone-400">(por cobrar)</span></h3><div id="inicio-cobrar" class="space-y-1.5 text-xs"></div></div>
 </div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<div class="glass rounded-2xl p-4"><h3 class="font-black text-sm text-emerald-700 mb-2">✅ Pagado / egresos</h3><div id="inicio-pagados" class="space-y-1.5 text-xs"></div></div>
 <div class="glass rounded-2xl p-4"><h3 class="font-black text-sm text-sky-700 mb-2">💰 Ingresos</h3><div id="inicio-ingresos" class="space-y-1.5 text-xs"></div></div>
+</div>
 <div class="flex flex-wrap gap-2 text-xs">
 <button type="button" onclick="showTab('mov')" class="px-3 py-2 bg-white border border-pink-200 rounded-xl font-black text-pink-700">Movimientos + gráficas →</button>
 <button type="button" onclick="showTab('deudas')" class="px-3 py-2 bg-white border border-pink-200 rounded-xl font-black text-pink-700">Todas las deudas →</button>
@@ -186,6 +189,12 @@ color: #4a2c3d; min-height: 100vh; margin: 0;
 </section>
 </main>
 
+<div id="modal-dia" class="fixed inset-0 hidden items-center justify-center p-4 modal-bg">
+<div class="glass rounded-3xl max-w-md w-full p-5 space-y-3 max-h-[80vh] overflow-y-auto">
+<div class="flex justify-between"><h3 class="font-black text-sm" id="dia-title">Día</h3><button type="button" onclick="closeModal('modal-dia')" class="font-bold text-stone-400 cursor-pointer">✕</button></div>
+<div id="dia-body" class="text-xs space-y-2"></div>
+</div>
+</div>
 <div id="modal-rates" class="fixed inset-0 hidden items-center justify-center p-4 modal-bg">
 <div class="glass rounded-3xl max-w-md w-full p-5 space-y-3">
 <div class="flex justify-between"><h3 class="font-black text-sm">💱 Tasas de cambio</h3><button type="button" onclick="closeModal('modal-rates')" class="font-bold text-stone-400 cursor-pointer">✕</button></div>
@@ -261,8 +270,15 @@ color: #4a2c3d; min-height: 100vh; margin: 0;
 <div class="flex justify-between"><h3 class="font-black text-sm">💳 Deuda / pendiente</h3><button type="button" onclick="closeModal('modal-debt')" class="font-bold text-stone-400 cursor-pointer">✕</button></div>
 <input type="hidden" id="debt-id">
 <div class="space-y-2 text-xs">
+<div><label class="font-bold text-stone-600">Tipo</label>
+<select id="debt-lado" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold">
+<option value="debo">Yo debo (por pagar)</option>
+<option value="me_deben">Me deben (por cobrar)</option>
+</select>
+<p class="text-[10px] text-stone-400 mt-1 font-bold">Ej. renta/Cashea = yo debo · Mamá me tiene $90 = me deben</p>
+</div>
 <div><label class="font-bold text-stone-600">Concepto</label>
-<input type="text" id="debt-nombre" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold" placeholder="Qué hay que pagar">
+<input type="text" id="debt-nombre" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold" placeholder="Renta, Cashea, préstamo a mamá…">
 </div>
 <div class="grid grid-cols-2 gap-2">
 <div><label class="font-bold text-stone-600">Monto</label>
@@ -433,6 +449,14 @@ const CATEGORIAS = [
 'Gym','Transporte','Regalos','Efectivo','Ahorro','Préstamos','Deudas','Hogar','Otros'
 ];
 
+function normalizeDebt(d) {
+  d = Object.assign({ lado: 'debo', estado: 'pendiente' }, d);
+  const n = (d.nombre || '').toLowerCase();
+  if (!d.lado || d.lado === 'debo') {
+    if (/me debe|me deben|me tiene|me debe|préstamo a mí|me deben/.test(n) || /mamá me debe/.test(n)) d.lado = 'me_deben';
+  }
+  return d;
+}
 function load() {
 try {
 const raw = localStorage.getItem(KEY) || localStorage.getItem('MARY_GASTOS_V1');
@@ -443,7 +467,7 @@ else {
 data = Object.assign(data, parsed);
 data.items = (data.items || []).map(normalizeItem);
 data.fijos = (data.fijos || []).map(f => Object.assign({ moneda: 'EUR' }, f));
-data.deudas = data.deudas || [];
+data.deudas = (data.deudas || []).map(normalizeDebt);
 data.extras = data.extras || {};
 data.rates = Object.assign({ eurUsd: 1.08, usdVes: 40, eurVes: null }, data.rates || {});
 }
@@ -494,6 +518,7 @@ if (a) a.value = from;
 if (b) b.value = to;
 renderInicio();
 }
+
 function renderInicio() {
 const fromEl = document.getElementById('inicio-from');
 const toEl = document.getElementById('inicio-to');
@@ -502,15 +527,16 @@ const from = fromEl.value, to = toEl.value;
 if (!from || !to) return;
 const deudas = (data.deudas || []).filter(d => d.fecha >= from && d.fecha <= to);
 const movs = (data.items || []).filter(m => m.fecha >= from && m.fecha <= to);
-const pend = deudas.filter(d => d.estado !== 'pagada');
+const pend = deudas.filter(d => d.estado !== 'pagada' && (d.lado || 'debo') === 'debo');
+const cobrar = deudas.filter(d => d.estado !== 'pagada' && d.lado === 'me_deben');
 const pagadas = deudas.filter(d => d.estado === 'pagada');
 const ingresos = movs.filter(m => m.tipo === 'ingreso');
 const egresos = movs.filter(m => m.tipo === 'egreso');
 const sumU = arr => arr.filter(x => (x.moneda || 'USD') === 'USD').reduce((a, x) => a + (+x.monto || 0), 0);
 const kpis = document.getElementById('inicio-kpis');
 if (kpis) kpis.innerHTML = `
-<div class="glass rounded-2xl p-3"><div class="text-[10px] font-bold text-stone-500">Por pagar</div><div class="text-lg font-black text-amber-600">$${sumU(pend).toFixed(0)}</div></div>
-<div class="glass rounded-2xl p-3"><div class="text-[10px] font-bold text-stone-500">Pagado (deudas)</div><div class="text-lg font-black text-emerald-600">$${sumU(pagadas).toFixed(0)}</div></div>
+<div class="glass rounded-2xl p-3"><div class="text-[10px] font-bold text-stone-500">Por pagar (yo debo)</div><div class="text-lg font-black text-amber-600">$${sumU(pend).toFixed(0)}</div></div>
+<div class="glass rounded-2xl p-3"><div class="text-[10px] font-bold text-stone-500">Me deben</div><div class="text-lg font-black text-violet-600">$${sumU(cobrar).toFixed(0)}</div></div>
 <div class="glass rounded-2xl p-3"><div class="text-[10px] font-bold text-stone-500">Ingresos</div><div class="text-lg font-black text-sky-600">$${sumU(ingresos).toFixed(0)}</div></div>
 <div class="glass rounded-2xl p-3"><div class="text-[10px] font-bold text-stone-500">Egresos</div><div class="text-lg font-black text-pink-600">$${sumU(egresos).toFixed(0)}</div></div>`;
 const days = [];
@@ -518,39 +544,93 @@ const a = new Date(from + 'T12:00:00'), b = new Date(to + 'T12:00:00');
 for (let d = new Date(a); d <= b; d.setDate(d.getDate() + 1)) days.push(fmt(new Date(d)));
 const show = days.slice(0, 42);
 const by = {};
-show.forEach(f => { by[f] = { p: 0, ok: 0, i: 0 }; });
-pend.forEach(d => { if (by[d.fecha]) by[d.fecha].p++; });
-pagadas.forEach(d => { if (by[d.fecha]) by[d.fecha].ok++; });
-ingresos.forEach(m => { if (by[m.fecha]) by[m.fecha].i++; });
-egresos.forEach(m => { if (by[m.fecha]) by[m.fecha].ok++; });
+show.forEach(f => { by[f] = { debo: 0, cobrar: 0, egr: 0, ing: 0, n: 0 }; });
+pend.forEach(d => { if (by[d.fecha]) { by[d.fecha].debo += (+d.monto || 0); by[d.fecha].n++; } });
+cobrar.forEach(d => { if (by[d.fecha]) { by[d.fecha].cobrar += (+d.monto || 0); by[d.fecha].n++; } });
+ingresos.forEach(m => { if (by[m.fecha]) { by[m.fecha].ing += (+m.monto || 0); by[m.fecha].n++; } });
+egresos.forEach(m => { if (by[m.fecha]) { by[m.fecha].egr += (+m.monto || 0); by[m.fecha].n++; } });
+window._inicioDayData = by;
 let cal = ['L','M','X','J','V','S','D'].map(w => `<div class="text-[10px] font-black text-stone-400 py-1">${w}</div>`).join('');
 if (show.length) {
 let pad = (new Date(show[0] + 'T12:00:00').getDay() + 6) % 7;
 for (let i = 0; i < pad; i++) cal += '<div></div>';
 show.forEach(f => {
-const info = by[f] || { p: 0, ok: 0, i: 0 };
+const info = by[f] || { debo: 0, cobrar: 0, egr: 0, ing: 0, n: 0 };
 let bg = 'bg-white border-pink-100';
-if (info.p) bg = 'bg-amber-100 border-amber-300';
-else if (info.i) bg = 'bg-sky-100 border-sky-300';
-else if (info.ok) bg = 'bg-emerald-50 border-emerald-200';
-cal += `<div class="rounded-lg border ${bg} py-2 text-[11px] font-black">${parseInt(f.slice(8), 10)}</div>`;
+if (info.debo) bg = 'bg-amber-100 border-amber-300';
+else if (info.cobrar) bg = 'bg-violet-100 border-violet-300';
+else if (info.ing) bg = 'bg-sky-100 border-sky-300';
+else if (info.egr) bg = 'bg-emerald-50 border-emerald-200';
+const totDebo = info.debo || 0;
+const totCob = info.cobrar || 0;
+let sub = '';
+if (totDebo) sub += `<div class="text-[9px] font-black text-amber-700 leading-tight">$${totDebo.toFixed(0)}</div>`;
+if (totCob) sub += `<div class="text-[9px] font-black text-violet-700 leading-tight">+$${totCob.toFixed(0)}</div>`;
+if (!totDebo && !totCob && info.egr) sub += `<div class="text-[9px] font-black text-emerald-700 leading-tight">$${info.egr.toFixed(0)}</div>`;
+if (!totDebo && !totCob && !info.egr && info.ing) sub += `<div class="text-[9px] font-black text-sky-700 leading-tight">$${info.ing.toFixed(0)}</div>`;
+cal += `<button type="button" onclick="openDiaDetail('${f}')" class="rounded-lg border ${bg} py-1.5 px-0.5 text-[11px] font-black cursor-pointer w-full min-h-[48px]">${parseInt(f.slice(8), 10)}${sub}</button>`;
 });
 }
 const calEl = document.getElementById('inicio-cal');
 if (calEl) calEl.innerHTML = cal;
 const list = (arr, empty, col) => !arr.length
 ? `<p class="text-stone-400 font-bold">${empty}</p>`
-: arr.slice(0, 12).map(x => {
+: arr.slice(0, 15).map(x => {
 const n = x.nombre || x.concepto || '—';
 return `<div class="flex justify-between gap-2 py-1 border-b border-pink-50"><span class="font-bold text-stone-700">${x.fecha} · ${n}</span><span class="font-black ${col}">${fmtMoney(+x.monto || 0, x.moneda || 'USD')}</span></div>`;
 }).join('');
 const pe = document.getElementById('inicio-pendientes');
+const pc = document.getElementById('inicio-cobrar');
 const pa = document.getElementById('inicio-pagados');
 const ig = document.getElementById('inicio-ingresos');
-if (pe) pe.innerHTML = list(pend, 'Nada pendiente', 'text-amber-600');
+if (pe) pe.innerHTML = list(pend, 'Nada por pagar', 'text-amber-600');
+if (pc) pc.innerHTML = list(cobrar, 'Nadie te debe en este rango', 'text-violet-600');
 if (pa) pa.innerHTML = list(pagadas.concat(egresos.map(m => Object.assign({}, m, { nombre: m.concepto }))), 'Sin pagos/egresos', 'text-emerald-600');
 if (ig) ig.innerHTML = list(ingresos.map(m => Object.assign({}, m, { nombre: m.concepto })), 'Sin ingresos', 'text-sky-600');
 }
+function openDiaDetail(fecha) {
+const from = document.getElementById('inicio-from').value;
+const to = document.getElementById('inicio-to').value;
+const deudas = (data.deudas || []).filter(d => d.fecha === fecha);
+const movs = (data.items || []).filter(m => m.fecha === fecha);
+const title = document.getElementById('dia-title');
+const body = document.getElementById('dia-body');
+if (title) title.textContent = '📅 ' + fecha;
+let html = '';
+let totalDebo = 0, totalCobrar = 0, totalEgr = 0, totalIng = 0;
+const debo = deudas.filter(d => d.estado !== 'pagada' && (d.lado || 'debo') === 'debo');
+const cobrar = deudas.filter(d => d.estado !== 'pagada' && d.lado === 'me_deben');
+const pagadas = deudas.filter(d => d.estado === 'pagada');
+if (debo.length) {
+html += '<p class="font-black text-amber-700">Por pagar (yo debo)</p>';
+debo.forEach(d => { totalDebo += +d.monto || 0; html += `<div class="flex justify-between"><span>${d.nombre}</span><strong class="text-amber-600">${fmtMoney(d.monto, d.moneda||'USD')}</strong></div>`; });
+html += `<div class="font-black text-right text-amber-800">Total debo: $${totalDebo.toFixed(2)}</div>`;
+}
+if (cobrar.length) {
+html += '<p class="font-black text-violet-700 mt-2">Me deben</p>';
+cobrar.forEach(d => { totalCobrar += +d.monto || 0; html += `<div class="flex justify-between"><span>${d.nombre}</span><strong class="text-violet-600">${fmtMoney(d.monto, d.moneda||'USD')}</strong></div>`; });
+html += `<div class="font-black text-right text-violet-800">Total me deben: $${totalCobrar.toFixed(2)}</div>`;
+}
+const egr = movs.filter(m => m.tipo === 'egreso');
+const ing = movs.filter(m => m.tipo === 'ingreso');
+if (egr.length) {
+html += '<p class="font-black text-pink-700 mt-2">Egresos / compras</p>';
+egr.forEach(m => { totalEgr += +m.monto || 0; html += `<div class="flex justify-between"><span>${m.concepto||m.cat}</span><strong class="text-pink-600">${fmtMoney(m.monto, m.moneda||'USD')}</strong></div>`; });
+html += `<div class="font-black text-right">Total egresos: $${totalEgr.toFixed(2)}</div>`;
+}
+if (ing.length) {
+html += '<p class="font-black text-sky-700 mt-2">Ingresos</p>';
+ing.forEach(m => { totalIng += +m.monto || 0; html += `<div class="flex justify-between"><span>${m.concepto||m.cat}</span><strong class="text-sky-600">${fmtMoney(m.monto, m.moneda||'USD')}</strong></div>`; });
+}
+if (pagadas.length) {
+html += '<p class="font-black text-emerald-700 mt-2">Deudas marcadas pagadas</p>';
+pagadas.forEach(d => { html += `<div class="flex justify-between"><span>${d.nombre}</span><strong>${fmtMoney(d.monto, d.moneda||'USD')}</strong></div>`; });
+}
+if (!html) html = '<p class="text-stone-400 font-bold">Sin movimientos este día</p>';
+if (body) body.innerHTML = html;
+openModal('modal-dia');
+}
+
 
 function showTab(name) {
 ['inicio','mov','deudas','fijos','plan'].forEach(t => {
@@ -854,6 +934,7 @@ document.getElementById('debt-id').value = id || '';
 if (id) {
 const d = data.deudas.find(x => x.id === id);
 if (!d) return;
+document.getElementById('debt-lado').value = d.lado || 'debo';
 document.getElementById('debt-nombre').value = d.nombre || '';
 document.getElementById('debt-monto').value = d.monto;
 document.getElementById('debt-moneda').value = d.moneda || 'EUR';
@@ -862,6 +943,7 @@ document.getElementById('debt-cat').value = d.cat || '';
 document.getElementById('debt-estado').value = d.estado || 'pendiente';
 document.getElementById('debt-nota').value = d.nota || '';
 } else {
+document.getElementById('debt-lado').value = 'debo';
 document.getElementById('debt-nombre').value = '';
 document.getElementById('debt-monto').value = '';
 document.getElementById('debt-moneda').value = 'EUR';
@@ -880,6 +962,7 @@ const editId = document.getElementById('debt-id').value;
 const obj = {
 id: editId ? parseInt(editId) : Date.now(),
 nombre, monto,
+lado: document.getElementById('debt-lado').value || 'debo',
 moneda: document.getElementById('debt-moneda').value,
 fecha: document.getElementById('debt-fecha').value,
 cat: document.getElementById('debt-cat').value.trim() || 'Deudas',
@@ -921,7 +1004,8 @@ return true;
 }
 function renderDeudas() {
 const list = filteredDeudas();
-const pend = list.filter(d => d.estado !== 'pagada');
+const pend = list.filter(d => d.estado !== 'pagada' && (d.lado || 'debo') === 'debo');
+const cobrarList = list.filter(d => d.estado !== 'pagada' && d.lado === 'me_deben');
 const paid = list.filter(d => d.estado === 'pagada');
 const sumP = { EUR:0, USD:0, VES:0 };
 const sumPaid = { EUR:0, USD:0, VES:0 };
@@ -947,7 +1031,7 @@ const mon = d.moneda || 'EUR';
 const isPaid = d.estado === 'pagada';
 box.innerHTML += '<div class="glass rounded-2xl p-3 text-xs '+(isPaid?'opacity-70':'')+'">' +
 '<div class="flex justify-between gap-2 items-start">' +
-'<div><div class="font-black">'+(isPaid?'✅':'⏳')+' '+d.nombre+'</div>' +
+'<div><div class="font-black">'+(isPaid?'✅':((d.lado==='me_deben')?'🤝':'⏳'))+' '+d.nombre+((d.lado==='me_deben' && !isPaid)?' (me deben)':'')+'</div>' +
 '<div class="text-stone-500">'+(d.cat||'')+' · vence '+(d.fecha||'—')+(d.nota?' · '+d.nota:'')+'</div>' +
 '</div></div>' +
 '<div class="text-right"><div class="font-black text-pink-600">'+fmtMoney(d.monto, mon)+'</div>' +
@@ -1204,7 +1288,7 @@ if (!data.deudas) data.deudas = [];
 if (!data.deudas.some(d => d.id === 2026100500)) {
 data.deudas.push({
 id: 2026100500, nombre: 'Mamá me debe (préstamo efectivo)', monto: 40, moneda: 'USD',
-fecha: '2026-10-02', cat: 'Préstamos', estado: 'pendiente',
+fecha: '2026-10-02', cat: 'Préstamos', estado: 'pendiente', lado: 'me_deben',
 nota: 'De los 200 en efectivo', pagadaEn: null
 });
 }
@@ -1319,4 +1403,6 @@ renderAll();
 </script>
 </body>
 </html>
+
+
 
