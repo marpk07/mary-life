@@ -1,9 +1,20 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MARY</title></head>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MARY</title>
+</head>
 <body style="margin:0;background:#0f0a14;color:#f5eef8;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh">
 <p id="m">Cargando MARY…</p>
 <script>
-Promise.all([fetch('idx-p1.txt'),fetch('idx-p2.txt')])
-.then(async rs=>{for(const r of rs){if(!r.ok)throw new Error(r.status)}const h=(await rs[0].text())+(await rs[1].text());document.open();document.write(h);document.close();})
-.catch(e=>{document.getElementById('m').textContent='Error: '+e+' — recarga en 1 min';});
-</script></body></html>
+Promise.all([fetch('idx-p1.txt'),fetch('idx-p2.txt'),fetch('idx-p3.txt')])
+.then(async rs=>{
+  for (const r of rs) { if (!r.ok) throw new Error(r.status); }
+  const h = (await rs[0].text()) + (await rs[1].text()) + (await rs[2].text());
+  document.open(); document.write(h); document.close();
+})
+.catch(e=>{ document.getElementById('m').textContent = 'Error: '+e+' — recarga en 1 min'; });
+</script>
+</body>
+</html>
