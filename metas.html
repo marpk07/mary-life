@@ -634,7 +634,7 @@ function weekText() {
   t += '━━━━━━━━━━━━━━━━━━━━\n\n';
   let area='';
   goals().forEach(g=>{
-    if (g.area!==area){ area=g.area; t+='✨ '+area+'\n'; }
+    if (g.area!==area){ area=g.area; t+='🎫 '+area+'\n'; }
     const p = progressFor(g, days);
     const icon = p.status==='ok'?'✅':(p.status==='warn'?'🎫':(p.status==='bad'?'❌':'🔄'));
     t += icon+' '+g.name+'\n';
@@ -643,7 +643,7 @@ function weekText() {
       let row = '   ';
       days.forEach((ds,i)=>{
         const v = dayData(ds)[g.id];
-        if (v===true) row += dayNames[i]+'☑️ ';
+        if (v===true) row += dayNames[i]+'✅ ';
         else if (v==='tarjeta'||v==='card') row += dayNames[i]+'🎫 ';
         else if (v===false || ds < fmt(new Date())) row += dayNames[i]+'❌ ';
         else row += dayNames[i]+'⬜ ';
