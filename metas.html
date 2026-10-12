@@ -615,10 +615,10 @@ function dailyText(ds) {
     by[area].forEach(g=>{
       const v = dayData(ds)[g.id];
       let s;
-      if (v===true) s = '☑️';
+      if (v===true) s = '✅';
       else if (v==='tarjeta' || v==='card') s = '🎫';
       else if (v===false) s = '❌';
-      else if (typeof v==='number'&&v>0) s = '☑️ ×'+v;
+      else if (typeof v==='number'&&v>0) s = '✅ ×'+v;
       else s = '⬜';
       t += '  '+s+'  '+g.name+'\n';
     });
