@@ -5,345 +5,812 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MARY · Metas</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;font-family:'Plus Jakarta Sans',sans-serif}
 body{
   background:
-    radial-gradient(circle at 12% 15%, rgba(249,168,212,.35) 0%, transparent 42%),
-    radial-gradient(circle at 88% 85%, rgba(180,146,205,.3) 0%, transparent 45%),
-    linear-gradient(135deg,#fdf2f8 0%,#fce7f3 45%,#f3e8ff 100%);
-  color:#4a2c3d;min-height:100vh;margin:0;
+    radial-gradient(circle at 10% 10%, rgba(249,168,212,.4) 0%, transparent 40%),
+    radial-gradient(circle at 90% 90%, rgba(167,139,250,.35) 0%, transparent 42%),
+    linear-gradient(160deg,#fdf2f8 0%,#f5e6ff 50%,#ede9fe 100%);
+  color:#3b1f36;min-height:100vh;margin:0;
 }
-.glass{background:rgba(255,255,255,.92);backdrop-filter:blur(14px);border:1px solid rgba(249,168,212,.45);box-shadow:0 10px 28px rgba(120,80,100,.07)}
-.bar{height:8px;border-radius:999px;background:#fce7f3;overflow:hidden}
-.bar>i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#ec4899,#a78bfa)}
-.chip{font-size:10px;font-weight:800;padding:2px 8px;border-radius:999px}
+.glass{
+  background:rgba(255,255,255,.88);
+  backdrop-filter:blur(16px);
+  border:1px solid rgba(236,72,153,.22);
+  box-shadow:0 12px 40px rgba(120,60,100,.08);
+}
+.bar{height:10px;border-radius:999px;background:#fce7f3;overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#ec4899,#a78bfa);transition:width .3s}
+.chip{font-size:10px;font-weight:800;padding:3px 10px;border-radius:999px;display:inline-block}
 .ok{background:#d1fae5;color:#065f46}
 .warn{background:#fef3c7;color:#92400e}
 .bad{background:#fee2e2;color:#991b1b}
-.soft{background:#f3e8ff;color:#6b21a8}
-.area-h{font-size:12px;font-weight:900;letter-spacing:.02em;text-transform:uppercase;color:#9d174d}
+.soft{background:#ede9fe;color:#5b21b6}
+.tab-btn{border:1px solid rgba(236,72,153,.25);background:#fff;color:#9d174d}
+.tab-btn.active{background:linear-gradient(135deg,#ec4899,#a78bfa);color:#fff;border-color:transparent}
+.day-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.dot-ok{background:#34d399}.dot-no{background:#fb7185}.dot-na{background:#e7e5e4}
+input:focus,select:focus,textarea:focus{border-color:#ec4899;box-shadow:0 0 0 3px rgba(236,72,153,.15);outline:none}
 </style>
 </head>
-<body class="pb-24">
-<header class="bg-gradient-to-r from-[#c879a8] via-[#d9a7c7] to-[#b492cd] text-white sticky top-0 z-40 shadow-lg">
-  <div class="max-w-2xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+<body class="pb-28">
+<header class="sticky top-0 z-40 text-white shadow-lg" style="background:linear-gradient(90deg,#c879a8,#d9a7c7,#a78bfa)">
+  <div class="max-w-3xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
     <div>
-      <h1 class="text-sm font-black tracking-wide uppercase">🎯 Metas</h1>
-      <p class="text-[10px] text-white/85" id="week-label">Semana actual</p>
+      <h1 class="text-sm font-black tracking-wide uppercase">Metas</h1>
+      <p class="text-[10px] text-white/90" id="hdr-sub">Semana · tarjetas · reportes</p>
     </div>
-    <div class="flex gap-2 flex-wrap">
-      <button type="button" onclick="shiftWeek(-1)" class="px-2.5 py-1.5 bg-white/20 border border-white/40 rounded-xl text-[10px] font-bold">←</button>
-      <button type="button" onclick="shiftWeek(0)" class="px-2.5 py-1.5 bg-white/20 border border-white/40 rounded-xl text-[10px] font-bold">Hoy</button>
-      <button type="button" onclick="shiftWeek(1)" class="px-2.5 py-1.5 bg-white/20 border border-white/40 rounded-xl text-[10px] font-bold">→</button>
-      <button type="button" onclick="copyWhatsApp()" class="px-2.5 py-1.5 bg-white text-pink-700 rounded-xl text-[10px] font-black">📋 WhatsApp</button>
+    <div class="flex flex-wrap gap-1.5">
+      <button type="button" onclick="copyDailyReport()" class="px-2.5 py-1.5 bg-white/20 border border-white/40 rounded-xl text-[10px] font-bold">Copiar dia</button>
+      <button type="button" onclick="copyWeekReport()" class="px-2.5 py-1.5 bg-white/20 border border-white/40 rounded-xl text-[10px] font-bold">Copiar sem</button>
+      <button type="button" onclick="pdfDaily()" class="px-2.5 py-1.5 bg-white text-pink-700 rounded-xl text-[10px] font-black">PDF dia</button>
+      <button type="button" onclick="pdfWeek()" class="px-2.5 py-1.5 bg-white text-violet-700 rounded-xl text-[10px] font-black">PDF sem</button>
     </div>
   </div>
 </header>
 
-<main class="max-w-2xl mx-auto p-4 space-y-4">
-  <div class="glass rounded-2xl p-4">
-    <div class="flex justify-between items-end gap-2 mb-2">
-      <div>
-        <div class="text-[10px] font-bold text-stone-500">Progreso de la semana</div>
-        <div class="text-2xl font-black text-pink-700" id="kpi-pct">0%</div>
+<main class="max-w-3xl mx-auto p-4 space-y-4">
+  <div class="flex gap-2 overflow-x-auto text-xs font-bold pb-1">
+    <button type="button" class="tab-btn active px-4 py-2 rounded-full whitespace-nowrap" data-tab="semana" onclick="showTab('semana')">Semana</button>
+    <button type="button" class="tab-btn px-4 py-2 rounded-full whitespace-nowrap" data-tab="historial" onclick="showTab('historial')">Historial</button>
+    <button type="button" class="tab-btn px-4 py-2 rounded-full whitespace-nowrap" data-tab="reporte" onclick="showTab('reporte')">Reporte</button>
+    <button type="button" class="tab-btn px-4 py-2 rounded-full whitespace-nowrap" data-tab="config" onclick="showTab('config')">Mis metas</button>
+    <button type="button" class="tab-btn px-4 py-2 rounded-full whitespace-nowrap" data-tab="reper" onclick="showTab('reper')">Repercusiones</button>
+  </div>
+
+  <section id="tab-semana" class="space-y-4">
+    <div class="glass rounded-2xl p-4">
+      <div class="flex flex-wrap gap-2 items-center text-xs mb-3">
+        <button type="button" onclick="shiftWeek(-1)" class="px-3 py-1.5 bg-pink-100 text-pink-800 rounded-xl font-black">Ant</button>
+        <button type="button" onclick="shiftWeek(0)" class="px-3 py-1.5 bg-violet-100 text-violet-800 rounded-xl font-black">Esta semana</button>
+        <button type="button" onclick="shiftWeek(1)" class="px-3 py-1.5 bg-pink-100 text-pink-800 rounded-xl font-black">Sig</button>
+        <span class="font-black text-stone-700" id="week-label"></span>
       </div>
-      <div class="text-right text-xs font-bold text-stone-600">
-        <div id="kpi-done">0 / 0 cumplidas</div>
-        <div id="kpi-cards" class="text-violet-700">Tarjetas 0 / 0</div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3" id="kpis"></div>
+      <div class="bar mb-1"><i id="kpi-bar" style="width:0%"></i></div>
+      <p class="text-[10px] text-stone-500 font-bold">Tarjetas = fallos permitidos. 0 = no puedes fallar.</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button type="button" onclick="openDayModal()" class="px-4 py-2.5 bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white rounded-2xl text-xs font-black shadow">+ Check de hoy</button>
+      <button type="button" onclick="recalcAuto();renderAll()" class="px-4 py-2.5 bg-white border border-pink-200 rounded-2xl text-xs font-black text-pink-700">Leer Poker/Fitness</button>
+    </div>
+    <div id="areas" class="space-y-3"></div>
+  </section>
+
+  <section id="tab-historial" class="space-y-4 hidden">
+    <div class="glass rounded-2xl p-4 space-y-3">
+      <h3 class="font-black text-sm">Filtrar por fecha y meta</h3>
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div><label class="font-bold text-stone-500">Desde</label>
+          <input type="date" id="hist-from" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold"></div>
+        <div><label class="font-bold text-stone-500">Hasta</label>
+          <input type="date" id="hist-to" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold"></div>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-stone-500">Meta</label>
+        <select id="hist-goal" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 text-xs font-bold"></select>
+      </div>
+      <div class="flex flex-wrap gap-2 text-xs">
+        <button type="button" onclick="setHistPreset('week')" class="px-3 py-1.5 bg-pink-100 text-pink-800 rounded-xl font-black">Esta semana</button>
+        <button type="button" onclick="setHistPreset('month')" class="px-3 py-1.5 bg-violet-100 text-violet-800 rounded-xl font-black">Este mes</button>
+        <button type="button" onclick="renderHistorial()" class="px-3 py-1.5 bg-pink-500 text-white rounded-xl font-black">Filtrar</button>
+      </div>
+      <div class="grid grid-cols-3 gap-2 text-center text-xs" id="hist-kpis"></div>
+    </div>
+    <div id="hist-list" class="space-y-2"></div>
+  </section>
+
+  <section id="tab-reporte" class="space-y-4 hidden">
+    <div class="glass rounded-2xl p-4 space-y-3">
+      <h3 class="font-black text-sm">Reporte diario</h3>
+      <input type="date" id="rep-date" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 text-xs font-bold" onchange="renderReporte()">
+      <div id="rep-body" class="text-xs space-y-1 font-bold text-stone-700"></div>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" onclick="copyDailyReport()" class="px-3 py-2 bg-pink-500 text-white rounded-xl text-xs font-black">Copiar dia</button>
+        <button type="button" onclick="pdfDaily()" class="px-3 py-2 bg-violet-500 text-white rounded-xl text-xs font-black">PDF dia</button>
+        <button type="button" onclick="copyWeekReport()" class="px-3 py-2 border border-pink-200 rounded-xl text-xs font-black text-pink-700">Copiar semana</button>
+        <button type="button" onclick="pdfWeek()" class="px-3 py-2 border border-violet-200 rounded-xl text-xs font-black text-violet-700">PDF semana</button>
       </div>
     </div>
-    <div class="bar"><i id="kpi-bar" style="width:0%"></i></div>
-    <p class="text-[10px] text-stone-500 mt-2 font-bold leading-relaxed">
-      <b>Tarjetas</b> = veces que puedes fallar esa meta en la semana.
-      <b>0</b> = no puedes fallar. Los checks diarios alimentan el progreso.
-    </p>
-  </div>
+    <div id="pdf-area" class="hidden glass rounded-2xl p-6 text-sm"></div>
+  </section>
 
-  <div class="flex gap-2 flex-wrap text-xs">
-    <button type="button" onclick="showDayModal()" class="px-3 py-2 bg-pink-500 text-white rounded-xl font-black">+ Check de hoy</button>
-    <button type="button" onclick="recalcAuto(); render()" class="px-3 py-2 bg-white border border-pink-200 rounded-xl font-black text-pink-700">🔄 Leer Póker/Fitness</button>
-  </div>
+  
+  <section id="tab-reper" class="space-y-4 hidden">
+    <div class="glass rounded-2xl p-4 space-y-3">
+      <div class="flex flex-wrap justify-between items-center gap-2">
+        <div>
+          <h3 class="font-black text-sm">Tipos de repercusion</h3>
+          <p class="text-[10px] text-stone-500 font-bold">Consecuencias si fallas (ej. meta con 0 tarjetas). Minimo 3.</p>
+        </div>
+        <button type="button" onclick="openTipoReper()" class="px-3 py-2 bg-violet-500 text-white rounded-xl text-xs font-black">+ Tipo</button>
+      </div>
+      <div id="tipos-reper" class="space-y-2 text-xs"></div>
+    </div>
+    <div class="glass rounded-2xl p-4 space-y-3">
+      <div class="flex flex-wrap justify-between items-center gap-2">
+        <div>
+          <h3 class="font-black text-sm">Hojas / pendientes</h3>
+          <p class="text-[10px] text-stone-500 font-bold">Que debes hacer por haber fallado, cuando y si ya las cumpliste.</p>
+        </div>
+        <button type="button" onclick="openHojaModal()" class="px-3 py-2 bg-pink-500 text-white rounded-xl text-xs font-black">+ Hoja</button>
+      </div>
+      <div class="flex gap-2 text-xs flex-wrap">
+        <button type="button" onclick="filterHojas('pendiente')" class="px-3 py-1.5 bg-amber-100 text-amber-900 rounded-xl font-black hoja-f active-f" data-hf="pendiente">Pendientes</button>
+        <button type="button" onclick="filterHojas('hecha')" class="px-3 py-1.5 bg-emerald-100 text-emerald-900 rounded-xl font-black hoja-f" data-hf="hecha">Hechas</button>
+        <button type="button" onclick="filterHojas('all')" class="px-3 py-1.5 bg-stone-100 text-stone-700 rounded-xl font-black hoja-f" data-hf="all">Todas</button>
+      </div>
+      <div id="hojas-list" class="space-y-2 text-xs"></div>
+    </div>
+  </section>
 
-  <div id="areas" class="space-y-3"></div>
-
-  <div class="glass rounded-2xl p-4 space-y-2">
-    <h3 class="font-black text-sm text-stone-800">📊 Cierre de semana</h3>
-    <div id="cierre" class="text-xs space-y-1 font-bold text-stone-700"></div>
-  </div>
+  <section id="tab-config" class="space-y-4 hidden">
+    <div class="glass rounded-2xl p-4 space-y-3">
+      <div class="flex justify-between items-center gap-2">
+        <div>
+          <h3 class="font-black text-sm">Mis metas</h3>
+          <p class="text-[10px] text-stone-500 font-bold">Anade, edita o borra. Semana 1 ya viene cargada.</p>
+        </div>
+        <button type="button" onclick="openGoalModal()" class="px-3 py-2 bg-pink-500 text-white rounded-xl text-xs font-black">+ Meta</button>
+      </div>
+      <div id="goal-list" class="space-y-2"></div>
+    </div>
+  </section>
 </main>
 
-<div id="modal-day" class="fixed inset-0 hidden items-center justify-center p-4" style="background:rgba(74,44,61,.45);z-index:9999">
-  <div class="glass rounded-3xl max-w-md w-full p-5 space-y-3 max-h-[85vh] overflow-y-auto">
-    <div class="flex justify-between items-center">
-      <h3 class="font-black text-sm">Check del día</h3>
-      <button type="button" onclick="closeDay()" class="font-bold text-stone-400">✕</button>
-    </div>
+<div id="modal-day" class="fixed inset-0 hidden items-center justify-center p-4" style="background:rgba(55,20,45,.5);z-index:9999">
+  <div class="glass rounded-3xl max-w-md w-full p-5 space-y-3 max-h-[88vh] overflow-y-auto">
+    <div class="flex justify-between"><h3 class="font-black text-sm">Check del dia</h3>
+      <button type="button" onclick="closeModal('modal-day')" class="text-stone-400 font-bold">X</button></div>
     <input type="date" id="day-date" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 text-xs font-bold">
     <div id="day-checks" class="space-y-2 text-xs"></div>
-    <button type="button" onclick="saveDay()" class="w-full py-2.5 bg-pink-500 text-white rounded-xl font-black text-sm">Guardar día</button>
+    <div id="day-reper-block" class="border-t border-pink-100 pt-3 space-y-2 text-xs">
+      <p class="font-black text-stone-700">Repercusion de hoy</p>
+      <label class="flex items-center gap-2 font-bold"><input type="checkbox" id="day-tuvo-reper" class="w-4 h-4 accent-violet-500"> Tuve repercusion (falle algo importante)</label>
+      <div id="day-reper-extra" class="space-y-2 hidden">
+        <select id="day-reper-tipo" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold"></select>
+        <select id="day-reper-meta" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold"></select>
+        <input type="date" id="day-reper-limite" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold" title="Hacer antes de">
+        <textarea id="day-reper-nota" rows="2" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold" placeholder="Nota de la hoja"></textarea>
+      </div>
+    </div>
+    <button type="button" onclick="saveDay()" class="w-full py-2.5 bg-pink-500 text-white rounded-xl font-black">Guardar</button>
+  </div>
+</div>
+
+<div id="modal-goal" class="fixed inset-0 hidden items-center justify-center p-4" style="background:rgba(55,20,45,.5);z-index:9999">
+  <div class="glass rounded-3xl max-w-md w-full p-5 space-y-3 max-h-[88vh] overflow-y-auto">
+    <div class="flex justify-between"><h3 class="font-black text-sm" id="goal-modal-title">Nueva meta</h3>
+      <button type="button" onclick="closeModal('modal-goal')" class="text-stone-400 font-bold">X</button></div>
+    <input type="hidden" id="goal-id">
+    <div class="text-xs space-y-2">
+      <div><label class="font-bold text-stone-500">Nombre</label>
+        <input id="goal-name" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold" placeholder="Ej. Meditar 10 min"></div>
+      <div><label class="font-bold text-stone-500">Area</label>
+        <input id="goal-area" list="areas-list" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold" placeholder="Fitness, Poker...">
+        <datalist id="areas-list">
+          <option value="Fitness"><option value="Poker"><option value="Espiritual">
+          <option value="Bienestar"><option value="Crecimiento"><option value="General">
+        </datalist>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div><label class="font-bold text-stone-500">Tipo</label>
+          <select id="goal-kind" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold">
+            <option value="daily">Diaria</option>
+            <option value="count">Conteo semanal</option>
+          </select>
+        </div>
+        <div><label class="font-bold text-stone-500">Tarjetas (fallos)</label>
+          <input type="number" id="goal-cards" min="0" max="7" value="1" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div><label class="font-bold text-stone-500">Objetivo</label>
+          <input type="number" id="goal-target" min="1" value="7" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold"></div>
+        <div><label class="font-bold text-stone-500">Unidad</label>
+          <input id="goal-unit" value="dias" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold"></div>
+      </div>
+    </div>
+    <div class="flex gap-2 justify-end">
+      <button type="button" onclick="closeModal('modal-goal')" class="px-3 py-2 border border-pink-200 rounded-xl text-xs font-bold">Cancelar</button>
+      <button type="button" onclick="saveGoal()" class="px-4 py-2 bg-pink-500 text-white rounded-xl text-xs font-black">Guardar meta</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="modal-tipo" class="fixed inset-0 hidden items-center justify-center p-4" style="background:rgba(55,20,45,.5);z-index:9999">
+  <div class="glass rounded-3xl max-w-md w-full p-5 space-y-3">
+    <div class="flex justify-between"><h3 class="font-black text-sm">Tipo de repercusion</h3>
+      <button type="button" onclick="closeModal('modal-tipo')" class="font-bold text-stone-400">X</button></div>
+    <input type="hidden" id="tipo-id">
+    <input id="tipo-nombre" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 text-xs font-bold" placeholder="Ej. Extra estudio 30 min">
+    <textarea id="tipo-desc" rows="2" class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 text-xs font-bold" placeholder="Descripcion opcional"></textarea>
+    <button type="button" onclick="saveTipo()" class="w-full py-2.5 bg-violet-500 text-white rounded-xl font-black text-xs">Guardar tipo</button>
+  </div>
+</div>
+<div id="modal-hoja" class="fixed inset-0 hidden items-center justify-center p-4" style="background:rgba(55,20,45,.5);z-index:9999">
+  <div class="glass rounded-3xl max-w-md w-full p-5 space-y-3 max-h-[88vh] overflow-y-auto">
+    <div class="flex justify-between"><h3 class="font-black text-sm" id="hoja-title">Nueva hoja</h3>
+      <button type="button" onclick="closeModal('modal-hoja')" class="font-bold text-stone-400">X</button></div>
+    <input type="hidden" id="hoja-id">
+    <div class="text-xs space-y-2">
+      <div><label class="font-bold text-stone-500">Tipo de repercusion</label>
+        <select id="hoja-tipo" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold"></select></div>
+      <div><label class="font-bold text-stone-500">Por fallar que meta (opcional)</label>
+        <select id="hoja-meta" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold"></select></div>
+      <div class="grid grid-cols-2 gap-2">
+        <div><label class="font-bold text-stone-500">Dia del fallo</label>
+          <input type="date" id="hoja-fecha-fallo" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold"></div>
+        <div><label class="font-bold text-stone-500">Hacer antes de</label>
+          <input type="date" id="hoja-fecha-limite" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold"></div>
+      </div>
+      <div><label class="font-bold text-stone-500">Nota</label>
+        <textarea id="hoja-nota" rows="2" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold" placeholder="Detalle..."></textarea></div>
+      <div><label class="font-bold text-stone-500">Estado</label>
+        <select id="hoja-estado" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold">
+          <option value="pendiente">Pendiente</option>
+          <option value="hecha">Hecha</option>
+        </select></div>
+    </div>
+    <button type="button" onclick="saveHoja()" class="w-full py-2.5 bg-pink-500 text-white rounded-xl font-black text-xs">Guardar hoja</button>
   </div>
 </div>
 
 <script>
-const KEY = 'MARY_METAS_V1';
+const KEY = 'MARY_METAS_V2';
 const FITNESS_KEY = 'MARY_FITNESS_DATA_V9';
 const POKER_KEY = 'MARPK_POKER_DATA_V14';
-const SPIRIT_KEY = 'MARY_SPIRITUAL_SPACE_V6';
-
-const TEMPLATE = [
-  { id:'fit_prot', area:'Fitness', name:'Proteína 130–140 g', kind:'daily', targetDays:7, cards:1, unit:'días ok', auto:'protein' },
-  { id:'fit_cardio', area:'Fitness', name:'Cardio 3–4 × 30–40 min', kind:'count', target:4, cards:2, unit:'sesiones', auto:'cardio' },
-  { id:'fit_train', area:'Fitness', name:'Entrenos 4–5', kind:'count', target:5, cards:2, unit:'entrenos', auto:'workout' },
-  { id:'fit_creatina', area:'Fitness', name:'Creatina', kind:'daily', targetDays:7, cards:1, unit:'días', auto:null },
-  { id:'fit_cal', area:'Fitness', name:'Calorías 1500–1600', kind:'daily', targetDays:7, cards:1, unit:'días ok', auto:null },
-  { id:'fit_dulce', area:'Bienestar', name:'No dulce', kind:'daily', targetDays:7, cards:0, unit:'días', auto:null },
-  { id:'fit_bici', area:'Fitness', name:'Bici 15–20 min (mañana)', kind:'daily', targetDays:7, cards:2, unit:'días', auto:null },
-  { id:'pk_games', area:'Póker', name:'110 games diarios', kind:'daily', targetDays:7, cards:0, unit:'días ≥110', auto:'games' },
-  { id:'pk_study', area:'Póker', name:'Estudiar 40–60 min', kind:'daily', targetDays:7, cards:2, unit:'días', auto:'study' },
-  { id:'pk_hands', area:'Póker', name:'Revisión de manos 2×/sem', kind:'count', target:2, cards:5, unit:'revisiones', auto:null },
-  { id:'sp_cap', area:'Espiritual', name:'1 capítulo diario', kind:'daily', targetDays:7, cards:1, unit:'días', auto:null },
-  { id:'sp_dev', area:'Espiritual', name:'Devocional físico', kind:'daily', targetDays:7, cards:1, unit:'días', auto:null },
-  { id:'cr_aa', area:'Crecimiento', name:'Tracker AA (amor/autoestima)', kind:'daily', targetDays:7, cards:1, unit:'días', auto:null },
-  { id:'cr_gen', area:'Crecimiento', name:'Tracker general (llenar app)', kind:'daily', targetDays:7, cards:1, unit:'días', auto:null }
+const DEFAULT_TIPOS = [
+  { id:'t1', nombre:'Extra estudio 30 min', desc:'Sesion extra de estudio de poker o lectura' },
+  { id:'t2', nombre:'Reflexion escrita', desc:'Escribir 1 pagina sobre el fallo y el plan' },
+  { id:'t3', nombre:'Sin redes 1 noche', desc:'No redes sociales esa noche' }
 ];
-
+const DEFAULT_GOALS = [
+  { id:'fit_prot', area:'Fitness', name:'Proteina 130-140 g', kind:'daily', target:7, cards:1, unit:'dias ok' },
+  { id:'fit_cardio', area:'Fitness', name:'Cardio 3-4 x 30-40 min', kind:'count', target:4, cards:2, unit:'sesiones' },
+  { id:'fit_train', area:'Fitness', name:'Entrenos 4-5', kind:'count', target:5, cards:2, unit:'entrenos' },
+  { id:'fit_creatina', area:'Fitness', name:'Creatina', kind:'daily', target:7, cards:1, unit:'dias' },
+  { id:'fit_cal', area:'Fitness', name:'Calorias 1500-1600', kind:'daily', target:7, cards:1, unit:'dias ok' },
+  { id:'fit_dulce', area:'Bienestar', name:'No dulce', kind:'daily', target:7, cards:0, unit:'dias' },
+  { id:'fit_bici', area:'Fitness', name:'Bici 15-20 min (manana)', kind:'daily', target:7, cards:2, unit:'dias' },
+  { id:'pk_games', area:'Poker', name:'110 games diarios', kind:'daily', target:7, cards:0, unit:'dias >=110' },
+  { id:'pk_study', area:'Poker', name:'Estudiar 40-60 min', kind:'daily', target:7, cards:2, unit:'dias' },
+  { id:'pk_hands', area:'Poker', name:'Revision de manos 2x/sem', kind:'count', target:2, cards:5, unit:'revisiones' },
+  { id:'sp_cap', area:'Espiritual', name:'1 capitulo diario', kind:'daily', target:7, cards:1, unit:'dias' },
+  { id:'sp_dev', area:'Espiritual', name:'Devocional fisico', kind:'daily', target:7, cards:1, unit:'dias' },
+  { id:'cr_aa', area:'Crecimiento', name:'Tracker AA', kind:'daily', target:7, cards:1, unit:'dias' },
+  { id:'cr_gen', area:'Crecimiento', name:'Tracker general', kind:'daily', target:7, cards:1, unit:'dias' }
+];
 let weekOffset = 0;
-let store = loadStore();
-
-function loadStore() {
+let store = load();
+function load() {
   try {
-    return JSON.parse(localStorage.getItem(KEY)) || { days: {}, notes: {} };
-  } catch(e) { return { days: {}, notes: {} }; }
+    const raw = localStorage.getItem(KEY) || localStorage.getItem('MARY_METAS_V1');
+    if (!raw) return { goals: JSON.parse(JSON.stringify(DEFAULT_GOALS)), days: {}, tiposReper: JSON.parse(JSON.stringify(DEFAULT_TIPOS)), hojas: [] };
+    const p = JSON.parse(raw);
+    if (!p.goals || !p.goals.length) p.goals = JSON.parse(JSON.stringify(DEFAULT_GOALS));
+    p.days = p.days || {};
+    if (!p.tiposReper || !p.tiposReper.length) p.tiposReper = JSON.parse(JSON.stringify(DEFAULT_TIPOS));
+    p.hojas = p.hojas || [];
+    return p;
+  } catch(e) { return { goals: JSON.parse(JSON.stringify(DEFAULT_GOALS)), days: {}, tiposReper: JSON.parse(JSON.stringify(DEFAULT_TIPOS)), hojas: [] }; }
 }
-function saveStore() {
-  localStorage.setItem(KEY, JSON.stringify(store));
+function save() { localStorage.setItem(KEY, JSON.stringify(store)); }
+function fmt(d) {
+  if (typeof d === 'string') return d;
+  const x = new Date(d);
+  return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
 }
-
 function startOfWeek(d) {
-  const x = new Date(d); x.setHours(0,0,0,0);
-  const day = (x.getDay() + 6) % 7;
-  x.setDate(x.getDate() - day);
+  const x = new Date(d); x.setHours(12,0,0,0);
+  const day = (x.getDay()+6)%7;
+  x.setDate(x.getDate()-day);
   return x;
 }
-function addDays(d, n) {
-  const x = new Date(d); x.setDate(x.getDate() + n); return x;
-}
-function fmt(d) {
-  return d.toISOString().slice(0,10);
-}
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
 function weekRange() {
   const base = startOfWeek(new Date());
-  const from = addDays(base, weekOffset * 7);
-  const to = addDays(from, 6);
-  return { from, to, days: Array.from({length:7}, (_,i) => fmt(addDays(from,i))) };
+  const from = addDays(base, weekOffset*7);
+  const days = Array.from({length:7},(_,i)=>fmt(addDays(from,i)));
+  return { from, to: addDays(from,6), days };
 }
-function shiftWeek(n) {
-  if (n === 0) weekOffset = 0;
-  else weekOffset += n;
-  render();
+function dayData(ds) { if (!store.days[ds]) store.days[ds] = {}; return store.days[ds]; }
+function goals() { return store.goals || []; }
+function shiftWeek(n) { if (n===0) weekOffset=0; else weekOffset+=n; renderAll(); }
+
+function ensureReper() {
+  if (!store.tiposReper || !store.tiposReper.length) store.tiposReper = JSON.parse(JSON.stringify(DEFAULT_TIPOS));
+  if (!store.hojas) store.hojas = [];
+}
+let hojaFilter = 'pendiente';
+
+function showTab(name) {
+  ['semana','historial','reporte','config','reper'].forEach(t=>{
+    const el = document.getElementById('tab-'+t);
+    if (el) el.classList.toggle('hidden', t!==name);
+  });
+  document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===name));
+  if (name==='historial') { fillHistGoals(); renderHistorial(); }
+  if (name==='reporte') {
+    if (!document.getElementById('rep-date').value) document.getElementById('rep-date').value = fmt(new Date());
+    renderReporte();
+  }
+  if (name==='config') renderGoalConfig();
+  if (name==='reper') { ensureReper(); renderTipos(); renderHojas(); }
 }
 
-function dayData(dateStr) {
-  if (!store.days[dateStr]) store.days[dateStr] = {};
-  return store.days[dateStr];
+function renderTipos() {
+  ensureReper();
+  const box = document.getElementById('tipos-reper');
+  if (!box) return;
+  box.innerHTML = store.tiposReper.map(t=>
+    '<div class="bg-white/80 rounded-xl p-3 border border-violet-100 flex justify-between gap-2"><div><div class="font-black text-stone-800">'+t.nombre+'</div><div class="text-stone-500">'+((t.desc)||'')+'</div></div><div class="flex gap-1"><button type="button" onclick="openTipoReper(\''+t.id+'\')" class="px-2 py-1 border border-violet-200 rounded-lg font-bold text-violet-700">Editar</button><button type="button" onclick="deleteTipo(\''+t.id+'\')" class="text-red-500 font-bold px-1">X</button></div></div>'
+  ).join('') || '<p class="text-stone-400">Sin tipos. Agrega al menos 3.</p>';
+}
+function openTipoReper(id) {
+  ensureReper();
+  document.getElementById('modal-tipo').classList.remove('hidden');
+  document.getElementById('modal-tipo').classList.add('flex');
+  if (id) {
+    const t = store.tiposReper.find(x=>x.id===id);
+    document.getElementById('tipo-id').value = t.id;
+    document.getElementById('tipo-nombre').value = t.nombre;
+    document.getElementById('tipo-desc').value = t.desc||'';
+  } else {
+    document.getElementById('tipo-id').value = '';
+    document.getElementById('tipo-nombre').value = '';
+    document.getElementById('tipo-desc').value = '';
+  }
+}
+function saveTipo() {
+  ensureReper();
+  const nombre = document.getElementById('tipo-nombre').value.trim();
+  if (!nombre) { alert('Nombre'); return; }
+  const id = document.getElementById('tipo-id').value || ('t_'+Date.now());
+  const obj = { id, nombre, desc: document.getElementById('tipo-desc').value.trim() };
+  const i = store.tiposReper.findIndex(x=>x.id===id);
+  if (i>=0) store.tiposReper[i]=obj; else store.tiposReper.push(obj);
+  save(); closeModal('modal-tipo'); renderTipos();
+}
+function deleteTipo(id) {
+  if (!confirm('Borrar tipo?')) return;
+  store.tiposReper = store.tiposReper.filter(x=>x.id!==id);
+  save(); renderTipos();
+}
+function filterHojas(f) {
+  hojaFilter = f;
+  document.querySelectorAll('.hoja-f').forEach(b=> b.classList.toggle('ring-2', b.dataset.hf===f));
+  renderHojas();
+}
+function renderHojas() {
+  ensureReper();
+  const box = document.getElementById('hojas-list');
+  if (!box) return;
+  let list = store.hojas.slice().sort((a,b)=>(a.fechaLimite||'').localeCompare(b.fechaLimite||''));
+  if (hojaFilter!=='all') list = list.filter(h=>h.estado===hojaFilter);
+  box.innerHTML = list.map(h=>{
+    const tipo = (store.tiposReper.find(t=>t.id===h.tipoId)||{}).nombre || 'Repercusion';
+    const meta = (goals().find(g=>g.id===h.metaId)||{}).name || '';
+    const cls = h.estado==='hecha' ? 'border-emerald-200' : 'border-amber-200';
+    return '<div class="bg-white/80 rounded-xl p-3 border '+cls+'"><div class="flex justify-between gap-2"><div class="font-black text-stone-800">'+tipo+'</div><span class="chip '+(h.estado==='hecha'?'ok':'warn')+'">'+h.estado+'</span></div>'+
+      (meta?'<div class="text-stone-500 mt-0.5">Por: '+meta+'</div>':'')+
+      '<div class="text-stone-500">Fallo: '+(h.fechaFallo||'-')+' · Limite: '+(h.fechaLimite||'-')+'</div>'+
+      (h.nota?'<div class="mt-1 text-stone-600">'+h.nota+'</div>':'')+
+      '<div class="flex gap-1 mt-2 justify-end">'+
+      (h.estado!=='hecha'?'<button type="button" onclick="marcarHoja(\''+h.id+'\',\'hecha\')" class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded-lg font-bold">Hecha</button>':'')+
+      '<button type="button" onclick="openHojaModal(\''+h.id+'\')" class="px-2 py-1 border border-pink-200 rounded-lg font-bold text-pink-600">Editar</button>'+
+      '<button type="button" onclick="deleteHoja(\''+h.id+'\')" class="text-red-500 font-bold px-1">X</button></div></div>';
+  }).join('') || '<p class="text-stone-400 text-center py-3">No hay hojas en este filtro</p>';
+}
+function fillHojaSelects() {
+  ensureReper();
+  document.getElementById('hoja-tipo').innerHTML = store.tiposReper.map(t=>'<option value="'+t.id+'">'+t.nombre+'</option>').join('');
+  document.getElementById('hoja-meta').innerHTML = '<option value="">—</option>'+goals().map(g=>'<option value="'+g.id+'">'+g.name+'</option>').join('');
+}
+function openHojaModal(id) {
+  ensureReper();
+  fillHojaSelects();
+  document.getElementById('modal-hoja').classList.remove('hidden');
+  document.getElementById('modal-hoja').classList.add('flex');
+  if (id) {
+    const h = store.hojas.find(x=>x.id===id);
+    if (!h) return;
+    document.getElementById('hoja-title').textContent = 'Editar hoja';
+    document.getElementById('hoja-id').value = h.id;
+    document.getElementById('hoja-tipo').value = h.tipoId;
+    document.getElementById('hoja-meta').value = h.metaId||'';
+    document.getElementById('hoja-fecha-fallo').value = h.fechaFallo||'';
+    document.getElementById('hoja-fecha-limite').value = h.fechaLimite||'';
+    document.getElementById('hoja-nota').value = h.nota||'';
+    document.getElementById('hoja-estado').value = h.estado||'pendiente';
+  } else {
+    document.getElementById('hoja-title').textContent = 'Nueva hoja';
+    document.getElementById('hoja-id').value = '';
+    document.getElementById('hoja-fecha-fallo').value = fmt(new Date());
+    document.getElementById('hoja-fecha-limite').value = '';
+    document.getElementById('hoja-nota').value = '';
+    document.getElementById('hoja-estado').value = 'pendiente';
+  }
+}
+function saveHoja() {
+  ensureReper();
+  const tipoId = document.getElementById('hoja-tipo').value;
+  if (!tipoId) { alert('Elige tipo'); return; }
+  const id = document.getElementById('hoja-id').value || ('h_'+Date.now());
+  const obj = {
+    id, tipoId,
+    metaId: document.getElementById('hoja-meta').value||null,
+    fechaFallo: document.getElementById('hoja-fecha-fallo').value,
+    fechaLimite: document.getElementById('hoja-fecha-limite').value,
+    nota: document.getElementById('hoja-nota').value.trim(),
+    estado: document.getElementById('hoja-estado').value
+  };
+  const i = store.hojas.findIndex(x=>x.id===id);
+  if (i>=0) store.hojas[i]=obj; else store.hojas.push(obj);
+  save(); closeModal('modal-hoja'); renderHojas();
+}
+function marcarHoja(id, estado) {
+  ensureReper();
+  store.hojas = store.hojas.map(h=> h.id===id ? Object.assign({},h,{estado}) : h);
+  save(); renderHojas();
+}
+function deleteHoja(id) {
+  if (!confirm('Borrar hoja?')) return;
+  store.hojas = store.hojas.filter(x=>x.id!==id);
+  save(); renderHojas();
 }
 
-function recalcAuto() {
-  const { days } = weekRange();
-  try {
-    const raw = localStorage.getItem(FITNESS_KEY);
-    if (raw) {
-      const data = JSON.parse(raw);
-      const list = data.alimentacion || data.food || data.meals || data.nutrition || [];
-      const workouts = data.entrenos || data.workouts || data.entrenamientos || [];
-      const cardios = data.cardio || data.cardios || [];
-      days.forEach(ds => {
-        const dd = dayData(ds);
-        const meals = (Array.isArray(list) ? list : []).filter(m => (m.fecha||m.date||'') === ds);
-        if (meals.length) {
-          const prot = meals.reduce((s,m)=>s+(+m.proteina||+m.protein||0),0);
-          const cal = meals.reduce((s,m)=>s+(+m.calorias||+m.calories||+m.kcal||0),0);
-          if (prot >= 130 && prot <= 160) dd.fit_prot = true;
-          if (cal >= 1500 && cal <= 1650) dd.fit_cal = true;
-        }
-        const w = (Array.isArray(workouts)?workouts:[]).filter(x => (x.fecha||x.date||'')===ds);
-        if (w.length) dd._workout = (dd._workout||0) + w.length;
-        const c = (Array.isArray(cardios)?cardios:[]).filter(x => (x.fecha||x.date||'')===ds);
-        if (c.length) dd._cardio = (dd._cardio||0) + c.length;
-      });
-    }
-  } catch(e) {}
-  try {
-    const raw = localStorage.getItem(POKER_KEY);
-    if (raw) {
-      const data = JSON.parse(raw);
-      const sessions = data.sessions || data.sesiones || data.items || [];
-      days.forEach(ds => {
-        const dd = dayData(ds);
-        const ss = (Array.isArray(sessions)?sessions:[]).filter(s => (s.fecha||s.date||s.sessionDate||'')===ds);
-        const games = ss.reduce((a,s)=>a+(+s.games||+s.manos||0),0);
-        const study = ss.reduce((a,s)=>a+(+s.estudio||+s.studyHours||+s.study||0),0);
-        if (games >= 110) dd.pk_games = true;
-        const studyMin = study > 10 ? study : study * 60;
-        if (studyMin >= 40) dd.pk_study = true;
-      });
-    }
-  } catch(e) {}
-  saveStore();
-}
+
 
 function progressFor(goal, days) {
-  let done = 0;
-  let fails = 0;
-  if (goal.kind === 'daily') {
-    days.forEach(ds => {
-      const v = dayData(ds)[goal.id];
-      if (v === true) done++;
-      else if (v === false) fails++;
-      else {
-        const today = fmt(new Date());
-        if (ds < today) fails++;
-      }
+  if (goal.kind === 'count') {
+    let count = 0;
+    days.forEach(ds=>{
+      const dd = dayData(ds);
+      if (goal.id==='fit_train' && dd._workout) count += +dd._workout;
+      else if (goal.id==='fit_cardio' && dd._cardio) count += +dd._cardio;
+      else if (dd[goal.id]===true) count++;
+      else if (typeof dd[goal.id]==='number') count += dd[goal.id];
     });
-    const target = goal.targetDays || 7;
-    const cardsUsed = Math.max(0, fails);
-    const cardsLeft = Math.max(0, goal.cards - cardsUsed);
-    const need = target - goal.cards;
-    const ok = done >= need && cardsUsed <= goal.cards;
-    const status = done >= target ? 'ok' : (cardsUsed > goal.cards ? 'bad' : (done >= need ? 'warn' : 'soft'));
-    return { done, fails, cardsUsed, cardsLeft, target, ok, status, label: `${done}/${target} ${goal.unit}` };
+    const target = +goal.target || 1;
+    const shortfall = Math.max(0, target - count);
+    const cardsUsed = shortfall;
+    const cardsLeft = Math.max(0, (+goal.cards||0) - cardsUsed);
+    const ok = shortfall <= (+goal.cards||0);
+    const status = count >= target ? 'ok' : (ok ? 'warn' : (count>0 ? 'soft' : 'bad'));
+    return { done:count, fails:shortfall, cardsUsed, cardsLeft, target, ok, status, label: count+'/'+target+' '+(goal.unit||'') };
   }
-  let count = 0;
-  days.forEach(ds => {
-    const dd = dayData(ds);
-    if (goal.id === 'fit_train' && dd._workout) count += dd._workout;
-    else if (goal.id === 'fit_cardio' && dd._cardio) count += dd._cardio;
-    else if (dd[goal.id] === true) count += 1;
-    else if (typeof dd[goal.id] === 'number') count += dd[goal.id];
+  let done=0, fails=0;
+  const today = fmt(new Date());
+  days.forEach(ds=>{
+    const v = dayData(ds)[goal.id];
+    if (v===true) done++;
+    else if (v===false) fails++;
+    else if (ds < today) fails++;
   });
-  const target = goal.target;
-  const shortfall = Math.max(0, target - count);
-  const cardsUsed = shortfall;
-  const cardsLeft = Math.max(0, goal.cards - cardsUsed);
-  const ok = shortfall <= goal.cards;
-  const status = count >= target ? 'ok' : (ok ? 'warn' : 'bad');
-  return { done: count, fails: shortfall, cardsUsed, cardsLeft, target, ok, status, label: `${count}/${target} ${goal.unit}` };
+  const target = +goal.target || 7;
+  const cardsUsed = fails;
+  const cardsLeft = Math.max(0, (+goal.cards||0) - cardsUsed);
+  const need = target - (+goal.cards||0);
+  const status = done>=target ? 'ok' : (cardsUsed > (+goal.cards||0) ? 'bad' : (done>=need ? 'warn' : 'soft'));
+  const ok = done >= need && cardsUsed <= (+goal.cards||0);
+  return { done, fails, cardsUsed, cardsLeft, target, ok, status, label: done+'/'+target+' '+(goal.unit||'dias') };
 }
-
-function statusChip(st) {
-  if (st === 'ok') return '<span class="chip ok">Cumplida</span>';
-  if (st === 'warn') return '<span class="chip warn">Con tarjetas</span>';
-  if (st === 'bad') return '<span class="chip bad">No cumplida</span>';
+function chip(st) {
+  if (st==='ok') return '<span class="chip ok">Cumplida</span>';
+  if (st==='warn') return '<span class="chip warn">Con tarjetas</span>';
+  if (st==='bad') return '<span class="chip bad">No cumplida</span>';
   return '<span class="chip soft">En curso</span>';
 }
-
-function render() {
+function renderAll() {
   const { from, to, days } = weekRange();
-  document.getElementById('week-label').textContent =
-    `Semana ${fmt(from).slice(5)} → ${fmt(to).slice(5)}`;
-
-  const byArea = {};
-  TEMPLATE.forEach(g => {
-    if (!byArea[g.area]) byArea[g.area] = [];
-    byArea[g.area].push(g);
-  });
-
-  let fulfilled = 0, total = TEMPLATE.length, cardsUsedAll = 0, cardsMaxAll = 0;
-  let html = '';
-  Object.keys(byArea).forEach(area => {
-    html += `<div class="glass rounded-2xl p-4 space-y-2"><div class="area-h">${area}</div>`;
-    byArea[area].forEach(g => {
-      const p = progressFor(g, days);
-      cardsUsedAll += p.cardsUsed;
-      cardsMaxAll += g.cards;
-      if (p.status === 'ok' || (p.status === 'warn' && p.ok)) fulfilled++;
-      const pct = Math.min(100, Math.round((p.done / (p.target||1)) * 100));
-      html += `<div class="bg-white/70 rounded-xl p-3 border border-pink-100">
-        <div class="flex justify-between gap-2 items-start">
-          <div class="font-black text-xs text-stone-800">${g.name}</div>
-          ${statusChip(p.status)}
-        </div>
-        <div class="text-[10px] font-bold text-stone-500 mt-1">${p.label} · Tarjetas ${p.cardsUsed}/${g.cards} usadas (${p.cardsLeft} libres)</div>
-        <div class="bar mt-2"><i style="width:${pct}%"></i></div>
-      </div>`;
-    });
-    html += `</div>`;
-  });
-  document.getElementById('areas').innerHTML = html;
-
-  const pct = Math.round((fulfilled / total) * 100);
-  document.getElementById('kpi-pct').textContent = pct + '%';
-  document.getElementById('kpi-done').textContent = `${fulfilled} / ${total} en verde o con tarjetas`;
-  document.getElementById('kpi-cards').textContent = `Tarjetas usadas ${cardsUsedAll} / pool ${cardsMaxAll}`;
-  document.getElementById('kpi-bar').style.width = pct + '%';
-
-  let cierre = '';
-  TEMPLATE.forEach(g => {
+  document.getElementById('week-label').textContent = fmt(from).slice(5)+' a '+fmt(to).slice(5);
+  document.getElementById('hdr-sub').textContent = 'Semana '+fmt(from).slice(5)+' a '+fmt(to).slice(5);
+  const list = goals();
+  let fulfilled=0, cardsU=0, cardsM=0;
+  list.forEach(g=>{
     const p = progressFor(g, days);
-    const icon = p.status === 'ok' ? '✅' : (p.status === 'warn' ? '⚠️' : (p.status === 'bad' ? '❌' : '🔄'));
-    cierre += `<div>${icon} <b>${g.name}</b> — ${p.label} · tarjetas ${p.cardsUsed}/${g.cards}</div>`;
+    cardsU += p.cardsUsed; cardsM += (+g.cards||0);
+    if (p.status==='ok' || (p.status==='warn' && p.ok)) fulfilled++;
   });
-  document.getElementById('cierre').innerHTML = cierre;
+  const pct = list.length ? Math.round(fulfilled/list.length*100) : 0;
+  document.getElementById('kpis').innerHTML =
+    '<div class="glass rounded-xl p-3"><div class="text-[10px] font-bold text-stone-500">Avance</div><div class="text-xl font-black text-pink-600">'+pct+'%</div></div>'+
+    '<div class="glass rounded-xl p-3"><div class="text-[10px] font-bold text-stone-500">OK / total</div><div class="text-xl font-black text-stone-800">'+fulfilled+'/'+list.length+'</div></div>'+
+    '<div class="glass rounded-xl p-3"><div class="text-[10px] font-bold text-stone-500">Tarjetas usadas</div><div class="text-xl font-black text-violet-700">'+cardsU+'</div></div>'+
+    '<div class="glass rounded-xl p-3"><div class="text-[10px] font-bold text-stone-500">Pool tarjetas</div><div class="text-xl font-black text-stone-600">'+cardsM+'</div></div>';
+  document.getElementById('kpi-bar').style.width = pct+'%';
+  const by = {};
+  list.forEach(g=>{ (by[g.area]=by[g.area]||[]).push(g); });
+  let html='';
+  Object.keys(by).forEach(area=>{
+    html += '<div class="glass rounded-2xl p-4 space-y-2"><div class="text-[11px] font-black uppercase tracking-wide text-pink-800">'+area+'</div>';
+    by[area].forEach(g=>{
+      const p = progressFor(g, days);
+      const pctg = Math.min(100, Math.round(p.done/(p.target||1)*100));
+      let dots='';
+      if (g.kind==='daily') {
+        dots = '<div class="flex gap-1 mt-1.5">'+days.map(ds=>{
+          const v=dayData(ds)[g.id];
+          const cls = v===true?'dot-ok':(v===false||(ds<fmt(new Date())&&v!==true)?'dot-no':'dot-na');
+          return '<span class="day-dot '+cls+'" title="'+ds+'"></span>';
+        }).join('')+'</div>';
+      }
+      html += '<div class="bg-white/80 rounded-xl p-3 border border-pink-100"><div class="flex justify-between gap-2 items-start"><div class="font-black text-xs text-stone-800">'+g.name+'</div>'+chip(p.status)+'</div><div class="text-[10px] font-bold text-stone-500 mt-1">'+p.label+' · Tarjetas '+p.cardsUsed+'/'+g.cards+' (libres '+p.cardsLeft+')</div><div class="bar mt-2"><i style="width:'+pctg+'%"></i></div>'+dots+'</div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('areas').innerHTML = html || '<p class="text-xs text-stone-400">Sin metas</p>';
 }
-
-function showDayModal() {
-  const el = document.getElementById('modal-day');
-  el.classList.remove('hidden'); el.classList.add('flex');
+function fillHistGoals() {
+  const sel = document.getElementById('hist-goal');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="all">Todas las metas</option>' + goals().map(g=>'<option value="'+g.id+'">'+g.name+'</option>').join('');
+  if (cur) sel.value = cur;
+}
+function setHistPreset(mode) {
+  const now = new Date();
+  document.getElementById('hist-to').value = fmt(now);
+  if (mode==='week') document.getElementById('hist-from').value = fmt(startOfWeek(now));
+  else document.getElementById('hist-from').value = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-01';
+  renderHistorial();
+}
+function renderHistorial() {
+  let from = document.getElementById('hist-from').value;
+  let to = document.getElementById('hist-to').value;
+  if (!from || !to) { setHistPreset('week'); from = document.getElementById('hist-from').value; to = document.getElementById('hist-to').value; }
+  const gid = document.getElementById('hist-goal').value;
+  const days = [];
+  let d = new Date(from+'T12:00:00');
+  const end = new Date(to+'T12:00:00');
+  while (d <= end) { days.push(fmt(d)); d = addDays(d,1); }
+  let okN=0, noN=0, naN=0, html='';
+  if (gid!=='all') {
+    const g = goals().find(x=>x.id===gid);
+    if (!g) return;
+    days.forEach(ds=>{
+      const v = dayData(ds)[g.id];
+      let label, cls, icon;
+      if (v===true) { label='Cumplida'; cls='ok'; icon='OK'; okN++; }
+      else if (v===false) { label='No'; cls='bad'; icon='NO'; noN++; }
+      else if (typeof v==='number' && v>0) { label='x'+v; cls='ok'; icon='OK'; okN++; }
+      else { label='Sin registro'; cls='soft'; icon='-'; naN++; }
+      html += '<div class="glass rounded-xl px-3 py-2.5 flex justify-between items-center text-xs"><span class="font-black text-stone-700">'+ds+'</span><span class="chip '+cls+'">'+icon+' '+label+'</span></div>';
+    });
+  } else {
+    days.forEach(ds=>{
+      const dd = dayData(ds);
+      const checks = goals();
+      let ok=0;
+      checks.forEach(g=>{ if (dd[g.id]===true || (typeof dd[g.id]==='number'&&dd[g.id]>0)) ok++; });
+      if (ok===checks.length && checks.length) okN++; else if (ok===0) noN++; else naN++;
+      html += '<div class="glass rounded-xl px-3 py-2.5 text-xs"><div class="flex justify-between font-black"><span>'+ds+'</span><span class="text-pink-600">'+ok+'/'+checks.length+' checks</span></div></div>';
+    });
+  }
+  document.getElementById('hist-kpis').innerHTML =
+    '<div class="glass rounded-xl p-2"><div class="text-[10px] font-bold text-stone-500">OK</div><div class="font-black text-emerald-600 text-lg">'+okN+'</div></div>'+
+    '<div class="glass rounded-xl p-2"><div class="text-[10px] font-bold text-stone-500">No</div><div class="font-black text-rose-600 text-lg">'+noN+'</div></div>'+
+    '<div class="glass rounded-xl p-2"><div class="text-[10px] font-bold text-stone-500">Sin dato</div><div class="font-black text-stone-500 text-lg">'+naN+'</div></div>';
+  document.getElementById('hist-list').innerHTML = html || '<p class="text-xs text-stone-400 text-center py-4">Sin datos</p>';
+}
+function dailyText(ds) {
+  let t = 'REPORTE METAS · '+ds+'\n\n';
+  const by={};
+  goals().forEach(g=>{ (by[g.area]=by[g.area]||[]).push(g); });
+  Object.keys(by).forEach(area=>{
+    t += area.toUpperCase()+'\n';
+    by[area].forEach(g=>{
+      const v = dayData(ds)[g.id];
+      let s = v===true ? '[OK]' : (v===false ? '[NO]' : (typeof v==='number'&&v>0 ? '[OK x'+v+']' : '[ ]'));
+      t += s+' '+g.name+'\n';
+    });
+    t += '\n';
+  });
+  t += 'Mary Life · Metas';
+  return t;
+}
+function weekText() {
+  const { from, to, days } = weekRange();
+  let t = 'METAS SEMANA · '+fmt(from)+' a '+fmt(to)+'\n\n';
+  let area='';
+  goals().forEach(g=>{
+    if (g.area!==area){ area=g.area; t+=area.toUpperCase()+'\n'; }
+    const p = progressFor(g, days);
+    const icon = p.status==='ok'?'[OK]':(p.status==='warn'?'[~]':(p.status==='bad'?'[NO]':'[...]'));
+    t += icon+' '+g.name+': '+p.label+' (tarjetas '+p.cardsUsed+'/'+g.cards+')\n';
+  });
+  t += '\nMary Life · Metas';
+  return t;
+}
+function copyDailyReport() {
+  const ds = document.getElementById('rep-date').value || fmt(new Date());
+  const t = dailyText(ds);
+  navigator.clipboard.writeText(t).then(()=>alert('Reporte del dia copiado')).catch(()=>prompt('Copia:',t));
+}
+function copyWeekReport() {
+  const t = weekText();
+  navigator.clipboard.writeText(t).then(()=>alert('Reporte de la semana copiado')).catch(()=>prompt('Copia:',t));
+}
+function renderReporte() {
+  const ds = document.getElementById('rep-date').value || fmt(new Date());
+  document.getElementById('rep-body').innerHTML = dailyText(ds).split('\n').map(l=>'<div>'+l+'</div>').join('');
+}
+function buildPdfHtml(title, bodyText) {
+  return '<div style="font-family:system-ui;padding:24px;color:#3b1f36"><h1 style="color:#be185d;font-size:18px">'+title+'</h1><pre style="white-space:pre-wrap;font-size:12px;line-height:1.5">'+bodyText.replace(/</g,'&lt;')+'</pre><p style="font-size:10px;color:#9ca3af">Mary Life · Metas</p></div>';
+}
+function pdfDaily() {
+  const ds = document.getElementById('rep-date').value || fmt(new Date());
+  const area = document.getElementById('pdf-area');
+  area.innerHTML = buildPdfHtml('Reporte metas · '+ds, dailyText(ds));
+  area.classList.remove('hidden');
+  html2pdf().set({margin:10, filename:'metas-'+ds+'.pdf', html2canvas:{scale:2}}).from(area).save().then(()=>area.classList.add('hidden'));
+}
+function pdfWeek() {
+  const { from, to } = weekRange();
+  const area = document.getElementById('pdf-area');
+  area.innerHTML = buildPdfHtml('Metas semana · '+fmt(from)+' a '+fmt(to), weekText());
+  area.classList.remove('hidden');
+  html2pdf().set({margin:10, filename:'metas-semana-'+fmt(from)+'.pdf', html2canvas:{scale:2}}).from(area).save().then(()=>area.classList.add('hidden'));
+}
+function renderGoalConfig() {
+  document.getElementById('goal-list').innerHTML = goals().map(g=>
+    '<div class="bg-white/80 rounded-xl p-3 border border-pink-100 text-xs flex justify-between gap-2 items-start"><div><div class="font-black text-stone-800">'+g.name+'</div><div class="text-stone-500 font-bold">'+g.area+' · '+g.kind+' · obj '+g.target+' · '+g.cards+' tarjetas</div></div><div class="flex gap-1 shrink-0"><button type="button" onclick="openGoalModal(\''+g.id+'\')" class="px-2 py-1 border border-pink-200 rounded-lg font-bold text-pink-600">Editar</button><button type="button" onclick="deleteGoal(\''+g.id+'\')" class="px-2 py-1 text-red-500 font-bold">X</button></div></div>'
+  ).join('') || '<p class="text-stone-400 text-xs">Sin metas</p>';
+}
+function openGoalModal(id) {
+  document.getElementById('modal-goal').classList.remove('hidden');
+  document.getElementById('modal-goal').classList.add('flex');
+  if (id) {
+    const g = goals().find(x=>x.id===id); if (!g) return;
+    document.getElementById('goal-modal-title').textContent = 'Editar meta';
+    document.getElementById('goal-id').value = g.id;
+    document.getElementById('goal-name').value = g.name;
+    document.getElementById('goal-area').value = g.area;
+    document.getElementById('goal-kind').value = g.kind;
+    document.getElementById('goal-cards').value = g.cards;
+    document.getElementById('goal-target').value = g.target;
+    document.getElementById('goal-unit').value = g.unit||'dias';
+  } else {
+    document.getElementById('goal-modal-title').textContent = 'Nueva meta';
+    document.getElementById('goal-id').value = '';
+    document.getElementById('goal-name').value = '';
+    document.getElementById('goal-area').value = 'General';
+    document.getElementById('goal-kind').value = 'daily';
+    document.getElementById('goal-cards').value = 1;
+    document.getElementById('goal-target').value = 7;
+    document.getElementById('goal-unit').value = 'dias';
+  }
+}
+function saveGoal() {
+  const name = document.getElementById('goal-name').value.trim();
+  if (!name) { alert('Pon un nombre'); return; }
+  const id = document.getElementById('goal-id').value || ('g_'+Date.now());
+  const obj = {
+    id, name,
+    area: document.getElementById('goal-area').value.trim()||'General',
+    kind: document.getElementById('goal-kind').value,
+    cards: +document.getElementById('goal-cards').value||0,
+    target: +document.getElementById('goal-target').value||7,
+    unit: document.getElementById('goal-unit').value.trim()||'dias'
+  };
+  const i = store.goals.findIndex(x=>x.id===id);
+  if (i>=0) store.goals[i]=obj; else store.goals.push(obj);
+  save(); closeModal('modal-goal'); renderGoalConfig(); renderAll();
+}
+function deleteGoal(id) {
+  if (!confirm('Borrar esta meta?')) return;
+  store.goals = store.goals.filter(x=>x.id!==id);
+  save(); renderGoalConfig(); renderAll();
+}
+function openDayModal() {
+  ensureReper();
+  document.getElementById('modal-day').classList.remove('hidden');
+  document.getElementById('modal-day').classList.add('flex');
   const today = fmt(new Date());
   document.getElementById('day-date').value = today;
   buildDayChecks(today);
   document.getElementById('day-date').onchange = function(){ buildDayChecks(this.value); };
-}
-function closeDay() {
-  const el = document.getElementById('modal-day');
-  el.classList.add('hidden'); el.classList.remove('flex');
+  const tipoSel = document.getElementById('day-reper-tipo');
+  const metaSel = document.getElementById('day-reper-meta');
+  if (tipoSel) tipoSel.innerHTML = store.tiposReper.map(t=>'<option value="'+t.id+'">'+t.nombre+'</option>').join('');
+  if (metaSel) metaSel.innerHTML = '<option value="">Meta fallada (opcional)</option>'+goals().map(g=>'<option value="'+g.id+'">'+g.name+'</option>').join('');
+  const chk = document.getElementById('day-tuvo-reper');
+  const extra = document.getElementById('day-reper-extra');
+  if (chk && extra) {
+    chk.checked = false;
+    extra.classList.add('hidden');
+    chk.onchange = function(){ extra.classList.toggle('hidden', !chk.checked); };
+  }
+  const lim = document.getElementById('day-reper-limite');
+  if (lim) lim.value = '';
+  const nota = document.getElementById('day-reper-nota');
+  if (nota) nota.value = '';
 }
 function buildDayChecks(ds) {
   const dd = dayData(ds);
-  const box = document.getElementById('day-checks');
-  const daily = TEMPLATE.filter(g => g.kind === 'daily' || g.id === 'pk_hands');
-  box.innerHTML = daily.map(g => {
-    const v = dd[g.id];
-    const checked = v === true ? 'checked' : '';
-    return `<label class="flex items-center gap-2 bg-white rounded-xl px-3 py-2 border border-pink-100 cursor-pointer">
-      <input type="checkbox" data-gid="${g.id}" ${checked} class="w-4 h-4">
-      <span class="font-bold text-stone-700">${g.name}</span>
-      <span class="ml-auto text-[10px] text-stone-400 font-bold">${g.area}</span>
-    </label>`;
+  document.getElementById('day-checks').innerHTML = goals().map(g=>{
+    const checked = dd[g.id]===true ? 'checked' : '';
+    return '<label class="flex items-center gap-2 bg-white rounded-xl px-3 py-2.5 border border-pink-100 cursor-pointer"><input type="checkbox" data-gid="'+g.id+'" '+checked+' class="w-4 h-4 accent-pink-500"><span class="font-bold text-stone-700 flex-1">'+g.name+'</span><span class="text-[10px] text-stone-400 font-bold">'+g.area+'</span></label>';
   }).join('');
 }
 function saveDay() {
   const ds = document.getElementById('day-date').value;
   if (!ds) return;
   const dd = dayData(ds);
-  document.querySelectorAll('#day-checks input[type=checkbox]').forEach(inp => {
-    dd[inp.dataset.gid] = inp.checked;
-  });
-  saveStore();
-  closeDay();
-  render();
+  document.querySelectorAll('#day-checks input[type=checkbox]').forEach(inp=>{ dd[inp.dataset.gid] = inp.checked; });
+  ensureReper();
+  const tuvo = document.getElementById('day-tuvo-reper');
+  if (tuvo && tuvo.checked) {
+    const tipoId = document.getElementById('day-reper-tipo').value;
+    const metaId = document.getElementById('day-reper-meta').value || null;
+    const limite = document.getElementById('day-reper-limite').value;
+    const nota = (document.getElementById('day-reper-nota').value||'').trim();
+    store.hojas.push({
+      id: 'h_'+Date.now(),
+      tipoId, metaId,
+      fechaFallo: ds,
+      fechaLimite: limite || ds,
+      nota,
+      estado: 'pendiente'
+    });
+    dd.repercusion = { tipoId, metaId, limite, nota };
+  }
+  save(); closeModal('modal-day'); renderAll();
 }
-
-function copyWhatsApp() {
-  const { from, to, days } = weekRange();
-  let t = `🎯 Metas Mary · ${fmt(from)} → ${fmt(to)}\n\n`;
-  let area = '';
-  TEMPLATE.forEach(g => {
-    if (g.area !== area) { area = g.area; t += `\n*${area}*\n`; }
-    const p = progressFor(g, days);
-    const icon = p.status === 'ok' ? '✅' : (p.status === 'warn' ? '⚠️' : (p.status === 'bad' ? '❌' : '🔄'));
-    t += `${icon} ${g.name}: ${p.label} (tarjetas ${p.cardsUsed}/${g.cards})\n`;
-  });
-  t += `\n_Generado desde Mary Life_`;
-  navigator.clipboard.writeText(t).then(() => alert('Copiado. Pégalo en WhatsApp.')).catch(() => {
-    prompt('Copia este texto:', t);
-  });
+function closeModal(id) {
+  const el = document.getElementById(id);
+  el.classList.add('hidden'); el.classList.remove('flex');
 }
-
+function recalcAuto() {
+  const { days } = weekRange();
+  try {
+    const raw = localStorage.getItem(FITNESS_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      const list = data.alimentacion||data.food||data.meals||[];
+      const workouts = data.entrenos||data.workouts||[];
+      const cardios = data.cardio||data.cardios||[];
+      days.forEach(ds=>{
+        const dd = dayData(ds);
+        const meals = (Array.isArray(list)?list:[]).filter(m=>(m.fecha||m.date||'')===ds);
+        if (meals.length) {
+          const prot = meals.reduce((s,m)=>s+(+m.proteina||+m.protein||0),0);
+          const cal = meals.reduce((s,m)=>s+(+m.calorias||+m.calories||+m.kcal||0),0);
+          if (prot>=130&&prot<=160) dd.fit_prot=true;
+          if (cal>=1500&&cal<=1650) dd.fit_cal=true;
+        }
+        const w=(Array.isArray(workouts)?workouts:[]).filter(x=>(x.fecha||x.date||'')===ds);
+        if (w.length) dd._workout=(dd._workout||0)+w.length;
+        const c=(Array.isArray(cardios)?cardios:[]).filter(x=>(x.fecha||x.date||'')===ds);
+        if (c.length) dd._cardio=(dd._cardio||0)+c.length;
+      });
+    }
+  } catch(e){}
+  try {
+    const raw = localStorage.getItem(POKER_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      const sessions = data.sessions||data.sesiones||[];
+      days.forEach(ds=>{
+        const dd = dayData(ds);
+        const ss=(Array.isArray(sessions)?sessions:[]).filter(s=>(s.fecha||s.date||'')===ds);
+        const games=ss.reduce((a,s)=>a+(+s.games||0),0);
+        const study=ss.reduce((a,s)=>a+(+s.estudio||+s.study||0),0);
+        if (games>=110) dd.pk_games=true;
+        const studyMin = study>10?study:study*60;
+        if (studyMin>=40) dd.pk_study=true;
+      });
+    }
+  } catch(e){}
+  save();
+}
 recalcAuto();
-render();
+renderAll();
 </script>
 </body>
 </html>
+
