@@ -489,6 +489,7 @@ function progressFor(goal, days) {
   days.forEach(ds=>{
     const v = dayData(ds)[goal.id];
     if (v===true) done++;
+    else if (v==='tarjeta' || v==='card') { fails++; /* usa tarjeta */ }
     else if (v===false) fails++;
     else if (ds < today) fails++;
   });
@@ -532,15 +533,21 @@ function renderAll() {
     by[area].forEach(g=>{
       const p = progressFor(g, days);
       const pctg = Math.min(100, Math.round(p.done/(p.target||1)*100));
-      let dots='';
-      if (g.kind==='daily') {
-        dots = '<div class="flex gap-1 mt-1.5">'+days.map(ds=>{
-          const v=dayData(ds)[g.id];
-          const cls = v===true?'dot-ok':(v===false||(ds<fmt(new Date())&&v!==true)?'dot-no':'dot-na');
-          return '<span class="day-dot '+cls+'" title="'+ds+'"></span>';
-        }).join('')+'</div>';
-      }
-      html += '<div class="bg-white/80 rounded-xl p-3 border border-pink-100"><div class="flex justify-between gap-2 items-start"><div class="font-black text-xs text-stone-800">'+g.name+'</div>'+chip(p.status)+'</div><div class="text-[10px] font-bold text-stone-500 mt-1">'+p.label+' · Tarjetas '+p.cardsUsed+'/'+g.cards+' (libres '+p.cardsLeft+')</div><div class="bar mt-2"><i style="width:'+pctg+'%"></i></div>'+dots+'</div>';
+      const dayNames = ['L','M','X','J','V','S','D'];
+      let tracker = '<div class="grid grid-cols-7 gap-1 mt-2 text-center">';
+      days.forEach((ds,i)=>{
+        const v = dayData(ds)[g.id];
+        const today = fmt(new Date());
+        let cell, bg, title;
+        if (v === true) { cell = '✓'; bg = 'background:#d1fae5;color:#065f46'; title = 'Cumplido'; }
+        else if (v === 'tarjeta' || v === 'card') { cell = 'T'; bg = 'background:#dbeafe;color:#1e40af'; title = 'Tarjeta usada'; }
+        else if (v === false) { cell = '✗'; bg = 'background:#fee2e2;color:#991b1b'; title = 'Fallado'; }
+        else if (ds < today) { cell = '✗'; bg = 'background:#fecaca;color:#7f1d1d'; title = 'Sin registro (fallo)'; }
+        else { cell = '·'; bg = 'background:#f5f5f4;color:#a8a29e'; title = 'Pendiente'; }
+        tracker += '<div title="'+dayNames[i]+' '+ds+' · '+title+'" style="'+bg+';border-radius:10px;padding:6px 2px;font-weight:900;font-size:11px"><div style="font-size:9px;opacity:.7">'+dayNames[i]+'</div>'+cell+'</div>';
+      });
+      tracker += '</div>';
+      html += '<div class="bg-white/80 rounded-xl p-3 border border-pink-100"><div class="flex justify-between gap-2 items-start"><div class="font-black text-xs text-stone-800">'+g.name+'</div>'+chip(p.status)+'</div><div class="text-[10px] font-bold text-stone-500 mt-1">'+p.label+' · 🎫 '+p.cardsUsed+'/'+g.cards+' tarjetas</div><div class="bar mt-2"><i style="width:'+pctg+'%"></i></div>'+tracker+'</div>';
     });
     html += '</div>';
   });
@@ -576,7 +583,8 @@ function renderHistorial() {
       const v = dayData(ds)[g.id];
       let label, cls, icon;
       if (v===true) { label='Cumplida'; cls='ok'; icon='OK'; okN++; }
-      else if (v===false) { label='No'; cls='bad'; icon='NO'; noN++; }
+      else if (v==='tarjeta'||v==='card') { label='Tarjeta'; cls='soft'; icon='T'; okN++; }
+      else if (v===false) { label='No'; cls='bad'; icon='X'; noN++; }
       else if (typeof v==='number' && v>0) { label='x'+v; cls='ok'; icon='OK'; okN++; }
       else { label='Sin registro'; cls='soft'; icon='-'; naN++; }
       html += '<div class="glass rounded-xl px-3 py-2.5 flex justify-between items-center text-xs"><span class="font-black text-stone-700">'+ds+'</span><span class="chip '+cls+'">'+icon+' '+label+'</span></div>';
@@ -598,32 +606,52 @@ function renderHistorial() {
   document.getElementById('hist-list').innerHTML = html || '<p class="text-xs text-stone-400 text-center py-4">Sin datos</p>';
 }
 function dailyText(ds) {
-  let t = 'REPORTE METAS · '+ds+'\n\n';
+  let t = '🌸 REPORTE METAS · '+ds+'\n';
+  t += '━━━━━━━━━━━━━━━━━━━━\n\n';
   const by={};
   goals().forEach(g=>{ (by[g.area]=by[g.area]||[]).push(g); });
   Object.keys(by).forEach(area=>{
-    t += area.toUpperCase()+'\n';
+    t += '✨ '+area+'\n';
     by[area].forEach(g=>{
       const v = dayData(ds)[g.id];
-      let s = v===true ? '[OK]' : (v===false ? '[NO]' : (typeof v==='number'&&v>0 ? '[OK x'+v+']' : '[ ]'));
-      t += s+' '+g.name+'\n';
+      let s;
+      if (v===true) s = '☑️';
+      else if (v==='tarjeta' || v==='card') s = '🎫';
+      else if (v===false) s = '❌';
+      else if (typeof v==='number'&&v>0) s = '☑️ ×'+v;
+      else s = '⬜';
+      t += '  '+s+'  '+g.name+'\n';
     });
     t += '\n';
   });
-  t += 'Mary Life · Metas';
+  t += '━━━━━━━━━━━━━━━━━━━━\n💗 Mary Life · Metas';
   return t;
 }
 function weekText() {
   const { from, to, days } = weekRange();
-  let t = 'METAS SEMANA · '+fmt(from)+' a '+fmt(to)+'\n\n';
+  const dayNames = ['L','M','X','J','V','S','D'];
+  let t = '🎯 METAS SEMANA\n📅 '+fmt(from)+' → '+fmt(to)+'\n';
+  t += '━━━━━━━━━━━━━━━━━━━━\n\n';
   let area='';
   goals().forEach(g=>{
-    if (g.area!==area){ area=g.area; t+=area.toUpperCase()+'\n'; }
+    if (g.area!==area){ area=g.area; t+='✨ '+area+'\n'; }
     const p = progressFor(g, days);
-    const icon = p.status==='ok'?'[OK]':(p.status==='warn'?'[~]':(p.status==='bad'?'[NO]':'[...]'));
-    t += icon+' '+g.name+': '+p.label+' (tarjetas '+p.cardsUsed+'/'+g.cards+')\n';
+    const icon = p.status==='ok'?'✅':(p.status==='warn'?'🎫':(p.status==='bad'?'❌':'🔄'));
+    t += icon+' '+g.name+'\n';
+    t += '   '+p.label+' · 🎫 '+p.cardsUsed+'/'+g.cards+'\n';
+    if (g.kind==='daily') {
+      let row = '   ';
+      days.forEach((ds,i)=>{
+        const v = dayData(ds)[g.id];
+        if (v===true) row += dayNames[i]+'☑️ ';
+        else if (v==='tarjeta'||v==='card') row += dayNames[i]+'🎫 ';
+        else if (v===false || ds < fmt(new Date())) row += dayNames[i]+'❌ ';
+        else row += dayNames[i]+'⬜ ';
+      });
+      t += row+'\n';
+    }
   });
-  t += '\nMary Life · Metas';
+  t += '\n━━━━━━━━━━━━━━━━━━━━\n💗 Mary Life · Metas';
   return t;
 }
 function copyDailyReport() {
@@ -733,15 +761,50 @@ function openDayModal() {
 function buildDayChecks(ds) {
   const dd = dayData(ds);
   document.getElementById('day-checks').innerHTML = goals().map(g=>{
-    const checked = dd[g.id]===true ? 'checked' : '';
-    return '<label class="flex items-center gap-2 bg-white rounded-xl px-3 py-2.5 border border-pink-100 cursor-pointer"><input type="checkbox" data-gid="'+g.id+'" '+checked+' class="w-4 h-4 accent-pink-500"><span class="font-bold text-stone-700 flex-1">'+g.name+'</span><span class="text-[10px] text-stone-400 font-bold">'+g.area+'</span></label>';
+    const v = dd[g.id];
+    const sel = (val) => (v===val || (val===true && v===true) ? 'font-black ring-2 ring-offset-1' : 'opacity-70');
+    const isTrue = v===true;
+    const isCard = v==='tarjeta' || v==='card';
+    const isFalse = v===false;
+    return '<div class="bg-white rounded-xl px-3 py-2.5 border border-pink-100 space-y-1.5" data-gid="'+g.id+'">'+
+      '<div class="font-bold text-stone-700 text-[11px]">'+g.name+' <span class="text-[10px] text-stone-400">'+g.area+'</span></div>'+
+      '<div class="flex gap-1.5">'+
+      '<button type="button" data-val="true" class="flex-1 py-1.5 rounded-lg text-[10px] font-black '+(isTrue?'bg-emerald-500 text-white ring-2 ring-emerald-300':'bg-emerald-50 text-emerald-800')+'" onclick="setDayGoal(this)">✓ Hecho</button>'+
+      '<button type="button" data-val="tarjeta" class="flex-1 py-1.5 rounded-lg text-[10px] font-black '+(isCard?'bg-blue-500 text-white ring-2 ring-blue-300':'bg-blue-50 text-blue-800')+'" onclick="setDayGoal(this)">🎫 Tarjeta</button>'+
+      '<button type="button" data-val="false" class="flex-1 py-1.5 rounded-lg text-[10px] font-black '+(isFalse?'bg-rose-500 text-white ring-2 ring-rose-300':'bg-rose-50 text-rose-800')+'" onclick="setDayGoal(this)">✗ Fallo</button>'+
+      '</div></div>';
   }).join('');
+}
+function setDayGoal(btn) {
+  const wrap = btn.closest('[data-gid]');
+  wrap.querySelectorAll('button').forEach(b=>{
+    b.classList.remove('ring-2','ring-emerald-300','ring-blue-300','ring-rose-300','bg-emerald-500','bg-blue-500','bg-rose-500','text-white');
+    if (b.dataset.val==='true') { b.classList.add('bg-emerald-50','text-emerald-800'); }
+    if (b.dataset.val==='tarjeta') { b.classList.add('bg-blue-50','text-blue-800'); }
+    if (b.dataset.val==='false') { b.classList.add('bg-rose-50','text-rose-800'); }
+  });
+  btn.classList.remove('bg-emerald-50','bg-blue-50','bg-rose-50','text-emerald-800','text-blue-800','text-rose-800');
+  if (btn.dataset.val==='true') btn.classList.add('bg-emerald-500','text-white','ring-2','ring-emerald-300');
+  if (btn.dataset.val==='tarjeta') btn.classList.add('bg-blue-500','text-white','ring-2','ring-blue-300');
+  if (btn.dataset.val==='false') btn.classList.add('bg-rose-500','text-white','ring-2','ring-rose-300');
+  wrap.dataset.selected = btn.dataset.val;
 }
 function saveDay() {
   const ds = document.getElementById('day-date').value;
   if (!ds) return;
   const dd = dayData(ds);
-  document.querySelectorAll('#day-checks input[type=checkbox]').forEach(inp=>{ dd[inp.dataset.gid] = inp.checked; });
+  document.querySelectorAll('#day-checks [data-gid]').forEach(wrap=>{
+    const gid = wrap.dataset.gid;
+    let val = wrap.dataset.selected;
+    if (val === undefined) {
+      // fallback from active button
+      const active = wrap.querySelector('button.ring-2');
+      if (active) val = active.dataset.val;
+    }
+    if (val === 'true') dd[gid] = true;
+    else if (val === 'tarjeta') dd[gid] = 'tarjeta';
+    else if (val === 'false') dd[gid] = false;
+  });
   ensureReper();
   const tuvo = document.getElementById('day-tuvo-reper');
   if (tuvo && tuvo.checked) {
@@ -813,4 +876,5 @@ renderAll();
 </script>
 </body>
 </html>
+
 
