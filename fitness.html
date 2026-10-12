@@ -597,13 +597,15 @@
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="font-bold text-stone-600 block mb-1">Tipo de Rutina</label>
-            <select id="entreno-rutina" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800">
-              <option value="Torso A">Torso A</option>
-              <option value="Pierna A">Pierna A</option>
-              <option value="Torso B">Torso B</option>
-              <option value="Pierna B">Pierna B</option>
-              <option value="Full Body">Full Body</option>
+            <select id="entreno-rutina" onchange="loadRutinaTemplate()" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800">
+              <option value="Push (Pecho/Hombros/Tríceps)">Push (Pecho/Hombros/Tríceps)</option>
+              <option value="Piernas 1 (Cuádriceps + Aductores)">Piernas 1 (Cuádriceps + Aductores)</option>
+              <option value="Pull (Espalda + Bíceps)">Pull (Espalda + Bíceps)</option>
+              <option value="Piernas 2 (Glúteos + Isquios + Abductores)">Piernas 2 (Glúteos + Isquios)</option>
+              <option value="Complemento (accesorios)">Complemento (accesorios)</option>
+              <option value="Movilidad / Rodillas">Movilidad / Rodillas</option>
             </select>
+            <p class="text-[10px] text-stone-400 mt-1">Elige la rutina → se cargan los ejercicios con sus series. Solo llenas peso y reps.</p>
           </div>
           <div><label class="font-bold text-stone-600 block mb-1">Tiempo (min)</label><input type="number" id="entreno-tiempo" placeholder="60" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
         </div>
@@ -676,7 +678,24 @@
           </div>
         </div>
         <div><label class="font-bold text-stone-600 block mb-1">Meditación (min)</label><input type="number" id="salud-med" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800"></div>
-        <div class="flex items-center gap-4 pt-1">
+        <div>
+          <label class="font-bold text-stone-600 block mb-1">Pasos del día 👟</label>
+          <input type="number" id="salud-pasos" placeholder="ej. 8500" class="w-full bg-white border border-[#f9a8d4] rounded-xl px-3 py-2 font-bold text-stone-800">
+        </div>
+        <div>
+          <label class="font-bold text-stone-600 block mb-1">Estados de ánimo (varios)</label>
+          <div id="salud-animos-wrap" class="flex flex-wrap gap-1.5 mt-1">
+            <label class="px-2 py-1 bg-white border border-pink-200 rounded-lg text-[10px] font-bold cursor-pointer"><input type="checkbox" class="salud-animo-cb" value="Motivada"> Motivada</label>
+            <label class="px-2 py-1 bg-white border border-pink-200 rounded-lg text-[10px] font-bold cursor-pointer"><input type="checkbox" class="salud-animo-cb" value="Feliz"> Feliz</label>
+            <label class="px-2 py-1 bg-white border border-pink-200 rounded-lg text-[10px] font-bold cursor-pointer"><input type="checkbox" class="salud-animo-cb" value="Ansiosa"> Ansiosa</label>
+            <label class="px-2 py-1 bg-white border border-pink-200 rounded-lg text-[10px] font-bold cursor-pointer"><input type="checkbox" class="salud-animo-cb" value="Pensativa"> Pensativa</label>
+            <label class="px-2 py-1 bg-white border border-pink-200 rounded-lg text-[10px] font-bold cursor-pointer"><input type="checkbox" class="salud-animo-cb" value="Cansada"> Cansada</label>
+            <label class="px-2 py-1 bg-white border border-pink-200 rounded-lg text-[10px] font-bold cursor-pointer"><input type="checkbox" class="salud-animo-cb" value="Desmotivada"> Desmotivada</label>
+            <label class="px-2 py-1 bg-white border border-pink-200 rounded-lg text-[10px] font-bold cursor-pointer"><input type="checkbox" class="salud-animo-cb" value="Tranquila"> Tranquila</label>
+            <label class="px-2 py-1 bg-white border border-pink-200 rounded-lg text-[10px] font-bold cursor-pointer"><input type="checkbox" class="salud-animo-cb" value="Estresada"> Estresada</label>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-3 pt-1">
           <label class="flex items-center space-x-2 cursor-pointer">
             <input type="checkbox" id="salud-dulce" class="accent-[#ec4899] w-4 h-4 rounded">
             <span class="font-bold text-stone-700">Comí dulce 🍫</span>
@@ -684,6 +703,18 @@
           <label class="flex items-center space-x-2 cursor-pointer">
             <input type="checkbox" id="salud-periodo" class="accent-[#b492cd] w-4 h-4 rounded">
             <span class="font-bold text-stone-700">Periodo 🩸</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input type="checkbox" id="salud-creatina" class="accent-[#ec4899] w-4 h-4 rounded">
+            <span class="font-bold text-stone-700">Creatina 💊</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input type="checkbox" id="salud-omega" class="accent-[#ec4899] w-4 h-4 rounded">
+            <span class="font-bold text-stone-700">Omega 🐟</span>
+          </label>
+          <label class="flex items-center space-x-2 cursor-pointer">
+            <input type="checkbox" id="salud-magnesio" class="accent-[#ec4899] w-4 h-4 rounded">
+            <span class="font-bold text-stone-700">Magnesio ✨</span>
           </label>
         </div>
       </div>
@@ -998,6 +1029,83 @@
       openModal('modal-cardio');
     }
 
+    
+    // Plantillas Mary — Push / Pull / Piernas / Complemento / Movilidad rodillas
+    // series sugeridas: se pre-cargan vacías con el nº de series del plan
+    const RUTINAS_TEMPLATES = {
+      'Push (Pecho/Hombros/Tríceps)': [
+        { nombre: 'Press de banca plano (barra o mancuernas)', series: 4, reps: '8-10' },
+        { nombre: 'Press inclinado (máquina o mancuernas)', series: 4, reps: '10-12' },
+        { nombre: 'Press militar (mancuernas o barra)', series: 3, reps: '8-10' },
+        { nombre: 'Elevaciones laterales con mancuernas', series: 4, reps: '12-15' },
+        { nombre: 'Extensión de tríceps en polea alta', series: 3, reps: '10-12' },
+        { nombre: 'Press francés o fondos en paralelas', series: 3, reps: '10-12' }
+      ],
+      'Piernas 1 (Cuádriceps + Aductores)': [
+        { nombre: 'Prensa 45° (pies altura media)', series: 4, reps: '8-10' },
+        { nombre: 'Máquina de aductores', series: 3, reps: '12-15' },
+        { nombre: 'Extensiones de cuádriceps', series: 4, reps: '12-15' },
+        { nombre: 'Elevación de talones de pie', series: 4, reps: '12-15' }
+      ],
+      'Pull (Espalda + Bíceps)': [
+        { nombre: 'Jalón al pecho (Lat Pulldown)', series: 4, reps: '8-12' },
+        { nombre: 'Remo en polea baja sentado', series: 4, reps: '8-12' },
+        { nombre: 'Remo mancuerna a una mano', series: 3, reps: '10-12' },
+        { nombre: 'Face pulls', series: 3, reps: '12-15' },
+        { nombre: 'Curl bíceps mancuernas (martillo o alterno)', series: 3, reps: '10-12' },
+        { nombre: 'Curl polea baja o barra Z', series: 3, reps: '10-12' }
+      ],
+      'Piernas 2 (Glúteos + Isquios + Abductores)': [
+        { nombre: 'Hip Thrust (máquina o barra)', series: 4, reps: '10-12' },
+        { nombre: 'Curl femoral (tumbado o sentado)', series: 4, reps: '10-12' },
+        { nombre: 'Pull-through en polea baja', series: 3, reps: '12-15' },
+        { nombre: 'Máquina de abductores', series: 3, reps: '15' }
+      ],
+      'Complemento (accesorios)': [
+        { nombre: 'Elevaciones laterales', series: 3, reps: '15' },
+        { nombre: 'Aperturas en polea o máquina', series: 3, reps: '12' },
+        { nombre: 'Pulldown brazos extendidos', series: 3, reps: '12' },
+        { nombre: 'Encogimientos de hombros (trapecio)', series: 3, reps: '12' },
+        { nombre: 'Elevación de talones (pantorrillas)', series: 3, reps: '15' },
+        { nombre: 'Abdomen (elev. piernas o crunch polea)', series: 4, reps: 'al fallo' }
+      ],
+      'Movilidad / Rodillas': [
+        { nombre: 'Movilidad de tobillo (círculos / dorsiflexión pared)', series: 2, reps: '10/lado' },
+        { nombre: 'Puente de glúteo isométrico', series: 3, reps: '20-30 seg' },
+        { nombre: 'Clamshell (con o sin banda)', series: 3, reps: '12-15/lado' },
+        { nombre: 'Sentadilla a caja (controlada, sin dolor)', series: 3, reps: '8-10' },
+        { nombre: 'Step-up bajo o step-down controlado', series: 3, reps: '8/lado' },
+        { nombre: 'Estiramiento cuádriceps + flexores de cadera', series: 2, reps: '30-45 seg/lado' },
+        { nombre: 'Rodillo / mov. de cadera 90/90', series: 2, reps: '8/lado' }
+      ]
+    };
+
+
+
+    
+    function loadRutinaTemplate() {
+      const nombre = document.getElementById('entreno-rutina').value;
+      const lista = RUTINAS_TEMPLATES[nombre] || [];
+      const container = document.getElementById('ejercicios-container');
+      container.innerHTML = '';
+      if (!lista.length) {
+        addExerciseRow();
+        return;
+      }
+      lista.forEach(ej => {
+        const nSeries = typeof ej === 'object' ? (ej.series || 3) : 3;
+        const ejName = typeof ej === 'object' ? ej.nombre : ej;
+        const repsHint = typeof ej === 'object' ? (ej.reps || '') : '';
+        const seriesList = [];
+        for (let i = 0; i < nSeries; i++) {
+          seriesList.push({ peso: '', reps: '', unidad: 'lbs', pr: false });
+        }
+        addExerciseRow(ejName, seriesList, repsHint);
+      });
+    }
+
+
+
     function openModalRutina() {
       document.getElementById('entreno-edit-id').value = '';
       document.getElementById('entreno-date').value = new Date().toISOString().slice(0, 10);
@@ -1006,8 +1114,8 @@
       document.getElementById('entreno-hr').value = '';
       document.getElementById('entreno-esfuerzo').value = '8';
       document.getElementById('entreno-notas').value = '';
-      document.getElementById('ejercicios-container').innerHTML = '';
-      addExerciseRow();
+      document.getElementById('entreno-rutina').value = 'Push (Pecho/Hombros/Tríceps)';
+      loadRutinaTemplate();
       openModal('modal-entrenamiento');
     }
 
@@ -1030,7 +1138,7 @@
       openModal('modal-entrenamiento');
     }
 
-    function addExerciseRow(ejName = '', seriesList = [{ peso: 0, reps: 0, unidad: 'lbs', pr: false }]) {
+    function addExerciseRow(ejName = '', seriesList = [{ peso: '', reps: '', unidad: 'lbs', pr: false }], repsHint = '') {
       const container = document.getElementById('ejercicios-container');
       let seriesHtml = '';
       seriesList.forEach((s, idx) => {
@@ -1054,7 +1162,8 @@
       card.className = 'bg-white/70 p-3 rounded-2xl border border-[#f9a8d4] space-y-2 ejercicio-card';
       card.innerHTML = `
         <div class="flex justify-between items-center">
-          <input type="text" placeholder="Nombre Ejercicio (ej. Press Banca)" value="${ejName}" class="bg-transparent font-black text-stone-800 text-xs w-3/4 outline-none ejercicio-nombre">
+          <input type="text" placeholder="Nombre Ejercicio" value="${ejName}" class="bg-transparent font-black text-stone-800 text-xs flex-1 outline-none ejercicio-nombre">
+          ${repsHint ? '<span class="text-[10px] font-bold text-[#b492cd] whitespace-nowrap">'+repsHint+' reps</span>' : ''}
           <button onclick="this.closest('.ejercicio-card').remove()" class="text-red-500 font-bold text-xs">Borrar</button>
         </div>
         <div class="series-list space-y-1">${seriesHtml}</div>
@@ -1092,6 +1201,9 @@
       document.getElementById('salud-med').value = '';
       document.getElementById('salud-dulce').checked = false;
       document.getElementById('salud-periodo').checked = false;
+      const sp = document.getElementById('salud-pasos'); if (sp) sp.value = '';
+      document.querySelectorAll('.salud-animo-cb').forEach(c => c.checked = false);
+      ['salud-creatina','salud-omega','salud-magnesio'].forEach(id => { const e=document.getElementById(id); if(e) e.checked=false; });
       openModal('modal-salud');
     }
 
@@ -1107,6 +1219,12 @@
       document.getElementById('salud-med').value = item.med;
       document.getElementById('salud-dulce').checked = !!item.dulce;
       document.getElementById('salud-periodo').checked = !!item.periodo;
+      const sp = document.getElementById('salud-pasos'); if (sp) sp.value = item.pasos || '';
+      const animos = (item.animo||'').split(',').map(s=>s.trim());
+      document.querySelectorAll('.salud-animo-cb').forEach(c => { c.checked = animos.some(a => a.includes(c.value)); });
+      const sc = document.getElementById('salud-creatina'); if (sc) sc.checked = !!item.creatina;
+      const so = document.getElementById('salud-omega'); if (so) so.checked = !!item.omega;
+      const sm = document.getElementById('salud-magnesio'); if (sm) sm.checked = !!item.magnesio;
       openModal('modal-salud');
     }
 
@@ -1193,10 +1311,15 @@
         agua: parseFloat(document.getElementById('salud-agua').value || 0),
         sueno: parseFloat(document.getElementById('salud-sueno').value || 0),
         calidadSueno: document.getElementById('salud-calidad-sueno').value,
-        animo: document.getElementById('salud-animo').value,
+        animo: (Array.from(document.querySelectorAll('.salud-animo-cb:checked')).map(c=>c.value).join(', ')
+          || (document.getElementById('salud-animo')||{}).value || '—'),
         med: parseFloat(document.getElementById('salud-med').value || 0),
+        pasos: parseInt((document.getElementById('salud-pasos')||{}).value || 0, 10) || 0,
         dulce: document.getElementById('salud-dulce').checked,
-        periodo: document.getElementById('salud-periodo').checked
+        periodo: document.getElementById('salud-periodo').checked,
+        creatina: !!(document.getElementById('salud-creatina')||{}).checked,
+        omega: !!(document.getElementById('salud-omega')||{}).checked,
+        magnesio: !!(document.getElementById('salud-magnesio')||{}).checked
       };
       if (editId) {
         maryData.salud = maryData.salud.map(x => x.id === parseInt(editId) ? item : x);
@@ -2193,3 +2316,4 @@
   </script>
 </body>
 </html>
+
