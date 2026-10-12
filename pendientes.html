@@ -301,10 +301,12 @@
                 <button onclick="deleteItem(${it.id})" class="px-2 py-1 text-red-500 font-bold cursor-pointer">✕</button>
               </div>
             </div>
-            <div class="flex gap-1.5 pt-1">
-              <button onclick="setEstado(${it.id},'pendiente')" class="px-2 py-0.5 bg-pink-50 text-pink-700 rounded-lg font-bold text-[10px] cursor-pointer">Pendiente</button>
-              <button onclick="setEstado(${it.id},'hecho')" class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-lg font-bold text-[10px] cursor-pointer">Hecho</button>
-              <button onclick="setEstado(${it.id},'postergado')" class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-lg font-bold text-[10px] cursor-pointer">Postergar</button>
+            <div class="flex flex-wrap gap-1 items-center justify-end shrink-0">
+              <button onclick="setEstado(${it.id},'pendiente')" class="px-2 py-1 bg-pink-50 text-pink-700 rounded-lg font-bold text-[10px] cursor-pointer" title="Pendiente">📌</button>
+              <button onclick="setEstado(${it.id},'hecho')" class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-lg font-bold text-[10px] cursor-pointer" title="Hecho">✅</button>
+              <button onclick="setEstado(${it.id},'postergado')" class="px-2 py-1 bg-amber-50 text-amber-700 rounded-lg font-bold text-[10px] cursor-pointer" title="Postergar">⏸️</button>
+              <button onclick="openModal(${it.id})" class="px-2 py-1 bg-white border border-[#ebd7e3] rounded-lg font-bold cursor-pointer text-[10px]">✏️</button>
+              <button onclick="deleteItem(${it.id})" class="px-2 py-1 text-red-500 font-bold cursor-pointer text-[10px]">✕</button>
             </div>
           </div>`;
       });
@@ -331,7 +333,9 @@
         const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
         const dayItems = items.filter(x => x.fecha === dateStr);
         const hasUrg = dayItems.some(x => x.urgente);
-        grid.innerHTML += `<button onclick="showDayDetail('${dateStr}')" class="aspect-square rounded-xl border text-[11px] font-bold cursor-pointer ${dayItems.length ? (hasUrg ? 'bg-red-100 border-red-300 text-red-800' : 'bg-[#b492cd]/25 border-[#b492cd] text-[#633a82]') : 'bg-white border-[#ebd7e3] text-stone-600'}">${d}${dayItems.length ? '<div class="text-[8px]">'+dayItems.length+'</div>' : ''}</button>`;
+        const titles = dayItems.slice(0,2).map(x => (x.titulo||'').slice(0,10)).join(' · ');
+        const more = dayItems.length > 2 ? ' +'+(dayItems.length-2) : '';
+        grid.innerHTML += `<button onclick="showDayDetail('${dateStr}')" class="min-h-[52px] rounded-xl border text-[10px] font-bold cursor-pointer p-1 flex flex-col items-start justify-start text-left ${dayItems.length ? (hasUrg ? 'bg-red-100 border-red-300 text-red-800' : 'bg-[#b492cd]/25 border-[#b492cd] text-[#633a82]') : 'bg-white border-[#ebd7e3] text-stone-600'}"><span class="font-black">${d}</span>${dayItems.length ? '<span class="text-[8px] leading-tight mt-0.5 opacity-90">'+titles+more+'</span>' : ''}</button>`;
       }
     }
 
