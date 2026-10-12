@@ -110,7 +110,16 @@
           <h2 class="text-lg font-black text-rose-900">📖 Diario Devocional & Estudio</h2>
           <p class="text-xs text-rose-600">Tus reflexiones ordenadas por temas, oración, gratitud y desahogo</p>
         </div>
-        <button onclick="openModalDevocional()" class="px-5 py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-extrabold text-xs rounded-xl shadow-lg transition cursor-pointer">+ Nuevo Devocional</button>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="openModalDevocional()" class="px-5 py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-extrabold text-xs rounded-xl shadow-lg transition cursor-pointer">+ Nuevo Devocional</button>
+          <button onclick="openModalLectura()" class="px-5 py-2.5 bg-white border border-pink-300 text-rose-800 font-extrabold text-xs rounded-xl shadow cursor-pointer">+ Lectura diaria</button>
+        </div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-4 space-y-2" id="lectura-rapida-panel">
+        <h3 class="font-black text-sm text-rose-900">📖 Lecturas diarias (Biblia)</h3>
+        <p class="text-[10px] text-rose-500 font-bold">Registro simple: libro, capítulo y minutos. Usa Desde/Hasta arriba para el resumen.</p>
+        <div id="lecturas-list" class="space-y-2 text-xs"></div>
       </div>
 
       <!-- PANEL DE RESUMEN / ESTADÍSTICAS DEL PERIODO -->
@@ -197,6 +206,41 @@
   </main>
 
   <!-- MODAL DEVOCIONAL -->
+  
+  <div id="modal-lectura" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
+    <div class="glass-card-solid rounded-3xl max-w-md w-full p-6 space-y-4 border border-pink-200">
+      <div class="flex justify-between items-center">
+        <h3 class="font-black text-rose-900 text-sm">Lectura diaria</h3>
+        <button onclick="closeModal('modal-lectura')" class="font-bold text-rose-400">✕</button>
+      </div>
+      <div class="space-y-2 text-xs">
+        <input type="hidden" id="lec-id">
+        <div><label class="font-bold text-rose-800">Fecha</label>
+          <input type="date" id="lec-date" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold"></div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="font-bold text-rose-800">Libro</label>
+            <input id="lec-libro" placeholder="Juan, Salmos..." class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold"></div>
+          <div><label class="font-bold text-rose-800">Capítulo</label>
+            <input id="lec-cap" placeholder="3" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="font-bold text-rose-800">Minutos</label>
+            <input type="number" id="lec-min" placeholder="15" class="w-full mt-1 bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold"></div>
+          <div><label class="font-bold text-rose-800">Temporizador</label>
+            <div class="flex gap-1 mt-1">
+              <button type="button" onclick="startLecTimer(10)" class="flex-1 py-2 bg-pink-100 rounded-xl font-black text-pink-800">10m</button>
+              <button type="button" onclick="startLecTimer(20)" class="flex-1 py-2 bg-pink-100 rounded-xl font-black text-pink-800">20m</button>
+              <button type="button" onclick="startLecTimer(30)" class="flex-1 py-2 bg-pink-100 rounded-xl font-black text-pink-800">30m</button>
+            </div>
+          </div>
+        </div>
+        <div id="lec-timer-display" class="text-center font-black text-2xl text-pink-600 hidden">00:00</div>
+        <textarea id="lec-nota" rows="2" placeholder="Nota breve..." class="w-full bg-white border border-pink-200 rounded-xl px-3 py-2 font-bold"></textarea>
+      </div>
+      <button onclick="saveLectura()" class="w-full py-2.5 bg-pink-500 text-white rounded-xl font-black text-xs">Guardar lectura</button>
+    </div>
+  </div>
+
   <div id="modal-devocional" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
     <div class="glass-card-solid rounded-3xl max-w-2xl w-full p-6 space-y-5 border border-pink-200 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between pb-2 border-b border-pink-200">
@@ -445,6 +489,77 @@
 
     function openModal(id) { const m = document.getElementById(id); if (m) { m.classList.remove('hidden'); m.style.display = 'flex'; } }
     function closeModal(id) { const m = document.getElementById(id); if (m) { m.classList.add('hidden'); m.style.display = 'none'; } }
+
+    
+    function openModalLectura() {
+      if (!appData.lecturas) appData.lecturas = [];
+      document.getElementById('lec-id').value = '';
+      document.getElementById('lec-date').value = new Date().toISOString().slice(0,10);
+      document.getElementById('lec-libro').value = '';
+      document.getElementById('lec-cap').value = '';
+      document.getElementById('lec-min').value = '';
+      document.getElementById('lec-nota').value = '';
+      document.getElementById('lec-timer-display').classList.add('hidden');
+      openModal('modal-lectura');
+    }
+    let lecTimerInterval = null;
+    function startLecTimer(mins) {
+      clearInterval(lecTimerInterval);
+      let left = mins * 60;
+      const el = document.getElementById('lec-timer-display');
+      el.classList.remove('hidden');
+      document.getElementById('lec-min').value = mins;
+      const tick = () => {
+        const m = String(Math.floor(left/60)).padStart(2,'0');
+        const s = String(left%60).padStart(2,'0');
+        el.textContent = m+':'+s;
+        if (left <= 0) { clearInterval(lecTimerInterval); el.textContent = '¡Listo! 💗'; return; }
+        left--;
+      };
+      tick();
+      lecTimerInterval = setInterval(tick, 1000);
+    }
+    function saveLectura() {
+      if (!appData.lecturas) appData.lecturas = [];
+      const libro = document.getElementById('lec-libro').value.trim();
+      if (!libro) { showToast('Escribe el libro'); return; }
+      const item = {
+        id: Date.now(),
+        date: document.getElementById('lec-date').value,
+        libro,
+        capitulo: document.getElementById('lec-cap').value.trim(),
+        minutos: parseInt(document.getElementById('lec-min').value||0,10)||0,
+        nota: document.getElementById('lec-nota').value.trim()
+      };
+      appData.lecturas.push(item);
+      saveDatabase();
+      closeModal('modal-lectura');
+      renderLecturas();
+      showToast('Lectura guardada');
+    }
+    function renderLecturas() {
+      const box = document.getElementById('lecturas-list');
+      if (!box) return;
+      if (!appData.lecturas) appData.lecturas = [];
+      const from = (document.getElementById('dev-from')||{}).value;
+      const to = (document.getElementById('dev-to')||{}).value;
+      let list = appData.lecturas.slice().sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+      if (from) list = list.filter(x => x.date >= from);
+      if (to) list = list.filter(x => x.date <= to);
+      const totalMin = list.reduce((a,x)=>a+(x.minutos||0),0);
+      const resumen = list.length ? `<p class="font-bold text-rose-700 mb-2">📚 ${list.length} lecturas · ⏱️ ${totalMin} min en el rango</p>` : '';
+      box.innerHTML = resumen + (list.map(x =>
+        `<div class="bg-white/80 rounded-xl p-3 border border-pink-100 flex justify-between gap-2">
+          <div><span class="font-black text-rose-900">${x.date}</span> · ${x.libro} ${x.capitulo?('cap. '+x.capitulo):''} · ${x.minutos||0} min
+          ${x.nota?'<div class="text-rose-500 italic mt-0.5">'+x.nota+'</div>':''}</div>
+          <button onclick="deleteLectura(${x.id})" class="text-red-400 font-bold">✕</button>
+        </div>`
+      ).join('') || '<p class="text-rose-400 text-center py-2">Sin lecturas en este rango</p>');
+    }
+    function deleteLectura(id) {
+      appData.lecturas = (appData.lecturas||[]).filter(x => x.id !== id);
+      saveDatabase(); renderLecturas();
+    }
 
     function switchTab(tabId) {
       ['diario', 'tracker', 'calendario', 'planes'].forEach(id => {
@@ -792,6 +907,10 @@
     }
 
     function renderDevocionalHistory() {
+      try { renderLecturas(); } catch(e) {}
+      return _renderDevocionalHistoryBody();
+    }
+    function _renderDevocionalHistoryBody() {
       const container = document.getElementById('devocional-history-list');
       if(!container) return;
       container.innerHTML = '';
