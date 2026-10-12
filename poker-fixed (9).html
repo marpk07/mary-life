@@ -235,6 +235,11 @@
 
     <!-- PANE 6: REPORTES & GRÁFICAS -->
     <section id="pane-reportes" class="tab-pane space-y-6 hidden">
+      <div class="glass-card rounded-2xl p-4 space-y-3">
+        <h3 class="font-black text-sm text-stone-800">🗓️ Calendario visual de la semana</h3>
+        <p class="text-[10px] text-stone-500 font-bold">⏰ horas · 🎮 games · 📈 EV≥70</p>
+        <div id="poker-cal-icons" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+      </div>
       <div class="glass-card-solid rounded-3xl p-6 space-y-6">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#e8d2dc]">
           <div>
@@ -484,19 +489,17 @@
           </div>
           <div>
             <label class="font-bold text-stone-500 block mb-1">Ánimo durante la sesión</label>
-            <select id="grind-animo" class="w-full bg-[#fcf5f8] border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
-              <option value="Motivada 🔥">Motivada 🔥</option>
-              <option value="Concentrada 🎯">Concentrada 🎯</option>
-              <option value="Tranquila 🧘‍♀️">Tranquila 🧘‍♀️</option>
-              <option value="Neutra 😐">Neutra 😐</option>
-              <option value="Pensativa 🤔">Pensativa 🤔</option>
-              <option value="Desconcentrada 😵">Desconcentrada 😵</option>
-              <option value="Ansiosa 😰">Ansiosa 😰</option>
-              <option value="Desmotivada 😔">Desmotivada 😔</option>
-              <option value="Apática 😶">Apática 😶</option>
-              <option value="Irritable 😤">Irritable 😤</option>
-              <option value="Cansada 🥱">Cansada 🥱</option>
-            </select>
+            <div id="grind-animos-wrap" class="flex flex-wrap gap-1.5">
+              <label class="px-2 py-1 bg-white border border-pink-200 rounded-lg text-[10px] font-bold cursor-pointer"><input type="checkbox" class="grind-animo-cb" value="Motivada"> Motivada</label>
+              <label class="px-2 py-1 bg-white border border-pink-200 rounded-lg text-[10px] font-bold cursor-pointer"><input type="checkbox" class="grind-animo-cb" value="Desmotivada"> Desmotivada</label>
+              <label class="px-2 py-1 bg-white border border-pink-200 rounded-lg text-[10px] font-bold cursor-pointer"><input type="checkbox" class="grind-animo-cb" value="Ansiosa"> Ansiosa</label>
+              <label class="px-2 py-1 bg-white border border-pink-200 rounded-lg text-[10px] font-bold cursor-pointer"><input type="checkbox" class="grind-animo-cb" value="Pensativa"> Pensativa</label>
+              <label class="px-2 py-1 bg-white border border-pink-200 rounded-lg text-[10px] font-bold cursor-pointer"><input type="checkbox" class="grind-animo-cb" value="Apática"> Apática</label>
+              <label class="px-2 py-1 bg-white border border-pink-200 rounded-lg text-[10px] font-bold cursor-pointer"><input type="checkbox" class="grind-animo-cb" value="Concentrada"> Concentrada</label>
+              <label class="px-2 py-1 bg-white border border-pink-200 rounded-lg text-[10px] font-bold cursor-pointer"><input type="checkbox" class="grind-animo-cb" value="Tilt"> Tilt</label>
+              <label class="px-2 py-1 bg-white border border-pink-200 rounded-lg text-[10px] font-bold cursor-pointer"><input type="checkbox" class="grind-animo-cb" value="Tranquila"> Tranquila</label>
+            </div>
+            <input type="hidden" id="grind-animo">
           </div>
         </div>
 
@@ -637,6 +640,26 @@
         <input type="text" id="leak-initial" placeholder="Dato inicial PokerTracker (ej. 54%)" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
         <input type="text" id="leak-final" placeholder="Dato final PokerTracker..." class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
         <input type="date" id="leak-date" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[10px] font-bold text-stone-500">Mi posición (Hero)</label>
+            <select id="leak-pos-hero" class="w-full mt-1 bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+              <option value="">—</option>
+              <option>UTG</option><option>UTG+1</option><option>MP</option><option>MP+1</option>
+              <option>HJ</option><option>CO</option><option>BTN</option><option>SB</option><option>BB</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-stone-500">Vs (villain)</label>
+            <select id="leak-pos-vs" class="w-full mt-1 bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+              <option value="">—</option>
+              <option>UTG</option><option>UTG+1</option><option>MP</option><option>MP+1</option>
+              <option>HJ</option><option>CO</option><option>BTN</option><option>SB</option><option>BB</option>
+              <option>Campo</option>
+            </select>
+          </div>
+        </div>
+        <p class="text-[10px] text-stone-400 font-bold">Ej: SB vs BB · BB vs BTN · BTN vs CO</p>
         <textarea id="leak-action" rows="2" placeholder="Plan de acción en mesas..." class="w-full bg-white border border-[#e8d2dc] rounded-xl p-3 text-stone-800"></textarea>
       </div>
       <div class="pt-2 flex justify-end space-x-2">
@@ -1021,14 +1044,14 @@
         wuDone: !!(document.getElementById('modal-wu-done')||{}).checked,
         hours: parseFloat(document.getElementById('grind-hours').value || 0),
         games: parseInt(document.getElementById('grind-games').value || 0),
-        cev: parseFloat(document.getElementById('grind-cev').value || 0),
+        cev: (function(){ const v=document.getElementById('grind-cev').value; return v===''||v==null?null:parseFloat(v); })(),
         focus: (function(){ const v=document.getElementById('grind-focus').value; return v===''||v==null?null:parseInt(v,10); })(),
         mindset: (function(){ const v=document.getElementById('grind-mindset').value; return v===''||v==null?null:parseInt(v,10); })(),
         sessionLevel: (function(){ const el=document.getElementById('grind-session-level'); const v=el?el.value:''; return v===''||v==null?null:parseInt(v,10); })(),
         studyHours: parseFloat(document.getElementById('grind-study').value || 0),
         hands: parseInt(document.getElementById('grind-hands').value || 0),
-        animo: (document.getElementById('grind-animo')||{value:'Neutra'}).value,
-        money: parseFloat((document.getElementById('grind-money')||{value:0}).value || 0),
+        animo: (Array.from(document.querySelectorAll('.grind-animo-cb:checked')).map(c=>c.value).join(', ') || (document.getElementById('grind-animo')||{value:''}).value || '—'),
+        money: (function(){ const el=document.getElementById('grind-money'); const v=el?el.value:''; return v===''||v==null?null:parseFloat(v); })(),
         notes: (document.getElementById('grind-notes')||{value:''}).value,
         rendimiento: (document.getElementById('grind-rendimiento')||{value:''}).value,
         fuga: (document.getElementById('grind-fuga')||{value:''}).value,
@@ -1051,12 +1074,20 @@
           if (old && old.imageUrl) base.imageUrl = old.imageUrl;
         }
         if (editId) {
-          appData.grindSessions = appData.grindSessions.map(s => s.id === base.id ? { ...s, ...base } : s);
+          appData.grindSessions = appData.grindSessions.map(s => {
+            if (s.id !== base.id) return s;
+            return Object.assign({}, base, { id: s.id, imageUrl: base.imageUrl || s.imageUrl || '' });
+          });
         } else {
           // replace same date if exists
           const idx = appData.grindSessions.findIndex(s => s.date === date);
-          if (idx >= 0) appData.grindSessions[idx] = { ...appData.grindSessions[idx], ...base, id: appData.grindSessions[idx].id };
-          else appData.grindSessions.push(base);
+          if (idx >= 0) {
+            const prev = appData.grindSessions[idx];
+            appData.grindSessions[idx] = Object.assign({}, base, {
+              id: prev.id,
+              imageUrl: base.imageUrl || prev.imageUrl || ''
+            });
+          } else appData.grindSessions.push(base);
         }
         saveDatabase(); closeModal('modal-grind'); renderAllViews(); showToast('Sesión guardada');
       };
@@ -1192,6 +1223,8 @@
         final: (document.getElementById('leak-final') && document.getElementById('leak-final').value) || '',
         analysisDate: leakDate,
         action: document.getElementById('leak-action').value,
+        posHero: (document.getElementById('leak-pos-hero')||{}).value || '',
+        posVs: (document.getElementById('leak-pos-vs')||{}).value || '',
         progress: [{ date: leakDate, stat: document.getElementById('leak-initial').value }]
       };
       if (editId) {
@@ -1232,6 +1265,8 @@
       const lf = document.getElementById('leak-final'); if (lf) lf.value = leak.final || '';
       const ld = document.getElementById('leak-date'); if (ld) ld.value = leak.analysisDate || currentDate;
       document.getElementById('leak-action').value = leak.action || '';
+      const ph = document.getElementById('leak-pos-hero'); if (ph) ph.value = leak.posHero || '';
+      const pv = document.getElementById('leak-pos-vs'); if (pv) pv.value = leak.posVs || '';
       // store edit id on title dataset
       document.getElementById('leak-title').dataset.editId = leak.id;
       openModal('modal-leak');
@@ -1626,11 +1661,13 @@
       empty?.classList.add('hidden');
 
       appData.leaks.forEach(leak => {
+        const posLabel = (leak.posHero || leak.posVs) ? (' · ' + (leak.posHero||'?') + (leak.posVs ? ' vs ' + leak.posVs : '')) : '';
+
         const progHtml = (leak.progress || []).map(p => `<span class="bg-white px-2 py-1 rounded-lg border border-pink-200 text-[11px] font-bold text-stone-700">📅 ${p.date}: ${p.stat}</span>`).join('');
         container.innerHTML += `
           <div class="p-5 glass-card-solid rounded-3xl space-y-3">
             <div class="flex justify-between items-center">
-              <h4 class="font-black text-stone-800 text-sm">🎯 ${leak.title}</h4>
+              <h4 class="font-black text-stone-800 text-sm">🎯 ${leak.title}${posLabel}</h4>
               <div class="flex gap-2">
                 <button onclick="editLeak(${leak.id})" class="px-2.5 py-1 bg-white border border-pink-200 rounded-xl font-bold text-xs text-pink-600 cursor-pointer">✏️ Editar</button>
                 <button onclick="deleteLeak(${leak.id})" class="text-stone-400 hover:text-red-500 font-bold cursor-pointer">✕</button>
@@ -1755,7 +1792,45 @@
       }
     }
 
+    function renderPokerCalIcons() {
+      const box = document.getElementById('poker-cal-icons');
+      if (!box) return;
+      const from = document.getElementById('report-from') && document.getElementById('report-from').value;
+      const to = document.getElementById('report-to') && document.getElementById('report-to').value;
+      // last 7 days if no range
+      const days = [];
+      if (from && to) {
+        let d = new Date(from+'T12:00:00');
+        const end = new Date(to+'T12:00:00');
+        while (d <= end && days.length < 31) {
+          days.push(d.toISOString().slice(0,10));
+          d.setDate(d.getDate()+1);
+        }
+      } else {
+        const now = new Date();
+        for (let i=6;i>=0;i--) {
+          const d = new Date(now); d.setDate(d.getDate()-i);
+          days.push(d.toISOString().slice(0,10));
+        }
+      }
+      const names = ['D','L','M','X','J','V','S'];
+      box.innerHTML = days.map(ds => {
+        const ss = (appData.grindSessions||[]).filter(s => s.date === ds);
+        const hours = ss.reduce((a,s)=>a+(+s.hours||0),0);
+        const games = ss.reduce((a,s)=>a+(+s.games||0),0);
+        const cev = ss.length ? ss.reduce((a,s)=>a+(+s.cev||0),0)/ss.length : 0;
+        const icons = [];
+        if (hours > 0) icons.push('⏰');
+        if (games >= 110) icons.push('🎮');
+        else if (games > 0) icons.push('🎲');
+        if (cev >= 70) icons.push('📈');
+        const day = new Date(ds+'T12:00:00').getDay();
+        return '<div class="bg-white/80 rounded-xl p-2 border border-pink-100"><div class="font-black text-[9px] text-stone-400">'+names[day]+'</div><div class="text-[9px] font-bold">'+ds.slice(5)+'</div><div class="text-base mt-1">'+(icons.join('')||'·')+'</div></div>';
+      }).join('');
+    }
     function applyReportFilters() {
+      try { renderPokerCalIcons(); } catch(e) {}
+
       const from = document.getElementById('report-from').value;
       const to = document.getElementById('report-to').value;
       const filteredSessions = appData.grindSessions.filter(s => s.date >= from && s.date <= to);
@@ -1840,7 +1915,7 @@
           <div class="space-y-0.5 flex-1 min-w-[180px]">
             <span class="font-black text-stone-800">📅 ${s.date}</span>
             <div class="text-stone-600">🎮 ${s.games||0} games · ⏱️ ${s.hours||0}h · cEV ${s.cev||0} · <strong class="${s._money>=0?'text-emerald-600':'text-red-600'}">$ ${s._money}</strong></div>
-            <div class="text-stone-500">Focus ${s.focus||'-'} · Mindset ${s.mindset||'-'} · Nivel ${s.sessionLevel||'-'} · ${s.animo||''} ${flags}</div>
+            <div class="text-stone-500">Focus ${s.focus!=null?s.focus:'—'} · Mindset ${s.mindset!=null?s.mindset:'—'} · Nivel ${s.sessionLevel!=null?s.sessionLevel:'—'} · ${s.animo||''} ${flags}</div>
           </div>
           <div class="flex gap-1.5">
             <button onclick="editGrindSessionByDate('${s.date}')" class="px-3 py-1.5 bg-pink-500 text-white font-bold rounded-xl cursor-pointer">✏️ Editar</button>
@@ -1903,7 +1978,10 @@
       sessions.forEach(function(s) {
         report += '---' + nl + '📅 ' + s.date + nl;
         report += 'Grind ' + (s.hours||0) + 'h · Games ' + (s.games||0) + ' · cEV ' + (s.cev||0) + ' · $ ' + (s.money||0) + nl;
-        report += 'Focus ' + (s.focus||'-') + ' | Mindset ' + (s.mindset||'-') + ' | Nivel ' + (s.sessionLevel||'-') + ' | Ánimo: ' + (s.animo||'-') + nl;
+        report += 'Focus ' + (s.focus!=null?s.focus:'—') + ' | Mindset ' + (s.mindset!=null?s.mindset:'—') + ' | Nivel ' + (s.sessionLevel!=null?s.sessionLevel:'—') + ' | Ánimo: ' + (s.animo||'-') + nl;
+        if (s.notes) report += 'Otras notas: ' + s.notes + nl;
+        if (s.rendimiento) report += 'Rendimiento: ' + s.rendimiento + nl;
+        if (s.fuga) report += 'Fuga: ' + s.fuga + nl;
         report += 'Estudio ' + (s.studyHours||0) + 'h · Manos ' + (s.hands||0) + nl;
         if (s.cdTiltCheck) report += '😤 Tilt: sí → ' + (s.cdTiltAction||s.cdTilt||'') + nl;
         if (s.cdSueno) report += '😴 Sueño: sí' + nl;
