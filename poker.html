@@ -418,14 +418,29 @@
         <input type="hidden" id="grind-edit-id">
         <div>
           <label class="font-bold text-stone-500 block mb-1">Fecha</label>
-          <input type="date" id="grind-date" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
+          <input type="date" id="grind-date" onchange="onGrindDateChange()" class="w-full bg-white border border-[#e8d2dc] rounded-xl px-3 py-2 font-bold text-stone-800">
         </div>
 
         <input type="hidden" id="grind-mode" value="day">
         <input type="hidden" id="grind-part-id" value="">
         <div id="grind-part-banner" class="hidden bg-violet-50 border border-violet-200 rounded-2xl p-3 space-y-2">
           <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="font-black text-violet-800 text-xs" id="grind-session-label">Sesión #1 del día</span>
+            <div class="flex flex-col gap-1">
+              <label class="font-black text-violet-800 text-[10px] uppercase">¿Cuál sesión es?</label>
+              <select id="grind-session-num" onchange="onSessionNumChange()" class="bg-white border-2 border-violet-300 rounded-xl px-3 py-2 font-black text-violet-900 text-sm">
+                <option value="1">Sesión #1</option>
+                <option value="2">Sesión #2</option>
+                <option value="3">Sesión #3</option>
+                <option value="4">Sesión #4</option>
+                <option value="5">Sesión #5</option>
+                <option value="6">Sesión #6</option>
+                <option value="7">Sesión #7</option>
+                <option value="8">Sesión #8</option>
+                <option value="9">Sesión #9</option>
+                <option value="10">Sesión #10</option>
+              </select>
+              <span class="text-[10px] text-violet-500 font-bold" id="grind-session-hint">Sugerida: la siguiente libre del día</span>
+            </div>
             <div class="flex gap-1">
               <button type="button" onclick="setTimerPreset(1)" class="px-2 py-1 bg-white border border-violet-200 rounded-lg text-[10px] font-black text-violet-700">1h</button>
               <button type="button" onclick="setTimerPreset(1.5)" class="px-2 py-1 bg-white border border-violet-200 rounded-lg text-[10px] font-black text-violet-700">1.5h</button>
@@ -1058,6 +1073,31 @@
     }
 
 
+
+    function onGrindDateChange() {
+      const mode = (document.getElementById('grind-mode')||{}).value;
+      if (mode !== 'part') return;
+      const day = document.getElementById('grind-date').value;
+      const num = nextSessionNum(day);
+      const sel = document.getElementById('grind-session-num');
+      if (sel) sel.value = String(Math.min(num, 10));
+      document.getElementById('grind-part-id').value = String(num);
+      const hint = document.getElementById('grind-session-hint');
+      if (hint) {
+        const used = sessionsForDate(day).filter(s => s.kind === 'part').map(s => s.sessionNum).filter(Boolean);
+        hint.textContent = used.length
+          ? ('Ya registradas: #' + used.sort((a,b)=>a-b).join(', #') + ' · Sugerida: #' + num)
+          : ('Sugerida: #' + num);
+      }
+    }
+    function onSessionNumChange() {
+      const sel = document.getElementById('grind-session-num');
+      if (!sel) return;
+      document.getElementById('grind-part-id').value = sel.value;
+      const title = document.getElementById('grind-modal-title');
+      if (title) title.textContent = '♠️ Sesión #' + sel.value + ' (timer)';
+    }
+
     function openModalGrindNew(mode) {
       mode = mode || 'day';
       // Formulario vacío, fecha = día seleccionado en el selector global
@@ -1073,10 +1113,17 @@
       if (mode === 'part') {
         const num = nextSessionNum(day);
         if (banner) banner.classList.remove('hidden');
-        if (title) title.textContent = '♠️ Sesión #' + num + ' (con timer)';
-        const lab = document.getElementById('grind-session-label');
-        if (lab) lab.textContent = 'Sesión #' + num + ' del día ' + day;
+        if (title) title.textContent = '♠️ Sesión del día (timer)';
+        const sel = document.getElementById('grind-session-num');
+        if (sel) sel.value = String(Math.min(num, 10));
         document.getElementById('grind-part-id').value = String(num);
+        const hint = document.getElementById('grind-session-hint');
+        if (hint) {
+          const used = sessionsForDate(day).filter(s => s.kind === 'part').map(s => s.sessionNum).filter(Boolean);
+          hint.textContent = used.length
+            ? ('Ya registradas hoy: #' + used.sort((a,b)=>a-b).join(', #') + ' · Sugerida: #' + num)
+            : ('Primera del día · Sugerida: #' + num);
+        }
       } else {
         if (banner) banner.classList.add('hidden');
         if (title) title.textContent = '♠️ Día completo';
@@ -1177,8 +1224,8 @@
         if (banner) banner.classList.remove('hidden');
         if (title) title.textContent = '♠️ Editar Sesión #' + (s.sessionNum || '');
         document.getElementById('grind-part-id').value = String(s.sessionNum || 1);
-        const lab = document.getElementById('grind-session-label');
-        if (lab) lab.textContent = 'Sesión #' + (s.sessionNum || '') + ' · ' + s.date;
+        const sel = document.getElementById('grind-session-num');
+        if (sel) sel.value = String(Math.min(s.sessionNum || 1, 10));
       } else {
         if (banner) banner.classList.add('hidden');
         if (title) title.textContent = '♠️ Editar día completo';
@@ -1236,7 +1283,10 @@
       const grindMode = (document.getElementById('grind-mode')||{}).value || 'day';
       base.kind = grindMode === 'part' ? 'part' : 'day';
       if (base.kind === 'part') {
-        base.sessionNum = parseInt((document.getElementById('grind-part-id')||{}).value || nextSessionNum(date), 10) || 1;
+        base.sessionNum = parseInt(
+          (document.getElementById('grind-session-num')||{}).value
+          || (document.getElementById('grind-part-id')||{}).value
+          || nextSessionNum(date), 10) || 1;
         // Si no hay horas, usar cronómetro
         if (!base.hours) {
           const th = timerElapsedHours();
@@ -2207,3 +2257,4 @@
   </script>
 </body>
 </html>
+
