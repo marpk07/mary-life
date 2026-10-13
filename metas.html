@@ -581,7 +581,7 @@ function renderAll() {
           let row='     ';
           days.forEach((ds,i)=>{
             const v=dayData(ds)[g.id];
-            if (v===true) row += dn[i]+'☑️ ';
+            if (v===true) row += dn[i]+'✅ ';
             else if (v==='tarjeta'||v==='card') row += dn[i]+'🎫 ';
             else if (v===false || ds < fmt(new Date())) row += dn[i]+'❌ ';
             else row += dn[i]+'⬜ ';
