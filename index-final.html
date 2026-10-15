@@ -333,6 +333,7 @@
       <button type="button" class="nav-item" data-view="pendientes" onclick="navigateTo('pendientes')"><span class="emoji">✅</span> Pendientes</button>
       <button type="button" class="nav-item" data-view="gastos" onclick="navigateTo('gastos')"><span class="emoji">💸</span> Gastos</button>
       <button type="button" class="nav-item" data-view="metas" onclick="navigateTo('metas')"><span class="emoji">🎯</span> Metas</button>
+      <button type="button" class="nav-item" data-view="guia" onclick="navigateTo('guia')"><span class="emoji">🪞</span> Guía</button>
       <button type="button" class="nav-item" data-view="cierre" onclick="navigateTo('cierre')"><span class="emoji">📊</span> Cierres</button>
     </div>
 
@@ -410,6 +411,11 @@
             <p>Tareas, urgencias y seguimiento.</p>
             <button class="enter-btn" type="button">Entrar →</button>
           </div>
+          <div class="area-card" onclick="navigateTo('guia')">
+            <div class="icon">🪞</div>
+            <h3>Guía integral</h3>
+            <p>Autoconocimiento, autonomía y bienestar.</p>
+          </div>
           <div class="area-card" onclick="navigateTo('metas')">
             <div class="card-icon" style="background:linear-gradient(135deg,#be185d,#f9a8d4);">🎯</div>
             <h3>Metas</h3>
@@ -439,6 +445,7 @@
       <div id="view-pendientes" class="view"><iframe class="module-frame" src="pendientes.html" title="Pendientes"></iframe></div>
       <div id="view-gastos" class="view"><iframe class="module-frame" src="gastos.html" title="Gastos"></iframe></div>
       <div id="view-metas" class="view"><iframe class="module-frame" src="metas.html" title="Metas"></iframe></div>
+      <div id="view-guia" class="view"><iframe class="module-frame" src="guia.html" title="Guía"></iframe></div>
       <div id="view-cierre" class="view"><iframe class="module-frame" src="cierre.html" title="Cierres"></iframe></div>
     </div>
   </div>
@@ -630,3 +637,5 @@
   </script>
 </body>
 </html>
+
+
