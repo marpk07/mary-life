@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MARY · Guía integral</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+:root {
+  --rose: #e8b4b8;
+  --rose-deep: #c98b92;
+  --lilac: #c5b4e3;
+  --lilac-deep: #9b87c4;
+  --cream: #f5e6c8;
+  --mint: #b8d4d0;
+  --sky: #b8cfe8;
+  --bg: #faf7f5;
+  --card: rgba(255,255,255,0.88);
+  --text: #4a3f45;
+  --muted: #8a7a82;
+}
+* { box-sizing: border-box; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0; min-height: 100vh; color: var(--text);
+  background:
+    radial-gradient(circle at 8% 5%, rgba(232,180,184,0.55) 0%, transparent 42%),
+    radial-gradient(circle at 92% 15%, rgba(197,180,227,0.5) 0%, transparent 45%),
+    radial-gradient(circle at 50% 95%, rgba(184,212,208,0.45) 0%, transparent 48%),
+    radial-gradient(circle at 70% 50%, rgba(245,230,200,0.35) 0%, transparent 40%),
+    linear-gradient(160deg, #f9eef1 0%, #f3eef9 40%, #eef6f4 100%);
+}
+.glass {
+  background: var(--card); backdrop-filter: blur(12px);
+  border: 1px solid rgba(232,180,184,0.35);
+  box-shadow: 0 10px 30px rgba(180,140,160,0.08);
+}
+.nav-btn { transition: .2s; cursor: pointer; border: none; background: transparent; }
+.nav-btn.active {
+  background: linear-gradient(135deg, var(--rose), var(--lilac));
+  color: white !important; font-weight: 800;
+  box-shadow: 0 4px 14px rgba(201,139,146,0.35);
+}
+.bar { height: 8px; background: #f0e8ec; border-radius: 99px; overflow: hidden; }
+.bar > i { display: block; height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--rose-deep), var(--lilac-deep)); }
+.chip { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 800; }
+.chip-rose { background: #fce8ea; color: #9a5a62; }
+.chip-lilac { background: #efe8fa; color: #6b5694; }
+.chip-mint { background: #e4f2ef; color: #3d6b66; }
+.chip-sky { background: #e5f0fa; color: #456a8a; }
+.chip-cream { background: #faf0dc; color: #8a7040; }
+textarea, input, select {
+  font-family: inherit; width: 100%;
+  border: 1px solid rgba(201,139,146,0.35);
+  border-radius: 12px; padding: 10px 12px;
+  background: #fff; color: var(--text); font-size: 13px; font-weight: 600;
+}
+textarea { min-height: 72px; resize: vertical; }
+label { font-size: 11px; font-weight: 800; color: var(--muted); display: block; margin-bottom: 4px; }
+.btn {
+  border: none; cursor: pointer; border-radius: 12px; padding: 10px 14px;
+  font-weight: 800; font-size: 12px;
+}
+.btn-rose { background: linear-gradient(135deg, var(--rose-deep), #d4a0a6); color: white; }
+.btn-lilac { background: linear-gradient(135deg, var(--lilac-deep), #b5a3d9); color: white; }
+.btn-ghost { background: white; border: 1px solid rgba(201,139,146,0.4); color: var(--text); }
+.btn-mint { background: var(--mint); color: #2d5550; }
+.hidden { display: none !important; }
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(74,63,69,0.45); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; padding: 1rem;
+}
+.cal-day {
+  min-height: 48px; border-radius: 12px; border: 1px solid rgba(232,180,184,0.3);
+  background: white; font-size: 10px; font-weight: 800; padding: 4px;
+  cursor: pointer; text-align: left;
+}
+.cal-day.has { background: linear-gradient(160deg, #fce8ea, #efe8fa); border-color: var(--rose); }
+#toast {
+  position: fixed; bottom: 20px; right: 16px; z-index: 99;
+  background: #4a3f45; color: white; padding: 10px 16px; border-radius: 14px;
+  font-size: 12px; font-weight: 700; opacity: 0; transform: translateY(12px); transition: .25s;
+  pointer-events: none;
+}
+#toast.show { opacity: 1; transform: translateY(0); }
+.wheel-wrap { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: center; }
+.wheel-svg { width: min(280px, 90vw); height: min(280px, 90vw); }
+.ancla-preview {
+  white-space: pre-wrap; font-size: 12px; font-weight: 600;
+  background: #fff; border-radius: 12px; padding: 12px;
+  border: 1px solid rgba(232,180,184,0.35); min-height: 48px;
+  color: var(--text);
+}
+.ancla-card.editing textarea { display: block !important; }
+.ancla-card:not(.editing) .ancla-edit-area { display: none; }
+.ancla-card.editing .ancla-preview { display: none; }
+.ancla-card.editing .btn-edit-toggle { display: none; }
+.ancla-card:not(.editing) .btn-save-ancla { display: none; }
+.ancla-card:not(.editing) .btn-cancel-ancla { display: none; }
+
+</style>
+</head>
+<body class="antialiased">
+
+<header class="sticky top-0 z-40 glass border-b border-pink-100">
+  <div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-lg"
+        style="background:linear-gradient(135deg,var(--rose),var(--lilac))">🪞</div>
+      <div>
+        <h1 class="text-sm font-black tracking-wide" style="color:var(--lilac-deep)">GUÍA INTEGRAL</h1>
+        <p class="text-[10px] font-bold" style="color:var(--muted)">Autoconocimiento · Autonomía · Bienestar</p>
+      </div>
+    </div>
+    <span id="cloud-badge" class="text-[9px] font-extrabold px-2 py-1 rounded-full chip-mint">☁️ Nube</span>
+  </div>
+  <nav class="max-w-5xl mx-auto px-2 pb-2 flex gap-1 overflow-x-auto text-[11px] font-bold">
+    <button class="nav-btn active px-3 py-1.5 rounded-xl whitespace-nowrap" data-tab="resumen" onclick="switchTab('resumen')">Resumen</button>
+    <button class="nav-btn px-3 py-1.5 rounded-xl whitespace-nowrap" data-tab="hoy" onclick="switchTab('hoy')">Hoy</button>
+    <button class="nav-btn px-3 py-1.5 rounded-xl whitespace-nowrap" data-tab="calendario" onclick="switchTab('calendario')">Calendario</button>
+    <button class="nav-btn px-3 py-1.5 rounded-xl whitespace-nowrap" data-tab="brujula" onclick="switchTab('brujula')">Brújula</button>
+    <button class="nav-btn px-3 py-1.5 rounded-xl whitespace-nowrap" data-tab="biblioteca" onclick="switchTab('biblioteca')">Biblioteca</button>
+    <button class="nav-btn px-3 py-1.5 rounded-xl whitespace-nowrap" data-tab="libre" onclick="switchTab('libre')">Libre</button>
+    <button class="nav-btn px-3 py-1.5 rounded-xl whitespace-nowrap" data-tab="reportes" onclick="switchTab('reportes')">Reportes</button>
+  </nav>
+</header>
+
+<main class="max-w-5xl mx-auto px-4 py-4 space-y-4 pb-24">
+
+<!-- RESUMEN -->
+<section id="tab-resumen" class="tab space-y-4">
+  <div class="glass rounded-3xl p-5 space-y-3">
+    <h2 class="font-black text-base">Tu proyecto</h2>
+    <p class="text-xs font-semibold" style="color:var(--muted)">Objetivo: dejar de decidir desde el miedo a decepcionar, la culpa o la aprobación externa; pensar con criterio propio, regular emociones y construir hábitos y relaciones coherentes con lo que eliges.</p>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="kpi-row"></div>
+    <div class="bar mt-2"><i id="prog-bar" style="width:0%"></i></div>
+    <p class="text-[10px] font-bold" style="color:var(--muted)" id="prog-label">0% del programa</p>
+  </div>
+  <div class="glass rounded-3xl p-4 space-y-2">
+    <h3 class="font-black text-sm">Continuar</h3>
+    <div id="continue-box" class="text-xs font-semibold"></div>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn btn-rose" onclick="switchTab('hoy')">Trabajar hoy</button>
+      <button class="btn btn-ghost" onclick="switchTab('biblioteca')">Ver biblioteca</button>
+    </div>
+  </div>
+  <div class="glass rounded-3xl p-4">
+    <h3 class="font-black text-sm mb-2">Últimos trabajos</h3>
+    <div id="recent-list" class="space-y-2 text-xs"></div>
+  </div>
+</section>
+
+<!-- HOY -->
+<section id="tab-hoy" class="tab space-y-4 hidden">
+  <div class="glass rounded-3xl p-4 space-y-3">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div><label>Fecha</label><input type="date" id="hoy-date"></div>
+      <div><label>Fase</label><select id="hoy-fase" onchange="fillSesiones()"></select></div>
+      <div><label>Sesión</label><select id="hoy-sesion" onchange="loadSessionForm()"></select></div>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn btn-lilac text-[10px]" type="button" onclick="startCheckDiario()">Check diario corto</button>
+      <button class="btn btn-ghost text-[10px]" type="button" onclick="startRevisionSemanal()">Revisión semanal</button>
+    </div>
+  </div>
+  <div id="session-form" class="glass rounded-3xl p-4 space-y-3 hidden"></div>
+  <div id="hoy-historial" class="space-y-2"></div>
+</section>
+
+<!-- CALENDARIO -->
+<section id="tab-calendario" class="tab space-y-4 hidden">
+  <div class="glass rounded-3xl p-4">
+    <div class="flex items-center justify-between mb-3">
+      <button class="btn btn-ghost" onclick="shiftCal(-1)">‹</button>
+      <h3 class="font-black text-sm" id="cal-label"></h3>
+      <button class="btn btn-ghost" onclick="shiftCal(1)">›</button>
+    </div>
+    <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-black mb-1" style="color:var(--muted)">
+      <div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div>
+    </div>
+    <div id="cal-grid" class="grid grid-cols-7 gap-1"></div>
+  </div>
+  <div id="cal-detail" class="glass rounded-3xl p-4 text-xs space-y-2"></div>
+</section>
+
+<!-- BRÚJULA -->
+<section id="tab-brujula" class="tab space-y-4 hidden">
+  <p class="text-xs font-semibold" style="color:var(--muted)">Anclas permanentes: se guardan aquí y puedes verlas, editarlas o copiarlas cuando quieras. No se pierden al cerrar la sesión.</p>
+
+  <div class="glass rounded-3xl p-4 space-y-3">
+    <h3 class="font-black text-sm">🎡 Rueda de vida</h3>
+    <p class="text-[11px] font-semibold" style="color:var(--muted)">Puntuaciones 0–10 (guía Fase 1). El diagrama se colorea según tu nota.</p>
+    <div class="wheel-wrap">
+      <div id="wheel-svg-box"></div>
+      <div id="wheel-sliders" class="flex-1 space-y-1.5 min-w-[200px]"></div>
+    </div>
+    <div><label>Notas sobre las 3 más bajas / prioridades</label>
+      <textarea id="rueda-notas" rows="3" placeholder="Hechos observables y las 2 áreas a priorizar…"></textarea>
+    </div>
+    <button class="btn btn-rose" type="button" onclick="saveRueda()">Guardar rueda</button>
+    <button class="btn btn-ghost" type="button" onclick="copyRueda()">Copiar rueda</button>
+  </div>
+
+  <div class="glass rounded-3xl p-4 space-y-2">
+    <h3 class="font-black text-sm">＋ Añadir ancla libre</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div><label>Nombre del ancla</label><input id="new-ancla-title" placeholder="Ej. Vestimenta, metas 2027…"></div>
+      <div class="flex items-end"><button class="btn btn-lilac w-full" type="button" onclick="addCustomAncla()">Crear ancla</button></div>
+    </div>
+  </div>
+
+  <div id="anclas-list" class="space-y-3"></div>
+</section>
+
+<!-- BIBLIOTECA -->
+<section id="tab-biblioteca" class="tab space-y-4 hidden">
+  <div id="biblio-list" class="space-y-3"></div>
+</section>
+
+<!-- LIBRE -->
+<section id="tab-libre" class="tab space-y-4 hidden">
+  <div class="glass rounded-3xl p-4 space-y-3">
+    <h3 class="font-black text-sm">Nota libre / investigar después</h3>
+    <input type="hidden" id="nota-id">
+    <div class="grid grid-cols-2 gap-2">
+      <div><label>Fecha</label><input type="date" id="nota-date"></div>
+      <div><label>Tipo</label>
+        <select id="nota-tipo">
+          <option>Pensamiento</option>
+          <option>Duda</option>
+          <option>Investigar después</option>
+          <option>Decisión</option>
+          <option>Dolor</option>
+          <option>Idea</option>
+        </select>
+      </div>
+    </div>
+    <div><label>Título</label><input id="nota-titulo" placeholder="Tema breve"></div>
+    <div><label>Texto</label><textarea id="nota-texto" rows="4"></textarea></div>
+    <button class="btn btn-rose w-full" onclick="saveNota()">Guardar nota</button>
+  </div>
+  <div class="flex flex-wrap gap-2 text-xs">
+    <input type="date" id="nota-from" onchange="renderNotas()">
+    <input type="date" id="nota-to" onchange="renderNotas()">
+  </div>
+  <div id="notas-list" class="space-y-2"></div>
+</section>
+
+<!-- REPORTES -->
+<section id="tab-reportes" class="tab space-y-4 hidden">
+  <div class="glass rounded-3xl p-4 space-y-3">
+    <h3 class="font-black text-sm">Exportar trabajo</h3>
+    <div class="grid grid-cols-2 gap-2">
+      <div><label>Desde</label><input type="date" id="rep-from"></div>
+      <div><label>Hasta</label><input type="date" id="rep-to"></div>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn btn-rose" onclick="copyRangeReport()">Copiar texto (Notion / IA)</button>
+      <button class="btn btn-lilac" onclick="pdfRangeReport()">PDF del rango</button>
+      <button class="btn btn-ghost" onclick="copySemanal()">Copiar revisión semanal</button>
+    </div>
+  </div>
+  <div id="rep-preview" class="glass rounded-3xl p-4 text-xs whitespace-pre-wrap font-semibold hidden"></div>
+</section>
+
+</main>
+
+<div id="toast"></div>
+<div id="pdf-area" class="hidden"></div>
+
+<script>
+const PHASES = [{"id": 1, "title": "Punto de partida: mapa de vida", "part": "PARTE II", "objetivo": "Describir la situación actual sin intentar arreglarla de inmediato.", "sessions": [{"id": 1, "title": "Mi fotografía actual", "mins": "30–45", "intro": "Reserva 30–45 minutos. Escribe respuestas honestas, no respuestas que suenen bien.", "questions": ["¿Qué áreas de mi vida me producen satisfacción hoy? ¿Qué hechos concretos lo demuestran?", "¿Qué áreas me producen malestar, miedo, vergüenza o sensación de estar estancada?", "¿Qué hago porque de verdad lo considero importante y qué hago principalmente para evitar críticas?", "¿Qué decisiones estoy posponiendo por miedo a equivocarme o decepcionar a alguien?", "¿Qué quiero que sea distinto dentro de 6–12 meses? Describe conductas observables, no solo sentimientos.", "¿Qué recursos tengo ya: capacidades, amistades, conocimientos, dinero, tiempo, fe, acceso a atención profesional?", "¿Qué obstáculos son reales (dinero, horarios, salud, entorno) y cuáles son predicciones que todavía no he comprobado?"], "ejercicio": {"title": "Rueda de vida", "para": "Convertir una sensación difusa de «tengo que cambiar todo» en prioridades manejables.", "pasos": ["Califica de 0 a 10 tu satisfacción actual en: fe/espiritualidad, autonomía, emociones, autoestima, relaciones, vida social, alimentación, movimiento, sueño, cuidado personal, trabajo, finanzas y hogar.", "Para las tres puntuaciones más bajas, escribe un hecho observable que explique la nota.", "Elige solo dos áreas para priorizar durante las primeras cuatro semanas. Las demás quedan en mantenimiento."]}, "anclas": ["rueda_vida", "prioridades"]}, {"id": 2, "title": "Historia sin condena", "intro": "Principio de trabajo: responsabilidad significa reconocer una conducta, comprender su efecto, reparar si corresponde y elegir distinto. La vergüenza global —«soy un desastre»— no es lo mismo que responsabilidad.", "questions": ["¿Qué reglas aprendí sobre ser una mujer «buena», «madura» o «correcta»?", "¿Quién me enseñó cada regla? ¿La acepté, la cuestioné o la obedecí por temor?", "¿Qué decisiones pasadas lamento? ¿Qué aprendí y qué reparación concreta, si alguna, sigue pendiente?", "¿Qué estoy usando como evidencia de que soy una mala persona? ¿La evidencia realmente prueba eso o describe una conducta pasada?", "¿Qué parte de mi historia necesito comprender sin seguir castigándome por ella?"]}]}, {"id": 2, "title": "Identidad, valores y expectativas del grupo", "part": "PARTE III", "objetivo": "Construir una brújula personal que no dependa únicamente de la aprobación de otras personas.", "sessions": [{"id": 3, "title": "Valores elegidos, no heredados automáticamente", "intro": "Un valor es una dirección de vida (por ejemplo, honestidad); una meta es un resultado concreto (por ejemplo, terminar un curso). Un valor no exige perfección.", "questions": ["¿Qué cinco cualidades quiero que definan mi manera de vivir? ¿Por qué son importantes para mí?", "¿Cómo se vería cada valor en una conducta observable esta semana?", "¿Qué valores cristianos considero centrales y cuáles quiero estudiar mejor antes de afirmar que son un mandato?", "¿Qué reglas de mi entorno comparto genuinamente? ¿Cuáles no tengo claras? ¿Cuáles no comparto?", "Si nadie me alabara ni me criticara por un año, ¿qué mantendría, cambiaría o dejaría de hacer?", "¿Qué clase de persona quiero ser cuando nadie está mirando y cuando alguien discrepa conmigo?"], "ejercicio": {"title": "Matriz: valor, regla y elección", "para": "Separar el propósito legítimo de una regla de la forma extrema en que quizá se aplica.", "pasos": ["Haz una tabla de cuatro columnas: «Regla que escuché», «Valor que intenta proteger», «Evidencia/razón», «Decisión que elijo por ahora».", "Marca cada regla: convicción propia / en estudio / preferencia ajena / obligación laboral explícita / regla que ya no acepto."]}, "anclas": ["valores"]}, {"id": 4, "title": "Mis inamovibles y mis preferencias", "intro": "No todo tiene que ser inamovible. Si todo se vuelve una línea roja, la vida se hace rígida; si nada importa, pierdes dirección.", "questions": ["¿Qué tres cosas no aceptaría en una relación o amistad? ¿Por qué?", "¿Qué cosas me gustan, pero no son requisitos morales?", "¿Qué ideas he llamado «principios» aunque quizá sean miedo, costumbre o deseo de aprobación?", "¿Qué evidencia me haría revisar una postura sin sentir que pierdo mi identidad?"], "anclas": ["limites", "preferencias"]}]}, {"id": 3, "title": "Autonomía, culpa, límites y conversaciones difíciles", "part": "PARTE IV", "objetivo": "Diferenciar consejo, control y responsabilidad; practicar límites; tolerar desaprobación.", "sessions": [{"id": 5, "title": "Diferenciar consejo, control y responsabilidad", "intro": "No necesitas adivinar las intenciones de nadie para evaluar una interacción. Mira la conducta, el efecto y si existe espacio real para disentir.", "questions": ["¿Qué temo que ocurra si digo «no estoy de acuerdo»?", "¿Qué pruebas tengo de que ese resultado ocurrirá? ¿Qué otras posibilidades existen?", "¿Puedo escuchar un argumento sin entregar a otra persona la decisión final?", "¿En qué situaciones pido permiso cuando en realidad necesito comunicar una decisión?", "¿Qué responsabilidades reales sí debo cumplir en el trabajo, independientemente de mi vida privada?"]}, {"id": 6, "title": "Practicar límites", "intro": "Un límite describe lo que tú harás; no obliga a la otra persona a pensar igual.", "ejercicio": {"title": "Guion de límite en cuatro pasos", "para": "Hacer límites claros sin convertirlos en amenazas ni en una discusión sobre las intenciones de la otra persona.", "pasos": ["Describe el hecho sin insultos: «Entiendo que tienes una opinión sobre…».", "Expresa la decisión: «Voy a reflexionarla y tomarla yo».", "Marca el formato: «Puedo escuchar una observación concreta; no participaré en…».", "Indica la acción propia si continúa: «Si la conversación sigue en ese tono, la dejaré…»."]}, "questions": ["Elige una situación de bajo riesgo esta semana y practica el guion. ¿Qué dijiste, qué sentiste y qué pasó?"], "anclas": ["limites"]}, {"id": 7, "title": "Tolerar desaprobación", "intro": "Frase de práctica: «Puedo revisar mis decisiones sin entregar mi autonomía. La incomodidad no demuestra por sí sola que esté haciendo algo malo».", "questions": ["¿Qué significaría para mí que alguien esté decepcionado conmigo? ¿Qué no significaría?", "¿Estoy dispuesta a aceptar que alguien no comparta una decisión responsable?", "¿Qué puedo controlar (mi honestidad, mis límites, mi conducta) y qué no (la reacción ajena, su opinión, si permanece en mi vida)?", "¿Qué frase breve puedo repetirme cuando sienta culpa sin haber hecho algo dañino?"]}]}, {"id": 4, "title": "Reconocimiento y regulación de emociones", "part": "PARTE V", "objetivo": "Detectar emociones, entender su función y elegir la conducta (no suprimirlas).", "sessions": [{"id": 8, "title": "Registro de emoción en el momento", "intro": "Registro de 3–5 minutos. Para qué sirve: crear una pausa entre emoción, pensamiento e impulso.", "questions": ["Situación: ¿qué pasó, de forma observable, sin interpretar?", "Emoción y nivel de intensidad de 0 a 10:", "Sensaciones corporales:", "Pensamiento automático: ¿qué me dijo la mente?", "Impulso: ¿qué me dieron ganas de hacer?", "Necesidad posible: seguridad, conexión, descanso, claridad, respeto…", "Respuesta elegida: ¿qué hice que respete mis valores aunque la emoción siguiera presente?"]}, {"id": 9, "title": "Semáforo de intensidad", "intro": "0–3 Verde: reflexiona y decide normalmente. 4–6 Amarillo: nombra emoción; respira; comprueba hechos; espera antes de mensajes importantes. 7–10 Rojo: no tomes decisiones irreversibles; reduce estímulos; regula y vuelve después.", "questions": ["¿En qué nivel de intensidad estoy ahora (0–10) y de qué color es el semáforo?", "¿Qué técnica de regulación usé o usaré (respiración, anclaje sensorial, lugar seguro)?", "¿Qué decisión pospongo hasta bajar de intensidad?"]}, {"id": 10, "title": "Cuando aparece un crush, fantasía o bajón", "questions": ["¿Qué sé de esta persona por hechos y qué estoy imaginando?", "¿Me atrae la persona real o también la novedad, la atención, la posibilidad y la fantasía?", "¿Qué información falta para decidir si es compatible o está disponible?", "¿Qué conducta prudente puedo tomar sin castigarme por sentir atracción?", "¿Qué actividades sostienen mi vida si la ilusión no progresa?"], "ejercicio": {"title": "Regla de pausa para mensajes", "para": "Reducir impulsividad sin tratar la atracción como algo vergonzoso.", "pasos": ["Si la intensidad es 7/10 o mayor, escribe el mensaje en notas, no en el chat.", "Espera hasta estar más regulada y vuelve a leerlo.", "Pregúntate: ¿es respetuoso, necesario, proporcional y coherente con mis valores?", "Envía solo si sigues eligiéndolo; no como forma de calmar ansiedad de inmediato."]}}, {"id": 11, "title": "ADHD, energía y hábitos", "intro": "Si tienes diagnóstico de TDAH, puede ayudar usar señales externas y pasos pequeños; no todo problema emocional se explica por el TDAH.", "questions": ["¿Qué recordatorios visibles o lista priorizada me ayudarían esta semana?", "¿Cuál es la acción inicial de 5 minutos que puedo hacer hoy?", "¿Qué pausas programaré antes de agotarme?", "¿Qué patrones noto en sueño, ciclo, cafeína, alimentación o estrés (sin conclusiones precipitadas)?"]}]}, {"id": 5, "title": "Autoestima, autocrítica y heridas personales", "part": "PARTE VI", "objetivo": "Separar identidad de conducta; construir autoestima con evidencia; procesar vergüenza sin condena permanente.", "sessions": [{"id": 12, "title": "Separar identidad de conducta", "questions": ["Cuando me equivoco, ¿qué etiqueta me pongo?", "¿Qué diría una persona justa que describiera el hecho sin humillarme?", "¿Qué responsabilidad concreta me corresponde? ¿Qué no me corresponde?", "¿Hay algo que reparar, pedir disculpas o cambiar? ¿Cuál es el siguiente paso verificable?", "¿Qué puedo aprender sin convertir el pasado en una condena permanente?"], "ejercicio": {"title": "Reestructuración de pensamiento", "para": "Sustituir condenas globales por responsabilidad específica.", "pasos": ["Escribe un pensamiento duro.", "Busca hechos a favor y en contra, sin exagerar ni maquillar.", "Redáctalo de forma precisa.", "Elige una acción útil: disculparme, corregir, pedir información, o dejar de rumiar si no hay nada que reparar."]}}, {"id": 13, "title": "Autoestima basada en evidencia", "intro": "La autoestima no se construye solo repitiendo frases positivas. También crece al cumplir pequeños compromisos contigo, aprender habilidades, tratarte con respeto y tolerar la imperfección.", "questions": ["¿Qué tres dificultades he manejado antes, aunque no perfectamente?", "¿Qué cualidades aparecen en mis actos cotidianos?", "¿Qué promesa pequeña puedo cumplir esta semana?", "¿Qué crítica útil puedo aceptar sin aceptar humillación?", "¿Qué necesito aprender en vez de usarlo como prueba de que no valgo?"]}, {"id": 14, "title": "Vergüenza por el pasado íntimo", "intro": "Tu historia sexual no determina tu valor humano. Puedes revisar decisiones pasadas según tus convicciones actuales, salud, consentimiento y efectos, sin permitir que otra persona use tu pasado para humillarte o para reclamar control ilimitado.", "questions": ["¿Qué creo hoy sobre sexualidad, compromiso, consentimiento y fe? ¿Qué parte es una convicción estudiada y qué parte es temor a ser juzgada?", "¿Hay experiencias que necesito procesar con una persona profesional o de confianza?", "¿Qué información de mi intimidad es privada y no tengo obligación de divulgar en grupo?", "¿Cómo puedo asumir una decisión pasada sin aceptar que me definan para siempre por ella?"]}]}, {"id": 6, "title": "Fe cristiana, Biblia y discernimiento propio", "part": "PARTE VII", "objetivo": "Estudiar con contexto, reconocer diferencias entre tradiciones y evitar convertir preferencias humanas en mandatos divinos sin fundamento.", "sessions": [{"id": 15, "title": "Método de estudio bíblico", "intro": "Lee un pasaje con cinco preguntas. Para qué sirve: formar criterio bíblico sin depender de una sola persona como intérprete final.", "questions": ["¿Qué dice el texto literalmente? Resume sin añadir interpretaciones.", "¿Quién habla, a quién, en qué situación y dentro de qué género literario?", "¿Qué significaba para los primeros destinatarios? ¿Qué contexto histórico o literario falta conocer?", "¿Qué principio parece enseñar y qué otras interpretaciones cristianas existen?", "¿Qué aplicación prudente tiene hoy? ¿Qué no puedo afirmar con seguridad a partir de este pasaje?"]}, {"id": 16, "title": "Mandato, principio, prudencia u opinión", "intro": "Categorías: mandato explícito · principio ético · prudencia · preferencia personal · tema disputado.", "questions": ["¿Qué norma o consejo estoy evaluando ahora?", "¿En qué categoría lo ubicaría y por qué?", "¿Qué haré con esta información (estudiar, aplicar, comparar, declarar incertidumbre)?"]}, {"id": 17, "title": "Plan espiritual sostenible", "questions": ["¿Qué creo sobre Dios y Jesús? ¿Qué creo saber, qué espero y qué preguntas tengo?", "¿Qué experiencias han fortalecido mi fe y cuáles han creado miedo o confusión?", "¿Cómo distinguiría convicción, conciencia, culpa aprendida y temor a una persona?", "¿Qué prácticas me acercan a Dios de forma sincera: lectura, oración, comunidad, servicio, gratitud, silencio?", "¿Qué rutina realista puedo mantener incluso en una semana difícil?"], "anclas": ["fe"]}, {"id": 18, "title": "Investigar alimentación y ética desde la fe", "intro": "No concluyas que un alimento es pecado solo porque alguien lo considera más puro o compasivo. La decisión puede ser importante sin que haya una única respuesta obligatoria para todos.", "questions": ["¿Qué pasajes se suelen citar sobre animales, alimentación, dominio, compasión y libertad? ¿Qué dicen en contexto?", "¿Qué interpretaciones diferentes existen entre cristianos y por qué?", "¿Qué datos verificables tengo sobre bienestar animal, impacto ambiental, salud y costos?", "¿Qué decisión puedo sostener por convicción sin despreciar a quien decide distinto?"], "anclas": ["alimentacion"]}]}, {"id": 7, "title": "Hombres, socialización, citas y límites", "part": "PARTE VIII", "objetivo": "Practicar interacción social neutral, exposición gradual y criterios claros para conocer a alguien.", "sessions": [{"id": 19, "title": "Interacción social neutral", "intro": "Hablar con un hombre no equivale por sí mismo a coquetear, comprometerse ni traicionar un principio. El contexto, la intención, la conducta y los límites importan.", "questions": ["¿Qué interacción concreta temo tener? ¿Qué creo que significaría moralmente?", "¿Qué evidencia apoya ese temor y qué parte proviene de una regla del grupo?", "¿Cómo puedo ser respetuosa y prudente sin evitar automáticamente a la mitad de la población?", "¿Qué límites personales quiero mantener respecto a contacto físico, mensajes, redes y privacidad?"], "anclas": ["limites_sociales"]}, {"id": 20, "title": "Exposición gradual y práctica social", "intro": "No hagas una exposición para forzarte a ligar. Practica primero la habilidad neutral que evitas por ansiedad.", "questions": ["¿En qué nivel estoy (1 saludo · 2 pregunta funcional · 3 conversación breve · 4 actividad grupal · 5 interés romántico gradual)?", "Ansiedad antes (0–10) y después (0–10):", "¿Qué temía que ocurriera y qué pasó realmente?"]}, {"id": 21, "title": "Criterios para conocer a alguien", "questions": ["¿Qué significa para mí una relación coherente con mi fe y mis valores?", "¿Qué hechos me ayudan a conocer a alguien (consistencia, honestidad, trato a otros, responsabilidad)?", "¿Qué señales requieren cautela: presión, mentiras, celos controladores, desprecio, límites ignorados, indisponibilidad afectiva?", "¿Qué necesito saber antes de involucrarme más? ¿Qué puedo preguntar sin convertirlo en un interrogatorio?", "¿Qué ritmo de mensajes, salidas y contacto físico me hace sentir cómoda y segura?", "¿Cómo quiero abordar anticoncepción, salud sexual, exclusividad y límites íntimos desde mis convicciones?"], "anclas": ["criterios_relacion"]}, {"id": 22, "title": "Evaluar compatibilidad sin idealizar", "ejercicio": {"title": "Hechos, hipótesis y fantasía", "para": "Dar espacio a la ilusión sin convertirla en el centro de tu vida.", "pasos": ["Divide una página en tres: hechos que conozco / hipótesis por comprobar / fantasías o deseos.", "No confundas atracción con compatibilidad ni una foto con certeza sobre el estado sentimental de alguien.", "Busca información de manera respetuosa; si alguien parece tener pareja o no está disponible, no avances románticamente hasta aclararlo.", "Conserva tus rutinas, amistades y objetivos aunque alguien te guste."]}, "questions": ["Hechos que conozco:", "Hipótesis por comprobar:", "Fantasías o deseos:"]}]}, {"id": 8, "title": "Alimentación, ética animal, cuerpo y entrenamiento", "part": "PARTE IX", "objetivo": "Definir objetivos de salud sostenibles sin pureza moral; decidir con información; entrenar y dormir con realismo.", "sessions": [{"id": 23, "title": "Definir el objetivo de salud", "intro": "La alimentación no debe convertirse en una prueba de pureza, disciplina o valor personal. El plan debe cubrir nutrientes, ser asequible, sostenible y compatible con tu salud y tu vida.", "questions": ["¿Qué quiero lograr: energía, salud, fuerza, composición corporal, digestión, rendimiento, ética animal u otra razón?", "¿Qué restricciones tengo por presupuesto, disponibilidad, cultura, tiempo o preferencias?", "¿Qué patrones me han resultado sostenibles y cuáles me han llevado a obsesión, culpa o rebote?", "¿Qué síntomas o antecedentes médicos debería conversar con un médico o dietista-nutricionista?"], "anclas": ["alimentacion"]}, {"id": 24, "title": "Auditoría alimentaria sin juicio", "intro": "Registro de 3–7 días. Para qué sirve: observar la realidad antes de imponer una dieta rígida.", "questions": ["Anota comidas, bebidas, hambre/saciedad, energía y contexto (sin calificación moral):", "Variedad de proteína, frutas/verduras, legumbres, cereales/tubérculos, grasas, calcio:", "Costo, disponibilidad y facilidad de preparación:", "Uno o dos cambios prácticos para la semana siguiente:"]}, {"id": 25, "title": "Decidir sobre carne, pescado o alimentación vegetal", "intro": "No hay una respuesta única que combine salud, ética y religión para todas las personas. Evalúa cada dimensión por separado.", "questions": ["Salud: ¿la pauta cubre energía, proteína, hierro, B12, calcio, vitamina D, yodo y omega-3 según corresponda?", "Ética animal: ¿qué prácticas de producción me preocupan? ¿Qué alternativas reales y asequibles tengo?", "Ambiente: ¿qué evidencia comparable existe sobre huella ambiental de las opciones?", "Fe: ¿qué enseña el texto en contexto y qué interpretaciones sostienen distintas comunidades cristianas?", "Economía: ¿puedo sostenerlo sin perjudicar necesidades básicas?", "Sostenibilidad personal: ¿puedo seguirlo con flexibilidad, vida social y salud mental?"], "anclas": ["alimentacion"]}, {"id": 26, "title": "Entrenamiento sostenible", "intro": "Combina actividad aeróbica y fuerza adaptadas a capacidad y salud. Empieza desde tu nivel. No uses ejercicio como compensación por comer ni como castigo por emociones.", "questions": ["¿Qué programa puedo sostener con mis horarios y recuperación?", "Registro de fuerza, energía, dolor y descanso:", "¿Qué ajustar si aparece dolor persistente, mareo o agotamiento desproporcionado?"]}, {"id": 27, "title": "Sueño, ayuno y energía", "questions": ["¿Cuántas horas duermo realmente y qué afecta mi horario?", "¿Qué señales aparecen cuando tengo hambre, estoy deshidratada o he dormido poco?", "¿El ayuno tiene un propósito médico o religioso claro, o lo estoy considerando para controlar emociones o peso?", "¿Qué rutina de cierre puedo sostener: reducir pantallas, preparar mañana, horario estable, luz diurna y cafeína más temprano?"]}]}, {"id": 9, "title": "Cuidado externo: piel, cabello, uñas, dientes y ropa", "part": "PARTE X", "objetivo": "Cuidado externo por salud y comodidad, no por valor personal ni compras impulsivas.", "sessions": [{"id": 28, "title": "Auditoría de cuidado personal", "questions": ["Dientes/encías — revisión inicial y próximo paso:", "Piel/cutis — revisión y próximo paso:", "Cabello/cuero cabelludo — revisión y próximo paso:", "Uñas/manos/pies — revisión y próximo paso:", "Ropa — revisión y próximo paso:", "Postura/presencia — revisión y próximo paso:"]}, {"id": 29, "title": "Rutina mínima y presupuesto", "ejercicio": {"title": "Construye una rutina realista", "para": "Cuidar tu presentación sin transformar la rutina en un proyecto caro o perfeccionista.", "pasos": ["Separa necesidades de salud, mantenimiento y deseos estéticos.", "Define una rutina de mañana y noche de máximo 3–5 pasos que realmente vayas a usar.", "Anota productos actuales, cuáles funcionan y cuáles irritan.", "Establece un presupuesto mensual y una lista de compras priorizada.", "Programa revisiones profesionales preventivas según necesidad y acceso."]}, "questions": ["Mi rutina mañana (máx. 3–5 pasos):", "Mi rutina noche:", "Presupuesto mensual de cuidado:"]}, {"id": 30, "title": "Estilo personal", "questions": ["¿Cómo quiero sentirme con mi ropa: cómoda, profesional, femenina, deportiva, sobria, creativa?", "¿Qué prendas actuales representan ese estilo y cuáles no uso?", "¿Qué cortes, colores y combinaciones me sirven para mi vida real y clima?", "¿Qué tres combinaciones puedo preparar con lo que ya tengo?", "¿Estoy eligiendo mi apariencia para expresarme o principalmente para evitar críticas?"]}]}, {"id": 10, "title": "Comunicación, seguridad social y asertividad", "part": "PARTE XI", "objetivo": "Expresar opinión, conversar con naturalidad y reparar sin sobreexplicar.", "sessions": [{"id": 31, "title": "Expresar una opinión", "intro": "Fórmula breve: «Yo pienso/siento… porque…; mi propuesta es…». No necesitas disculparte por tener una preferencia, aunque puedes expresarla con respeto.", "ejercicio": {"title": "Práctica de voz propia", "para": "Aumentar confianza a través de práctica repetida.", "pasos": ["Escribe una opinión cotidiana que suelas callar.", "Exprésala en dos frases, sin justificarte durante cinco minutos.", "Si alguien discrepa, responde: «Entiendo tu punto; yo lo veo de otra manera».", "Observa la incomodidad y evita corregirla automáticamente cediendo."]}, "questions": ["Opinión que practiqué:", "Qué pasó y qué sentí:"]}, {"id": 32, "title": "Conversación cotidiana", "intro": "Inicia con observación o pregunta contextual. Haz una pregunta abierta, escucha y comparte algo relacionado. Cierra con naturalidad.", "questions": ["¿Qué temo que la gente piense cuando hablo?", "¿Qué señales indican que la otra persona está interesada en conversar y cuáles indican que quiere cerrar?", "¿Cómo puedo reparar un comentario tosco sin atacar mi identidad?"]}, {"id": 33, "title": "Reparar sin sobreexplicar", "intro": "Formato útil: «Dije/hice X. Entiendo que pudo causar Y. Lo siento por esa parte. La próxima vez haré Z».", "questions": ["Situación a reparar (si aplica):", "Mi frase de reparación:", "Qué evité (disculpa interminable / pedir que me tranquilicen):"]}]}, {"id": 11, "title": "Orden, trabajo, finanzas, descanso y entorno", "part": "PARTE XII", "objetivo": "Sistema semanal realista, finanzas y autonomía, entorno relacional saludable.", "sessions": [{"id": 34, "title": "Sistema semanal", "intro": "Revisión de 20 minutos. Para qué sirve: reducir la carga mental y evitar que el autocuidado sea otra lista imposible.", "questions": ["Compromisos laborales y domésticos reales:", "Tres prioridades semanales (no quince):", "Descanso y ocio reservados:", "Tareas grandes divididas en acciones de 10–30 minutos:", "Obstáculos de la semana y ajuste del sistema (no de mi valor personal):"]}, {"id": 35, "title": "Finanzas y autonomía", "questions": ["¿Cuáles son mis ingresos, gastos esenciales, deudas y obligaciones verificables?", "¿Qué cantidad puedo ahorrar de forma realista sin dejar necesidades básicas sin cubrir?", "¿Qué habilidad o paso profesional podría aumentar mi estabilidad a medio plazo?", "¿Qué decisiones financieras requieren información o acuerdo laboral, y cuáles son personales?", "¿Qué significa para mí tener más independencia práctica en 6–12 meses?"], "anclas": ["finanzas"]}, {"id": 36, "title": "Entorno y relaciones", "questions": ["¿Qué personas respetan mis límites aunque no estén de acuerdo conmigo?", "¿Con quién puedo conversar sin sentir que debo aceptar una conclusión para que termine la conversación?", "¿Qué relación necesita una conversación, distancia temporal o reglas más claras?", "¿Qué actividades fuera de casa pueden ampliar mi mundo de manera segura y asequible?"]}]}, {"id": 12, "title": "Integración, decisiones y prevención de recaídas", "part": "PARTE XIII", "objetivo": "Manual personal, decisiones difíciles y revisión a 30/60/90 días.", "sessions": [{"id": 37, "title": "Mi manual personal", "intro": "Crea un documento de 2–4 páginas con estas secciones.", "questions": ["Mis cinco valores principales y cómo se ven en acciones:", "Mis convicciones cristianas actuales, preguntas abiertas y fuentes que consulto:", "Mis límites personales y señales de que una conversación dejó de ser productiva:", "Mis criterios para alimentación, ejercicio, descanso y cuidado externo:", "Mis criterios para amistad, socialización y citas:", "Mis señales tempranas de sobrecarga emocional y mis estrategias de regulación:", "Las personas y profesionales a quienes puedo acudir para diferentes tipos de apoyo:"], "anclas": ["manual"]}, {"id": 38, "title": "Plan para decisiones difíciles", "ejercicio": {"title": "Hoja de decisión", "para": "Tomar decisiones prudentes sin exigir una garantía imposible de no equivocarte.", "pasos": ["Define la decisión real en una frase.", "Enumera opciones, incluida esperar o pedir más información.", "Para cada opción: beneficios, costos, riesgos y qué valor protege.", "Separa hechos, interpretaciones, miedo y opinión ajena.", "Pregunta: ¿es reversible? Si lo es, ¿puedo probar una versión pequeña?", "Elige, define cuándo revisarás el resultado y acepta que no hay certeza total."]}, "questions": ["Decisión en una frase:", "Opciones:", "Hechos vs interpretaciones vs miedo vs opinión ajena:", "Decisión elegida y fecha de revisión:"]}, {"id": 39, "title": "Revisión a 30, 60 y 90 días", "intro": "El éxito no es convertirte en una mujer perfecta ni eliminar toda inseguridad. Es actuar con más claridad, flexibilidad, responsabilidad y respeto por ti y por los demás.", "questions": ["¿Qué cambio concreto se mantiene sin depender de motivación?", "¿Qué situación ahora manejo mejor? ¿Qué evidencia lo demuestra?", "¿Qué área se volvió rígida, obsesiva o demasiado exigente?", "¿Qué descubrí que realmente valoro y qué era una expectativa ajena?", "¿Qué debo continuar, modificar o abandonar?"]}]}];
+
+const ANCLA_DEFS = [
+  { id:'valores', title:'Mis valores', color:'chip-lilac' },
+  { id:'limites', title:'Límites e inamovibles', color:'chip-rose' },
+  { id:'preferencias', title:'Preferencias', color:'chip-cream' },
+  { id:'fe', title:'Fe y discernimiento', color:'chip-sky' },
+  { id:'alimentacion', title:'Alimentación y ética', color:'chip-mint' },
+  { id:'criterios_relacion', title:'Criterios de relación', color:'chip-lilac' },
+  { id:'limites_sociales', title:'Límites sociales', color:'chip-rose' },
+  { id:'prioridades', title:'Prioridades actuales', color:'chip-mint' },
+  { id:'finanzas', title:'Finanzas y autonomía', color:'chip-sky' },
+  { id:'manual', title:'Manual personal', color:'chip-lilac' },
+  { id:'vision', title:'Visión 3–4 años', color:'chip-cream' },
+  { id:'estilo', title:'Estilo y vestimenta', color:'chip-rose' }
+];
+const RUEDA_AREAS = [
+  'Fe / espiritualidad','Autonomía','Emociones','Autoestima','Relaciones','Vida social',
+  'Alimentación','Movimiento','Sueño','Cuidado personal','Trabajo','Finanzas','Hogar'
+];
+const RUEDA_COLORS = ['#e8b4b8','#c5b4e3','#b8d4d0','#b8cfe8','#f5e6c8','#d4a5c9','#a8c5b8','#c9b8e0','#e0c4a8','#b8c8e0','#d8b8c8','#c8d8b8','#e0d0b8'];
+
+
+const KEY = 'MARY_GUIA_V1';
+let db = null, isCloudReady = false;
+try {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCnhvfyXpwJdYOQFCvsyHDhgw9F3X7ARR4",
+    authDomain: "marpk-816dd.firebaseapp.com",
+    projectId: "marpk-816dd",
+    storageBucket: "marpk-816dd.firebasestorage.app",
+    messagingSenderId: "189644122232",
+    appId: "1:189644122232:web:ed7894f1510a373d44658d"
+  });
+  db = firebase.firestore();
+  isCloudReady = true;
+} catch(e) { console.warn(e); }
+
+function emptyStore() {
+  return { entries: [], notas: [], anclas: {}, customAnclas: [], rueda: {}, checks: [], _updatedAt: 0 };
+}
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return emptyStore();
+    const p = JSON.parse(raw);
+    p.entries = p.entries || []; p.notas = p.notas || []; p.anclas = p.anclas || {}; p.customAnclas = p.customAnclas || []; p.rueda = p.rueda || {}; p.checks = p.checks || [];
+    p._updatedAt = p._updatedAt || 0;
+    return p;
+  } catch(e) { return emptyStore(); }
+}
+let store = loadLocal();
+function save() {
+  store._updatedAt = Date.now();
+  try { localStorage.setItem(KEY, JSON.stringify(store)); } catch(e) {}
+  if (isCloudReady && db) {
+    db.collection('mapkr').doc('guia_data').set(JSON.parse(JSON.stringify(store))).catch(e => console.warn(e));
+  }
+}
+async function loadCloud() {
+  store = loadLocal();
+  if (!isCloudReady || !db) return;
+  try {
+    const doc = await db.collection('mapkr').doc('guia_data').get();
+    if (doc.exists) {
+      const c = doc.data() || {};
+      if ((c._updatedAt||0) >= (store._updatedAt||0)) {
+        store = Object.assign(emptyStore(), c);
+        localStorage.setItem(KEY, JSON.stringify(store));
+      } else if (store._updatedAt) {
+        await db.collection('mapkr').doc('guia_data').set(JSON.parse(JSON.stringify(store)));
+      }
+    } else if (store._updatedAt) {
+      await db.collection('mapkr').doc('guia_data').set(JSON.parse(JSON.stringify(store)));
+    }
+  } catch(e) { console.warn(e); }
+}
+
+function toast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+function fmt(d) {
+  if (typeof d === 'string') return d;
+  const x = new Date(d);
+  return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+}
+function today() { return fmt(new Date()); }
+
+function findSession(faseId, sesId) {
+  const ph = PHASES.find(p => p.id === +faseId);
+  if (!ph) return null;
+  const s = ph.sessions.find(x => x.id === +sesId);
+  return s ? { phase: ph, session: s } : null;
+}
+function allSessions() {
+  const out = [];
+  PHASES.forEach(p => p.sessions.forEach(s => out.push({ phase: p, session: s })));
+  return out;
+}
+function completedSessionIds() {
+  const set = new Set();
+  store.entries.filter(e => e.tipo === 'sesion' && e.done).forEach(e => set.add(e.sessionId));
+  return set;
+}
+
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+  const t = document.getElementById('tab-'+id);
+  if (t) t.classList.remove('hidden');
+  if (id === 'resumen') renderResumen();
+  if (id === 'hoy') { prepareHoy(); renderHoyHist(); }
+  if (id === 'calendario') renderCal();
+  if (id === 'brujula') renderAnclas();
+  if (id === 'biblioteca') renderBiblio();
+  if (id === 'libre') renderNotas();
+  if (id === 'reportes') {
+    const d = today();
+    if (!document.getElementById('rep-from').value) {
+      const a = new Date(); a.setDate(a.getDate()-30);
+      document.getElementById('rep-from').value = fmt(a);
+      document.getElementById('rep-to').value = d;
+    }
+  }
+}
+
+/* —— RESUMEN —— */
+function renderResumen() {
+  const done = completedSessionIds();
+  const total = allSessions().length;
+  const pct = total ? Math.round(done.size/total*100) : 0;
+  document.getElementById('prog-bar').style.width = pct+'%';
+  document.getElementById('prog-label').textContent = pct+'% del programa · '+done.size+'/'+total+' sesiones';
+  document.getElementById('kpi-row').innerHTML =
+    '<div class="glass rounded-xl p-3"><div class="text-[10px] font-bold" style="color:var(--muted)">Sesiones</div><div class="text-xl font-black">'+done.size+'/'+total+'</div></div>'+
+    '<div class="glass rounded-xl p-3"><div class="text-[10px] font-bold" style="color:var(--muted)">Entradas</div><div class="text-xl font-black">'+store.entries.length+'</div></div>'+
+    '<div class="glass rounded-xl p-3"><div class="text-[10px] font-bold" style="color:var(--muted)">Anclas</div><div class="text-xl font-black">'+Object.keys(store.anclas).filter(k=>store.anclas[k]&&store.anclas[k].trim()).length+'</div></div>'+
+    '<div class="glass rounded-xl p-3"><div class="text-[10px] font-bold" style="color:var(--muted)">Notas</div><div class="text-xl font-black">'+store.notas.length+'</div></div>';
+
+  let next = allSessions().find(x => !done.has(x.session.id));
+  const box = document.getElementById('continue-box');
+  if (next) {
+    box.innerHTML = '<span class="chip chip-lilac">Fase '+next.phase.id+'</span> <strong>Sesión '+next.session.id+' · '+next.session.title+'</strong><p class="mt-1" style="color:var(--muted)">'+ (next.phase.objetivo||'') +'</p>';
+  } else box.innerHTML = '<span class="chip chip-mint">Programa recorrido</span> Puedes repetir sesiones o usar check diario / notas libres.';
+
+  const recent = store.entries.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,8);
+  document.getElementById('recent-list').innerHTML = recent.map(e => {
+    const label = e.tipo==='sesion' ? ('Sesión '+(e.sessionId||'')+' · '+(e.title||'')) : (e.tipo||'entrada');
+    return '<div class="flex justify-between gap-2 border-b border-pink-50 pb-2"><span><strong>'+e.date+'</strong> · '+label+'</span><button class="text-[10px] font-black" style="color:var(--rose-deep)" onclick="editEntry(\''+e.id+'\')">Editar</button></div>';
+  }).join('') || '<p style="color:var(--muted)">Aún no hay trabajos guardados.</p>';
+}
+
+/* —— HOY / SESIÓN —— */
+function prepareHoy() {
+  const fd = document.getElementById('hoy-date');
+  if (!fd.value) fd.value = today();
+  const sel = document.getElementById('hoy-fase');
+  sel.innerHTML = PHASES.map(p => '<option value="'+p.id+'">Fase '+p.id+' · '+p.title+'</option>').join('');
+  fillSesiones();
+}
+function fillSesiones() {
+  const fid = +document.getElementById('hoy-fase').value;
+  const ph = PHASES.find(p => p.id === fid);
+  const ss = document.getElementById('hoy-sesion');
+  ss.innerHTML = (ph?ph.sessions:[]).map(s => '<option value="'+s.id+'">Sesión '+s.id+' · '+s.title+'</option>').join('');
+  loadSessionForm();
+}
+function loadSessionForm(editEntry) {
+  const fid = +document.getElementById('hoy-fase').value;
+  const sid = +document.getElementById('hoy-sesion').value;
+  const found = findSession(fid, sid);
+  const box = document.getElementById('session-form');
+  if (!found) { box.classList.add('hidden'); return; }
+  const { phase, session } = found;
+  const existing = editEntry || null;
+  const answers = existing && existing.answers ? existing.answers : {};
+  const conclusion = existing ? (existing.conclusion||'') : '';
+  const ejercicioAns = existing ? (existing.ejercicioAns||'') : '';
+  const done = existing ? !!existing.done : false;
+
+  let html = '';
+  html += '<div class="flex flex-wrap gap-2 items-center"><span class="chip chip-lilac">Fase '+phase.id+'</span><span class="chip chip-rose">Sesión '+session.id+'</span>';
+  if (session.mins) html += '<span class="chip chip-cream">'+session.mins+' min</span>';
+  html += '</div>';
+  html += '<h3 class="font-black text-base">'+session.title+'</h3>';
+  if (phase.objetivo) html += '<p class="text-xs font-semibold" style="color:var(--muted)"><strong>Objetivo de la fase:</strong> '+phase.objetivo+'</p>';
+  if (session.intro) html += '<div class="rounded-2xl p-3 text-xs font-semibold" style="background:#faf0f2;border:1px solid rgba(232,180,184,0.4)">'+session.intro+'</div>';
+
+  if (session.ejercicio) {
+    html += '<div class="rounded-2xl p-3 space-y-1" style="background:#f3eef9;border:1px solid rgba(197,180,227,0.45)">';
+    html += '<div class="font-black text-xs">'+session.ejercicio.title+'</div>';
+    if (session.ejercicio.para) html += '<p class="text-[11px] font-semibold" style="color:var(--muted)">Para qué sirve: '+session.ejercicio.para+'</p>';
+    (session.ejercicio.pasos||[]).forEach((p,i) => { html += '<p class="text-[11px] font-semibold">'+(i+1)+'. '+p+'</p>'; });
+    html += '<label class="mt-2">Tu trabajo del ejercicio</label><textarea id="ej-ans" rows="3">'+esc(ejercicioAns)+'</textarea></div>';
+  }
+
+  (session.questions||[]).forEach((q,i) => {
+    html += '<div><label>'+(i+1)+'. '+q+'</label>';
+    html += '<textarea data-qi="'+i+'" rows="3" class="q-ans">'+esc(answers[i]||'')+'</textarea></div>';
+  });
+
+  html += '<div class="rounded-2xl p-3 space-y-2" style="background:#eef6f4;border:1px solid rgba(184,212,208,0.5)">';
+  html += '<label class="!text-[#3d6b66]">Conclusión de esta sesión</label>';
+  html += '<p class="text-[10px] font-semibold" style="color:var(--muted)">¿En qué llegué? ¿Qué concluí? ¿Qué reflexioné? ¿Qué decisión provisional tomo?</p>';
+  html += '<textarea id="conclusion" rows="4">'+esc(conclusion)+'</textarea></div>';
+
+  html += '<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="mark-done" '+(done?'checked':'')+'> <span class="text-xs font-black">Marcar sesión como trabajada</span></label>';
+  html += '<input type="hidden" id="edit-entry-id" value="'+(existing?existing.id:'')+'">';
+  html += '<div class="flex flex-wrap gap-2">';
+  html += '<button class="btn btn-rose" type="button" onclick="saveSessionEntry()">Guardar</button>';
+  html += '<button class="btn btn-ghost" type="button" onclick="copyCurrentSession()">Copiar texto</button>';
+  html += '<button class="btn btn-lilac" type="button" onclick="pdfCurrentSession()">PDF</button>';
+  html += '</div>';
+
+  box.innerHTML = html;
+  box.classList.remove('hidden');
+}
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function saveSessionEntry() {
+  const fid = +document.getElementById('hoy-fase').value;
+  const sid = +document.getElementById('hoy-sesion').value;
+  const found = findSession(fid, sid);
+  if (!found) return;
+  const answers = {};
+  document.querySelectorAll('.q-ans').forEach(ta => { answers[ta.dataset.qi] = ta.value; });
+  const editId = document.getElementById('edit-entry-id').value;
+  const entry = {
+    id: editId || ('e'+Date.now()),
+    tipo: 'sesion',
+    date: document.getElementById('hoy-date').value || today(),
+    phaseId: fid,
+    sessionId: sid,
+    title: found.session.title,
+    phaseTitle: found.phase.title,
+    answers,
+    ejercicioAns: (document.getElementById('ej-ans')||{}).value || '',
+    conclusion: (document.getElementById('conclusion')||{}).value || '',
+    done: !!(document.getElementById('mark-done')||{}).checked,
+    updatedAt: Date.now()
+  };
+  if (editId) {
+    store.entries = store.entries.map(e => e.id === editId ? entry : e);
+  } else store.entries.push(entry);
+
+  // Update anclas if session tags them and conclusion/answers have content
+  (found.session.anclas||[]).forEach(aid => {
+    const blob = [entry.conclusion, entry.ejercicioAns].concat(Object.values(answers)).filter(Boolean).join('\n\n');
+    if (blob.trim()) {
+      if (!store.anclas[aid] || confirm('¿Actualizar ancla «'+aid+'» con lo de esta sesión?')) {
+        store.anclas[aid] = blob;
+        store.anclas[aid+'_date'] = entry.date;
+      }
+    }
+  });
+
+  save();
+  toast('Sesión guardada');
+  renderHoyHist();
+  renderResumen();
+}
+function buildSessionText(entry, found) {
+  let t = '🪞 GUÍA INTEGRAL · SESIÓN\n';
+  t += 'Fecha: '+(entry.date||'')+'\n';
+  t += 'Fase '+entry.phaseId+' · '+(entry.phaseTitle||'')+'\n';
+  t += 'Sesión '+entry.sessionId+' · '+(entry.title||'')+'\n';
+  t += '━━━━━━━━━━━━━━━━━━━━\n\n';
+  if (found && found.session.intro) t += found.session.intro+'\n\n';
+  if (found && found.session.ejercicio) {
+    t += '▶ '+found.session.ejercicio.title+'\n';
+    if (entry.ejercicioAns) t += entry.ejercicioAns+'\n\n';
+  }
+  (found && found.session.questions || []).forEach((q,i) => {
+    t += (i+1)+'. '+q+'\n';
+    t += (entry.answers && entry.answers[i] ? entry.answers[i] : '—')+'\n\n';
+  });
+  t += '▶ CONCLUSIÓN\n'+(entry.conclusion||'—')+'\n';
+  t += '\n━━━━━━━━━━━━━━━━━━━━\nMary · Guía integral';
+  return t;
+}
+function copyCurrentSession() {
+  const editId = document.getElementById('edit-entry-id').value;
+  let entry;
+  if (editId) entry = store.entries.find(e => e.id === editId);
+  if (!entry) {
+    // build from form without save
+    const fid = +document.getElementById('hoy-fase').value;
+    const sid = +document.getElementById('hoy-sesion').value;
+    const found = findSession(fid, sid);
+    const answers = {};
+    document.querySelectorAll('.q-ans').forEach(ta => { answers[ta.dataset.qi] = ta.value; });
+    entry = {
+      date: document.getElementById('hoy-date').value,
+      phaseId: fid, sessionId: sid,
+      title: found.session.title, phaseTitle: found.phase.title,
+      answers,
+      ejercicioAns: (document.getElementById('ej-ans')||{}).value||'',
+      conclusion: (document.getElementById('conclusion')||{}).value||''
+    };
+    const text = buildSessionText(entry, found);
+    navigator.clipboard.writeText(text).then(()=>toast('Copiado')).catch(()=>prompt('Copia:', text));
+    return;
+  }
+  const found = findSession(entry.phaseId, entry.sessionId);
+  const text = buildSessionText(entry, found);
+  navigator.clipboard.writeText(text).then(()=>toast('Copiado')).catch(()=>prompt('Copia:', text));
+}
+function pdfCurrentSession() {
+  const editId = document.getElementById('edit-entry-id').value;
+  let entry = editId ? store.entries.find(e => e.id === editId) : null;
+  const fid = +document.getElementById('hoy-fase').value;
+  const sid = +document.getElementById('hoy-sesion').value;
+  const found = findSession(fid, sid);
+  if (!entry) {
+    const answers = {};
+    document.querySelectorAll('.q-ans').forEach(ta => { answers[ta.dataset.qi] = ta.value; });
+    entry = { date: document.getElementById('hoy-date').value, phaseId:fid, sessionId:sid, title:found.session.title, phaseTitle:found.phase.title, answers, ejercicioAns:(document.getElementById('ej-ans')||{}).value||'', conclusion:(document.getElementById('conclusion')||{}).value||'' };
+  }
+  const text = buildSessionText(entry, found);
+  const area = document.getElementById('pdf-area');
+  area.classList.remove('hidden');
+  area.innerHTML = '<pre style="white-space:pre-wrap;font-family:system-ui;font-size:12px;padding:16px">'+esc(text)+'</pre>';
+  html2pdf().set({ margin:10, filename:'guia-sesion-'+(entry.sessionId||'')+'.pdf', html2canvas:{scale:2} }).from(area).save().then(()=>area.classList.add('hidden'));
+}
+
+function renderHoyHist() {
+  const d = document.getElementById('hoy-date').value || today();
+  const list = store.entries.filter(e => e.date === d).sort((a,b)=> (b.updatedAt||0)-(a.updatedAt||0));
+  document.getElementById('hoy-historial').innerHTML = list.map(e =>
+    '<div class="glass rounded-2xl p-3 text-xs flex justify-between gap-2"><div><strong>'+(e.tipo==='sesion'?('Sesión '+e.sessionId+' · '+e.title):e.tipo)+'</strong>'+(e.done?' <span class="chip chip-mint">hecha</span>':'')+'<p class="mt-1" style="color:var(--muted)">'+(e.conclusion||'').slice(0,80)+'</p></div><div class="flex flex-col gap-1"><button class="btn btn-ghost text-[10px] py-1" onclick="editEntry(\''+e.id+'\')">Editar</button><button class="btn btn-ghost text-[10px] py-1" style="color:#b33" onclick="deleteEntry(\''+e.id+'\')">Borrar</button></div></div>'
+  ).join('') || '<p class="text-xs" style="color:var(--muted)">Sin entradas este día.</p>';
+}
+function editEntry(id) {
+  const e = store.entries.find(x => x.id === id);
+  if (!e) return;
+  switchTab('hoy');
+  document.getElementById('hoy-date').value = e.date;
+  if (e.tipo === 'sesion') {
+    document.getElementById('hoy-fase').value = e.phaseId;
+    fillSesiones();
+    document.getElementById('hoy-sesion').value = e.sessionId;
+    loadSessionForm(e);
+  } else if (e.tipo === 'check' || e.tipo === 'semanal') {
+    // show as form-like in session-form
+    openSpecialEdit(e);
+  }
+  toast('Editando entrada');
+}
+function deleteEntry(id) {
+  if (!confirm('¿Borrar esta entrada?')) return;
+  store.entries = store.entries.filter(e => e.id !== id);
+  save(); renderHoyHist(); renderResumen(); renderCal(); toast('Borrada');
+}
+function openSpecialEdit(e) {
+  const box = document.getElementById('session-form');
+  let html = '<h3 class="font-black text-sm">'+(e.tipo==='semanal'?'Revisión semanal':'Check diario')+'</h3>';
+  html += '<input type="hidden" id="edit-entry-id" value="'+e.id+'">';
+  const fields = e.fields || {};
+  Object.keys(fields).forEach(k => {
+    html += '<div><label>'+k+'</label><textarea data-fk="'+esc(k)+'" class="sp-field" rows="2">'+esc(fields[k])+'</textarea></div>';
+  });
+  html += '<div><label>Conclusión</label><textarea id="conclusion" rows="3">'+esc(e.conclusion||'')+'</textarea></div>';
+  html += '<button class="btn btn-rose" onclick="saveSpecialEntry(\''+e.tipo+'\')">Guardar</button>';
+  box.innerHTML = html; box.classList.remove('hidden');
+}
+function saveSpecialEntry(tipo) {
+  const fields = {};
+  document.querySelectorAll('.sp-field').forEach(ta => { fields[ta.dataset.fk] = ta.value; });
+  const editId = document.getElementById('edit-entry-id').value;
+  const entry = {
+    id: editId || ('e'+Date.now()),
+    tipo, date: document.getElementById('hoy-date').value || today(),
+    fields, conclusion: (document.getElementById('conclusion')||{}).value||'',
+    updatedAt: Date.now(), done: true
+  };
+  if (editId) store.entries = store.entries.map(e => e.id===editId?entry:e);
+  else store.entries.push(entry);
+  save(); toast('Guardado'); renderHoyHist();
+}
+
+function startCheckDiario() {
+  const box = document.getElementById('session-form');
+  const qs = [
+    '¿Tomé al menos una decisión deliberada? ¿Elegí por convicción o por miedo?',
+    'Emoción principal hoy y nivel 0–10:',
+    '¿Tuve un espacio elegido de oración/lectura? ¿Fue relación/reflexión o cumplimiento por culpa?',
+    '¿Seguí rutinas realistas de salud? ¿Me cuidé o me castigué?',
+    '¿Practiqué un límite o una interacción respetuosa?',
+    'Una frase de lo que noté hoy:'
+  ];
+  let html = '<h3 class="font-black text-sm">Check diario (métricas de la guía)</h3>';
+  html += '<p class="text-[10px] font-semibold" style="color:var(--muted)">Indicadores de la Parte I · No son una nota moral; son información para ajustar el sistema.</p>';
+  html += '<input type="hidden" id="edit-entry-id" value="">';
+  qs.forEach((q,i) => { html += '<div><label>'+q+'</label><textarea data-fk="'+esc(q)+'" class="sp-field" rows="2"></textarea></div>'; });
+  html += '<div><label>Conclusión del día</label><textarea id="conclusion" rows="3"></textarea></div>';
+  html += '<button class="btn btn-rose" onclick="saveSpecialEntry(\'check\')">Guardar check</button>';
+  html += ' <button class="btn btn-ghost" onclick="copySpecialForm()">Copiar</button>';
+  box.innerHTML = html; box.classList.remove('hidden');
+}
+function startRevisionSemanal() {
+  const box = document.getElementById('session-form');
+  const qs = [
+    'Una cosa que hice bien.',
+    'Una cosa que aprendí.',
+    'Una conversación o decisión que manejé con más autonomía.',
+    'Un hábito de salud que fue sostenible.',
+    'Una cosa que debo simplificar.',
+    'Una prioridad para la próxima semana.'
+  ];
+  let html = '<h3 class="font-black text-sm">Revisión semanal breve (Anexo D)</h3>';
+  html += '<input type="hidden" id="edit-entry-id" value="">';
+  qs.forEach(q => { html += '<div><label>'+q+'</label><textarea data-fk="'+esc(q)+'" class="sp-field" rows="2"></textarea></div>'; });
+  html += '<div><label>Conclusión de la semana</label><textarea id="conclusion" rows="3"></textarea></div>';
+  html += '<button class="btn btn-rose" onclick="saveSpecialEntry(\'semanal\')">Guardar revisión</button>';
+  box.innerHTML = html; box.classList.remove('hidden');
+}
+function copySpecialForm() {
+  let t = '';
+  document.querySelectorAll('.sp-field').forEach(ta => { t += ta.dataset.fk+'\n'+ta.value+'\n\n'; });
+  t += 'Conclusión:\n'+((document.getElementById('conclusion')||{}).value||'');
+  navigator.clipboard.writeText(t).then(()=>toast('Copiado')).catch(()=>prompt('Copia', t));
+}
+
+/* —— CALENDARIO —— */
+let calY, calM;
+function shiftCal(d) {
+  calM += d;
+  if (calM > 11) { calM = 0; calY++; }
+  if (calM < 0) { calM = 11; calY--; }
+  renderCal();
+}
+function renderCal() {
+  if (calY == null) { const n = new Date(); calY = n.getFullYear(); calM = n.getMonth(); }
+  const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  document.getElementById('cal-label').textContent = months[calM]+' '+calY;
+  const first = new Date(calY, calM, 1);
+  const start = (first.getDay()+6)%7;
+  const days = new Date(calY, calM+1, 0).getDate();
+  const byDate = {};
+  store.entries.forEach(e => {
+    if (!e.date) return;
+    (byDate[e.date] = byDate[e.date] || []).push(e);
+  });
+  let html = '';
+  for (let i=0;i<start;i++) html += '<div></div>';
+  for (let d=1;d<=days;d++) {
+    const ds = calY+'-'+String(calM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const items = byDate[ds]||[];
+    const labels = items.slice(0,2).map(e => e.tipo==='sesion'?('S'+e.sessionId):(e.tipo||'')).join(' · ');
+    html += '<button type="button" class="cal-day'+(items.length?' has':'')+'" onclick="showCalDay(\''+ds+'\')"><div>'+d+'</div>'+(labels?'<div class="text-[8px] mt-0.5" style="color:var(--lilac-deep)">'+labels+'</div>':'')+'</button>';
+  }
+  document.getElementById('cal-grid').innerHTML = html;
+}
+function showCalDay(ds) {
+  const items = store.entries.filter(e => e.date === ds);
+  const box = document.getElementById('cal-detail');
+  if (!items.length) { box.innerHTML = '<p style="color:var(--muted)">Sin trabajo el '+ds+'</p>'; return; }
+  box.innerHTML = '<strong>'+ds+'</strong>' + items.map(e => {
+    const lab = e.tipo==='sesion' ? ('Sesión '+e.sessionId+' · '+e.title) : e.tipo;
+    return '<div class="border-t border-pink-50 pt-2 flex justify-between"><span>'+lab+(e.done?' ✓':'')+'</span><button class="font-black text-[10px]" style="color:var(--rose-deep)" onclick="editEntry(\''+e.id+'\')">Abrir</button></div>';
+  }).join('');
+}
+
+/* —— BRÚJULA —— */
+function allAnclaDefs() {
+  const custom = (store.customAnclas||[]).map(c => ({ id: c.id, title: c.title, color: 'chip-sky', custom: true }));
+  return ANCLA_DEFS.concat(custom);
+}
+function renderAnclas() {
+  renderRuedaUI();
+  const list = document.getElementById('anclas-list');
+  list.innerHTML = allAnclaDefs().map(a => {
+    const val = store.anclas[a.id] || '';
+    const dt = store.anclas[a.id+'_date'] || '';
+    const has = !!(val && String(val).trim());
+    return '<div class="glass rounded-2xl p-4 space-y-2 ancla-card" id="card-'+a.id+'">'+
+      '<div class="flex flex-wrap justify-between items-center gap-2">'+
+        '<span class="chip '+a.color+'">'+esc(a.title)+'</span>'+
+        '<span class="text-[10px] font-bold" style="color:var(--muted)">'+(has?('Guardado · '+dt):'Vacío — escribe y guarda')+'</span>'+
+      '</div>'+
+      '<div class="ancla-preview" id="prev-'+a.id+'">'+(has?esc(val):'<span style="color:var(--muted)">Aún no hay texto. Pulsa Editar para escribir.</span>')+'</div>'+
+      '<div class="ancla-edit-area space-y-2">'+
+        '<textarea id="ancla-'+a.id+'" rows="5" placeholder="Escribe aquí…">'+esc(val)+'</textarea>'+
+        '<div class="flex flex-wrap gap-2">'+
+          '<button class="btn btn-rose text-[10px] btn-save-ancla" type="button" onclick="saveAncla(\''+a.id+'\')">💾 Guardar cambios</button>'+
+          '<button class="btn btn-ghost text-[10px] btn-cancel-ancla" type="button" onclick="cancelEditAncla(\''+a.id+'\')">Cancelar</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="flex flex-wrap gap-2">'+
+        '<button class="btn btn-lilac text-[10px] btn-edit-toggle" type="button" onclick="startEditAncla(\''+a.id+'\')">✏️ Editar</button>'+
+        '<button class="btn btn-ghost text-[10px]" type="button" onclick="copyAncla(\''+a.id+'\')">📋 Copiar</button>'+
+        (a.custom?'<button class="btn btn-ghost text-[10px]" style="color:#b33" type="button" onclick="deleteCustomAncla(\''+a.id+'\')">Borrar ancla</button>':'')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+function startEditAncla(id) {
+  const card = document.getElementById('card-'+id);
+  if (card) card.classList.add('editing');
+  const ta = document.getElementById('ancla-'+id);
+  if (ta) { ta.focus(); }
+}
+function cancelEditAncla(id) {
+  const card = document.getElementById('card-'+id);
+  if (card) card.classList.remove('editing');
+  const ta = document.getElementById('ancla-'+id);
+  if (ta) ta.value = store.anclas[id] || '';
+}
+function saveAncla(id) {
+  const ta = document.getElementById('ancla-'+id);
+  store.anclas[id] = ta ? ta.value : '';
+  store.anclas[id+'_date'] = today();
+  save();
+  toast('✓ Guardado en Brújula · '+id);
+  renderAnclas();
+}
+function copyAncla(id) {
+  const def = allAnclaDefs().find(a => a.id === id);
+  const t = '🪞 '+(def?def.title:id)+'\n\n'+(store.anclas[id]||'');
+  navigator.clipboard.writeText(t).then(()=>toast('Copiado')).catch(()=>prompt('Copia', t));
+}
+function addCustomAncla() {
+  const title = (document.getElementById('new-ancla-title').value||'').trim();
+  if (!title) { toast('Pon un nombre'); return; }
+  const id = 'c_'+Date.now();
+  store.customAnclas = store.customAnclas || [];
+  store.customAnclas.push({ id, title });
+  store.anclas[id] = '';
+  document.getElementById('new-ancla-title').value = '';
+  save();
+  renderAnclas();
+  toast('Ancla creada · pulsa Editar para escribir');
+  setTimeout(() => startEditAncla(id), 100);
+}
+function deleteCustomAncla(id) {
+  if (!confirm('¿Borrar esta ancla y su texto?')) return;
+  store.customAnclas = (store.customAnclas||[]).filter(c => c.id !== id);
+  delete store.anclas[id];
+  delete store.anclas[id+'_date'];
+  save(); renderAnclas(); toast('Ancla borrada');
+}
+function renderRuedaUI() {
+  const scores = store.rueda || {};
+  const notesEl = document.getElementById('rueda-notas');
+  if (notesEl && notesEl !== document.activeElement) notesEl.value = scores._notas || '';
+  const sl = document.getElementById('wheel-sliders');
+  if (!sl) return;
+  sl.innerHTML = RUEDA_AREAS.map((name,i) => {
+    const v = scores[name] != null ? scores[name] : 5;
+    return '<div class="flex items-center gap-2 text-[11px] font-bold">'+
+      '<span class="w-28 truncate" style="color:var(--muted)">'+name+'</span>'+
+      '<input type="range" min="0" max="10" value="'+v+'" data-area="'+esc(name)+'" oninput="onRuedaSlide(this)" class="flex-1">'+
+      '<span class="w-5 text-right" id="rv-'+i+'">'+v+'</span></div>';
+  }).join('');
+  drawWheel();
+}
+function onRuedaSlide(el) {
+  const i = RUEDA_AREAS.indexOf(el.dataset.area);
+  const sp = document.getElementById('rv-'+i);
+  if (sp) sp.textContent = el.value;
+  if (!store.rueda) store.rueda = {};
+  store.rueda[el.dataset.area] = +el.value;
+  drawWheel();
+}
+function drawWheel() {
+  const box = document.getElementById('wheel-svg-box');
+  if (!box) return;
+  const n = RUEDA_AREAS.length;
+  const cx = 140, cy = 140, R = 120;
+  let paths = '';
+  for (let i=0;i<n;i++) {
+    const score = (store.rueda && store.rueda[RUEDA_AREAS[i]] != null) ? +store.rueda[RUEDA_AREAS[i]] : 5;
+    const r = (score/10) * R;
+    const a0 = (i/n)*Math.PI*2 - Math.PI/2;
+    const a1 = ((i+1)/n)*Math.PI*2 - Math.PI/2;
+    const x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
+    const x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
+    const large = 0;
+    paths += '<path d="M'+cx+','+cy+' L'+x0+','+y0+' A'+r+','+r+' 0 '+large+' 1 '+x1+','+y1+' Z" fill="'+RUEDA_COLORS[i%RUEDA_COLORS.length]+'" fill-opacity="0.75" stroke="#fff" stroke-width="1.5"/>';
+  }
+  // outer ring guide
+  paths += '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="none" stroke="rgba(180,140,160,0.35)" stroke-width="1.5" stroke-dasharray="4 3"/>';
+  for (let i=0;i<n;i++) {
+    const a = ((i+0.5)/n)*Math.PI*2 - Math.PI/2;
+    const lx = cx + (R+8)*Math.cos(a);
+    const ly = cy + (R+8)*Math.sin(a);
+    // short labels optional - skip for clarity
+  }
+  box.innerHTML = '<svg class="wheel-svg" viewBox="0 0 280 280">'+paths+'</svg>';
+}
+function saveRueda() {
+  if (!store.rueda) store.rueda = {};
+  document.querySelectorAll('#wheel-sliders input[type=range]').forEach(el => {
+    store.rueda[el.dataset.area] = +el.value;
+  });
+  store.rueda._notas = (document.getElementById('rueda-notas')||{}).value || '';
+  store.rueda._date = today();
+  // also mirror text summary into ancla rueda_vida for search
+  let summary = 'Rueda de vida · '+store.rueda._date+'\n';
+  RUEDA_AREAS.forEach(a => { summary += a+': '+(store.rueda[a]!=null?store.rueda[a]:'—')+'/10\n'; });
+  if (store.rueda._notas) summary += '\n'+store.rueda._notas;
+  store.anclas['rueda_vida'] = summary.replace(/\\\\n/g,'\\n');
+  store.anclas['rueda_vida_date'] = today();
+  save();
+  toast('✓ Rueda guardada en Brújula');
+  drawWheel();
+}
+function copyRueda() {
+  let t = '🪞 Rueda de vida\n';
+  RUEDA_AREAS.forEach(a => { t += a+': '+((store.rueda&&store.rueda[a]!=null)?store.rueda[a]:'—')+'/10\n'; });
+  if (store.rueda && store.rueda._notas) t += '\n'+store.rueda._notas;
+  t = t.replace(/\\\\n/g, '\\n');
+  navigator.clipboard.writeText(t).then(()=>toast('Copiado')).catch(()=>prompt('Copia', t));
+}
+
+/* —— BIBLIOTECA —— */
+function renderBiblio() {
+  const done = completedSessionIds();
+  document.getElementById('biblio-list').innerHTML = PHASES.map(p => {
+    let h = '<div class="glass rounded-3xl p-4 space-y-2">';
+    h += '<div class="font-black text-sm" style="color:var(--lilac-deep)">'+p.part+' · Fase '+p.id+'</div>';
+    h += '<div class="font-black">'+p.title+'</div>';
+    if (p.objetivo) h += '<p class="text-[11px] font-semibold" style="color:var(--muted)">'+p.objetivo+'</p>';
+    p.sessions.forEach(s => {
+      const ok = done.has(s.id);
+      h += '<button type="button" class="w-full text-left rounded-xl p-3 border border-pink-100 hover:bg-pink-50/50" onclick="openFromBiblio('+p.id+','+s.id+')">';
+      h += '<div class="flex justify-between"><span class="text-xs font-black">Sesión '+s.id+' · '+s.title+'</span>'+(ok?'<span class="chip chip-mint">hecha</span>':'<span class="chip chip-cream">pendiente</span>')+'</div>';
+      h += '</button>';
+    });
+    h += '</div>';
+    return h;
+  }).join('');
+}
+function openFromBiblio(fid, sid) {
+  switchTab('hoy');
+  document.getElementById('hoy-fase').value = fid;
+  fillSesiones();
+  document.getElementById('hoy-sesion').value = sid;
+  loadSessionForm();
+}
+
+/* —— LIBRE —— */
+function saveNota() {
+  const id = document.getElementById('nota-id').value;
+  const n = {
+    id: id || ('n'+Date.now()),
+    date: document.getElementById('nota-date').value || today(),
+    tipo: document.getElementById('nota-tipo').value,
+    titulo: document.getElementById('nota-titulo').value,
+    texto: document.getElementById('nota-texto').value
+  };
+  if (id) store.notas = store.notas.map(x => x.id===id?n:x);
+  else store.notas.push(n);
+  document.getElementById('nota-id').value = '';
+  document.getElementById('nota-titulo').value = '';
+  document.getElementById('nota-texto').value = '';
+  save(); renderNotas(); toast('Nota guardada');
+}
+function renderNotas() {
+  if (!document.getElementById('nota-date').value) document.getElementById('nota-date').value = today();
+  let list = store.notas.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const from = document.getElementById('nota-from').value;
+  const to = document.getElementById('nota-to').value;
+  if (from) list = list.filter(n => n.date >= from);
+  if (to) list = list.filter(n => n.date <= to);
+  document.getElementById('notas-list').innerHTML = list.map(n =>
+    '<div class="glass rounded-2xl p-3 text-xs space-y-1"><div class="flex justify-between"><span class="chip chip-sky">'+n.tipo+'</span><span class="font-bold" style="color:var(--muted)">'+n.date+'</span></div><strong>'+esc(n.titulo)+'</strong><p>'+esc(n.texto)+'</p><div class="flex gap-2"><button class="btn btn-ghost text-[10px] py-1" onclick="editNota(\''+n.id+'\')">Editar</button><button class="btn btn-ghost text-[10px] py-1" style="color:#b33" onclick="delNota(\''+n.id+'\')">Borrar</button><button class="btn btn-ghost text-[10px] py-1" onclick="copyNota(\''+n.id+'\')">Copiar</button></div></div>'
+  ).join('') || '<p class="text-xs" style="color:var(--muted)">Sin notas en el rango.</p>';
+}
+function editNota(id) {
+  const n = store.notas.find(x => x.id === id); if (!n) return;
+  document.getElementById('nota-id').value = n.id;
+  document.getElementById('nota-date').value = n.date;
+  document.getElementById('nota-tipo').value = n.tipo;
+  document.getElementById('nota-titulo').value = n.titulo;
+  document.getElementById('nota-texto').value = n.texto;
+}
+function delNota(id) {
+  if (!confirm('¿Borrar nota?')) return;
+  store.notas = store.notas.filter(n => n.id !== id); save(); renderNotas();
+}
+function copyNota(id) {
+  const n = store.notas.find(x => x.id === id); if (!n) return;
+  const t = n.tipo+' · '+n.date+'\n'+n.titulo+'\n\n'+n.texto;
+  navigator.clipboard.writeText(t).then(()=>toast('Copiado'));
+}
+
+/* —— REPORTES —— */
+function entriesInRange(from, to) {
+  return store.entries.filter(e => (!from || e.date >= from) && (!to || e.date <= to))
+    .sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+}
+function copyRangeReport() {
+  const from = document.getElementById('rep-from').value;
+  const to = document.getElementById('rep-to').value;
+  const list = entriesInRange(from, to);
+  let t = '🪞 REPORTE GUÍA INTEGRAL\n'+from+' → '+to+'\n━━━━━━━━━━━━━━━━━━━━\n\n';
+  list.forEach(e => {
+    if (e.tipo === 'sesion') {
+      const found = findSession(e.phaseId, e.sessionId);
+      t += buildSessionText(e, found)+'\n\n';
+    } else {
+      t += e.date+' · '+e.tipo+'\n';
+      if (e.fields) Object.keys(e.fields).forEach(k => { t += k+'\n'+e.fields[k]+'\n'; });
+      if (e.conclusion) t += 'Conclusión: '+e.conclusion+'\n';
+      t += '\n';
+    }
+  });
+  document.getElementById('rep-preview').textContent = t;
+  document.getElementById('rep-preview').classList.remove('hidden');
+  navigator.clipboard.writeText(t).then(()=>toast('Reporte copiado')).catch(()=>prompt('Copia', t));
+}
+function pdfRangeReport() {
+  copyRangeReport();
+  const area = document.getElementById('pdf-area');
+  area.classList.remove('hidden');
+  area.innerHTML = '<pre style="white-space:pre-wrap;font-size:11px;padding:12px;font-family:system-ui">'+esc(document.getElementById('rep-preview').textContent)+'</pre>';
+  html2pdf().set({margin:8, filename:'guia-rango.pdf', html2canvas:{scale:2}}).from(area).save().then(()=>area.classList.add('hidden'));
+}
+function copySemanal() {
+  const list = store.entries.filter(e => e.tipo==='semanal').sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,1);
+  if (!list.length) { toast('No hay revisión semanal guardada'); return; }
+  const e = list[0];
+  let t = '🪞 REVISIÓN SEMANAL · '+e.date+'\n\n';
+  if (e.fields) Object.keys(e.fields).forEach(k => { t += '• '+k+'\n'+e.fields[k]+'\n\n'; });
+  t += 'Conclusión: '+(e.conclusion||'');
+  navigator.clipboard.writeText(t).then(()=>toast('Copiado'));
+}
+
+(async function init() {
+  await loadCloud();
+  prepareHoy();
+  renderResumen();
+  document.getElementById('hoy-date').addEventListener('change', renderHoyHist);
+})();
+</script>
+</body>
+</html>
