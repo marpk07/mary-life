@@ -2,13 +2,13 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>MARY · Daily unificado (ejemplo)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MARY · Daily unificado</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 :root { --pink:#ec4899; --deep:#db2777; --vio:#a855f7; --text:#4a2040; --muted:#9d6b8a; }
-*{box-sizing:border-box;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+*{box-sizing:border-box;font-family:'Plus Jakarta Sans',system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
 body{
   margin:0;min-height:100vh;color:var(--text);
   background:
@@ -16,65 +16,92 @@ body{
     radial-gradient(ellipse at 100% 0%,rgba(168,85,247,.32),transparent 45%),
     linear-gradient(165deg,#fdf2f8,#faf5ff 50%,#fff1f2);
 }
-.demo{background:linear-gradient(90deg,#db2777,#a855f7);color:#fff;text-align:center;font-size:10px;font-weight:800;padding:6px}
 .card{background:rgba(255,255,255,.95);border:1px solid rgba(236,72,153,.22);border-radius:14px;box-shadow:0 6px 18px rgba(190,50,120,.1);padding:10px}
-input,select,textarea{width:100%;border:1.5px solid rgba(236,72,153,.28);border-radius:9px;padding:6px 8px;font-weight:600;font-size:12px;background:#fff;color:var(--text)}
+input,select,textarea{width:100%;border:1.5px solid rgba(236,72,153,.28);border-radius:9px;padding:7px 9px;font-weight:600;font-size:12px;background:#fff;color:var(--text)}
 input:focus,select:focus,textarea:focus{outline:none;border-color:#ec4899;box-shadow:0 0 0 3px rgba(236,72,153,.12)}
 .fld{font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;display:block;margin-bottom:2px}
-.btn{border:none;cursor:pointer;border-radius:12px;padding:10px 14px;font-weight:800;font-size:12px}
+.btn{border:none;cursor:pointer;border-radius:12px;padding:11px 14px;font-weight:800;font-size:12px}
 .btn-main{background:linear-gradient(135deg,#ec4899,#d946ef,#a855f7);color:#fff;box-shadow:0 6px 18px rgba(236,72,153,.35)}
 .btn-ghost{background:#fff;border:1.5px solid rgba(236,72,153,.35);color:var(--deep)}
-.tabs{display:flex;gap:4px;padding:2px;background:rgba(255,255,255,.7);border-radius:12px;border:1px solid rgba(236,72,153,.2)}
-.tab{flex:1;text-align:center;padding:8px 4px;border-radius:10px;font-size:11px;font-weight:800;cursor:pointer;color:var(--muted);border:none;background:transparent}
-.tab.on{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;box-shadow:0 4px 12px rgba(236,72,153,.3)}
+.tabs{display:flex;gap:4px;padding:3px;background:rgba(255,255,255,.75);border-radius:12px;border:1px solid rgba(236,72,153,.2)}
+.tab{flex:1;text-align:center;padding:9px 4px;border-radius:10px;font-size:11px;font-weight:800;cursor:pointer;color:var(--muted);border:none;background:transparent}
+.tab.on{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff}
 .chip{font-size:8px;font-weight:800;padding:2px 6px;border-radius:999px;background:#fce7f3;color:#be185d}
-.h{font-size:12px;font-weight:800;margin:0;display:flex;align-items:center;gap:6px}
+.h{font-size:12px;font-weight:800;margin:0 0 6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
-.mood-trigger{width:100%;text-align:left;border:1.5px solid rgba(236,72,153,.28);border-radius:9px;padding:7px 9px;font-weight:700;font-size:12px;background:#fff;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
-.mood-panel{display:none;margin-top:6px;max-height:180px;overflow-y:auto;border:1.5px solid rgba(236,72,153,.25);border-radius:10px;background:#fff;padding:4px;box-shadow:0 8px 20px rgba(190,50,120,.12)}
-.mood-panel.open{display:block}
-.mood-opt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font-size:12px;font-weight:700;width:100%;border:none;background:transparent;cursor:pointer;text-align:left;color:var(--text)}
-.mood-opt.sel,.mood-opt:hover{background:linear-gradient(135deg,#fce7f3,#f3e8ff)}
-.mood-tag{font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;background:linear-gradient(135deg,#fce7f3,#f3e8ff);color:#9d174d;border:1px solid rgba(236,72,153,.25);cursor:pointer}
-.pill{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:700;background:#fff;border:1.5px solid rgba(236,72,153,.25);cursor:pointer}
-.pill.on{background:linear-gradient(135deg,#fce7f3,#f3e8ff);border-color:#ec4899;color:#9d174d}
-.pill input{display:none}
-.hab{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:10px;background:#fdf2f8;border:1px solid rgba(236,72,153,.15);margin-bottom:4px;font-size:12px;font-weight:700}
-.hab input{width:auto;accent-color:#ec4899}
-.stars{display:flex;gap:4px}
-.star{width:28px;height:28px;border-radius:8px;border:1.5px solid rgba(236,72,153,.3);background:#fff;font-size:12px;cursor:pointer;font-weight:800;color:var(--muted)}
+.drop-btn{
+  width:100%;text-align:left;border:1.5px solid rgba(236,72,153,.28);border-radius:9px;
+  padding:8px 10px;font-weight:700;font-size:12px;background:#fff;color:var(--text);
+  display:flex;justify-content:space-between;align-items:center;cursor:pointer;
+}
+.drop-btn .ph{color:var(--muted)}
+.drop-panel{
+  display:none;margin-top:6px;max-height:200px;overflow-y:auto;
+  border:1.5px solid rgba(236,72,153,.25);border-radius:10px;background:#fff;padding:4px;
+  box-shadow:0 8px 20px rgba(190,50,120,.14);z-index:5;position:relative;
+}
+.drop-panel.open{display:block}
+.drop-opt{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;
+  font-size:12px;font-weight:700;width:100%;border:none;background:transparent;
+  cursor:pointer;text-align:left;color:var(--text);
+}
+.drop-opt:active,.drop-opt.sel{background:linear-gradient(135deg,#fce7f3,#f3e8ff)}
+.drop-opt .tick{width:16px;color:#ec4899;font-weight:900}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.tag{
+  font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;
+  background:linear-gradient(135deg,#fce7f3,#f3e8ff);color:#9d174d;
+  border:1px solid rgba(236,72,153,.25);cursor:pointer;
+}
+.toggle{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:7px 12px;border-radius:999px;font-size:11px;font-weight:700;
+  background:#fff;border:1.5px solid rgba(236,72,153,.28);cursor:pointer;
+  user-select:none;color:var(--text);
+}
+.toggle.on{
+  background:linear-gradient(135deg,#fce7f3,#f3e8ff);
+  border-color:#ec4899;color:#9d174d;
+  box-shadow:0 2px 8px rgba(236,72,153,.18);
+}
+.hab{display:flex;align-items:center;justify-content:space-between;padding:7px 9px;border-radius:10px;background:#fdf2f8;border:1px solid rgba(236,72,153,.15);margin-bottom:4px;font-size:12px;font-weight:700}
+.hab input{width:18px;height:18px;accent-color:#ec4899}
+.stars{display:flex;flex-wrap:wrap;gap:4px}
+.star{width:28px;height:28px;border-radius:8px;border:1.5px solid rgba(236,72,153,.3);background:#fff;font-size:11px;cursor:pointer;font-weight:800;color:var(--muted)}
 .star.on{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border-color:transparent}
 .pane{display:none}
 .pane.on{display:block}
 .hint{font-size:9px;font-weight:700;color:var(--muted);margin:4px 0 0}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(10px);background:#4a2040;color:#fff;padding:10px 16px;border-radius:12px;font-size:12px;font-weight:700;opacity:0;transition:.2s;z-index:50;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
-<div class="demo">✨ EJEMPLO · Daily = métricas + planner (lo que ya te gusta) · no es producción aún</div>
 
 <header class="px-3 pt-3 pb-2 max-w-lg mx-auto">
   <div class="flex items-center gap-2 mb-2">
     <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm shadow" style="background:linear-gradient(135deg,#ec4899,#a855f7)">🌸</div>
     <div class="flex-1">
       <div class="text-sm font-black" style="background:linear-gradient(90deg,#db2777,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Daily · Hoy</div>
-      <div class="text-[10px] font-bold" style="color:var(--muted)">Un día · métricas + reflexión</div>
+      <div class="text-[10px] font-bold" style="color:var(--muted)">Métricas + planner + reflexión</div>
     </div>
     <input type="date" id="fecha" style="width:auto;max-width:130px;padding:5px 6px;font-size:11px">
   </div>
-  <div class="tabs">
-    <button class="tab on" data-p="metricas" onclick="go(this)">💗 Métricas</button>
-    <button class="tab" data-p="planner" onclick="go(this)">✨ Planner</button>
-    <button class="tab" data-p="reflexion" onclick="go(this)">📝 Reflexión</button>
+  <div class="tabs" id="tabs">
+    <button type="button" class="tab on" data-pane="metricas">💗 Métricas</button>
+    <button type="button" class="tab" data-pane="planner">✨ Planner</button>
+    <button type="button" class="tab" data-pane="reflexion">📝 Reflexión</button>
   </div>
 </header>
 
-<main class="max-w-lg mx-auto px-3 pb-24 space-y-2">
+<main class="max-w-lg mx-auto px-3 pb-24">
 
-<!-- ===== MÉTRICAS ===== -->
+<!-- MÉTRICAS -->
 <div class="pane on space-y-2" id="pane-metricas">
 
-  <div class="card space-y-2">
+  <div class="card">
     <p class="h">💗 Cuerpo <span class="chip">→ Fitness</span></p>
     <div class="grid2">
       <div><label class="fld">Peso kg</label><input type="number" step="0.1" placeholder="58.0"></div>
@@ -83,38 +110,39 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#ec4899;box-sh
       <div><label class="fld">Agua L</label><input type="number" step="0.1" placeholder="2.0"></div>
       <div><label class="fld">Pasos</label><input type="number" placeholder="8000"></div>
       <div><label class="fld">Fase ciclo</label>
-        <select><option>—</option><option>Menstrual</option><option>Folicular</option><option>Ovulación</option><option>Lútea</option></select>
+        <select><option value="">—</option><option>Menstrual</option><option>Folicular</option><option>Ovulación</option><option>Lútea</option></select>
       </div>
       <div><label class="fld">Energía actividad</label><input type="number" min="1" max="10" placeholder="7"></div>
       <div><label class="fld">Energía reposo</label><input type="number" min="1" max="10" placeholder="6"></div>
     </div>
-    <div>
-      <label class="fld">Ánimo</label>
-      <button type="button" class="mood-trigger" onclick="document.getElementById('mood-panel').classList.toggle('open')">
-        <span id="mood-lab" style="color:var(--muted)">Elegir estados…</span><span style="color:#ec4899">▾</span>
+
+    <div class="mt-2">
+      <label class="fld">Estados de ánimo</label>
+      <button type="button" class="drop-btn" id="btn-mood" data-drop="mood">
+        <span class="ph" id="lab-mood">Elegir…</span><span style="color:#ec4899">▾</span>
       </button>
-      <div class="mood-panel" id="mood-panel"></div>
-      <div class="flex flex-wrap gap-1 mt-1" id="mood-tags"></div>
+      <div class="drop-panel" id="panel-mood"></div>
+      <div class="tags" id="tags-mood"></div>
     </div>
-    <div>
-      <label class="fld">Síntomas de hoy</label>
-      <div class="flex flex-wrap gap-1 mt-1">
-        <label class="pill" onclick="this.classList.toggle('on')"><input type="checkbox"> Cólicos</label>
-        <label class="pill" onclick="this.classList.toggle('on')"><input type="checkbox"> Dolor cabeza</label>
-        <label class="pill" onclick="this.classList.toggle('on')"><input type="checkbox"> Hinchazón</label>
-        <label class="pill" onclick="this.classList.toggle('on')"><input type="checkbox"> Fatiga</label>
-        <label class="pill" onclick="this.classList.toggle('on')"><input type="checkbox"> Antojos</label>
-        <label class="pill" onclick="this.classList.toggle('on')"><input type="checkbox"> Ninguno</label>
-      </div>
+
+    <div class="mt-2">
+      <label class="fld">Síntomas</label>
+      <button type="button" class="drop-btn" id="btn-sint" data-drop="sint">
+        <span class="ph" id="lab-sint">Elegir…</span><span style="color:#ec4899">▾</span>
+      </button>
+      <div class="drop-panel" id="panel-sint"></div>
+      <div class="tags" id="tags-sint"></div>
     </div>
   </div>
 
-  <div class="card space-y-2">
+  <div class="card">
     <p class="h">💪 Entreno <span class="chip">→ Fitness</span></p>
-    <label class="pill" onclick="this.classList.toggle('on')"><input type="checkbox"> Entrené</label>
+    <div class="flex flex-wrap gap-1 mb-2">
+      <button type="button" class="toggle" data-k="entreno">Entrené</button>
+    </div>
     <div><label class="fld">Rutina</label>
       <select>
-        <option>—</option>
+        <option value="">—</option>
         <option>Push (Pecho/Hombros/Tríceps)</option>
         <option>Piernas 1 (Cuádriceps + Aductores)</option>
         <option>Pull (Espalda + Bíceps)</option>
@@ -123,18 +151,18 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#ec4899;box-sh
         <option>Movilidad / rodillas</option>
       </select>
     </div>
-    <div class="grid3">
+    <div class="grid3 mt-1">
       <div><label class="fld">Min</label><input type="number" placeholder="55"></div>
       <div><label class="fld">FC prom</label><input type="number" placeholder="140"></div>
       <div><label class="fld">Cal quem.</label><input type="number" placeholder="300"></div>
     </div>
   </div>
 
-  <div class="card space-y-2">
+  <div class="card">
     <p class="h">🏃‍♀️ Cardio <span class="chip">→ Fitness</span></p>
-    <div class="flex flex-wrap gap-1">
-      <label class="pill" onclick="this.classList.toggle('on')"><input type="checkbox"> Cardio</label>
-      <label class="pill" onclick="this.classList.toggle('on')"><input type="checkbox"> Bici 15–20</label>
+    <div class="flex flex-wrap gap-1 mb-2">
+      <button type="button" class="toggle" data-k="cardio">Cardio</button>
+      <button type="button" class="toggle" data-k="bici">Bici 15–20</button>
     </div>
     <div class="grid2">
       <div><label class="fld">Tipo</label><select><option>Zona 2</option><option>HIIT</option><option>Bici</option><option>Caminata</option></select></div>
@@ -144,7 +172,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#ec4899;box-sh
     </div>
   </div>
 
-  <div class="card space-y-2">
+  <div class="card">
     <p class="h">🥗 Alimentación <span class="chip">→ Fitness</span></p>
     <div class="grid2">
       <div><label class="fld">Calorías</label><input type="number" placeholder="1550"></div>
@@ -152,15 +180,15 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#ec4899;box-sh
       <div><label class="fld">Carbos g</label><input type="number" placeholder="140"></div>
       <div><label class="fld">Grasas g</label><input type="number" placeholder="45"></div>
     </div>
-    <div class="flex flex-wrap gap-1">
-      <label class="pill" onclick="this.classList.toggle('on')"><input type="checkbox"> Creatina</label>
-      <label class="pill" onclick="this.classList.toggle('on')"><input type="checkbox"> Omega</label>
-      <label class="pill" onclick="this.classList.toggle('on')"><input type="checkbox"> Magnesio</label>
-      <label class="pill" onclick="this.classList.toggle('on')"><input type="checkbox"> Dulce</label>
+    <div class="flex flex-wrap gap-1 mt-2">
+      <button type="button" class="toggle" data-k="creatina">Creatina</button>
+      <button type="button" class="toggle" data-k="omega">Omega</button>
+      <button type="button" class="toggle" data-k="magnesio">Magnesio</button>
+      <button type="button" class="toggle" data-k="dulce">Dulce</button>
     </div>
   </div>
 
-  <div class="card space-y-2">
+  <div class="card">
     <p class="h">♠️ Póker · día <span class="chip">→ Póker</span></p>
     <div class="grid3">
       <div><label class="fld">Horas</label><input type="number" step="0.25" placeholder="3.5"></div>
@@ -170,173 +198,246 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#ec4899;box-sh
       <div><label class="fld">Mindset</label><input type="number" min="1" max="10" placeholder="8"></div>
       <div><label class="fld">Nivel</label><input type="number" min="1" max="10" placeholder="7"></div>
     </div>
-    <div class="grid2">
+    <div class="grid2 mt-1">
       <div><label class="fld">Estudio min</label><input type="number" placeholder="45"></div>
-      <div class="flex items-end"><label class="pill" onclick="this.classList.toggle('on')"><input type="checkbox"> Revisión manos</label></div>
+      <div class="flex items-end pb-0.5">
+        <button type="button" class="toggle" data-k="manos">Revisión manos</button>
+      </div>
     </div>
-    <p class="hint">Sesiones detalladas (timer, warm-up…) siguen en la sección Póker</p>
+    <p class="hint">Sesiones detalladas siguen en la sección Póker</p>
   </div>
 
-  <div class="card space-y-2">
+  <div class="card">
     <p class="h">🕊️ Espíritu <span class="chip">→ Espiritual</span></p>
-    <div class="flex flex-wrap gap-1">
-      <label class="pill" onclick="this.classList.toggle('on')"><input type="checkbox"> Devocional</label>
-      <label class="pill" onclick="this.classList.toggle('on')"><input type="checkbox"> Capítulo</label>
+    <div class="flex flex-wrap gap-1 mb-2">
+      <button type="button" class="toggle" data-k="devocional">Devocional</button>
+      <button type="button" class="toggle" data-k="capitulo">Capítulo</button>
     </div>
     <div class="grid2">
       <div><label class="fld">Libro</label><input placeholder="Salmos"></div>
       <div><label class="fld">Cap.</label><input placeholder="23"></div>
     </div>
-    <div><label class="fld">Minutos</label><input type="number" placeholder="15" style="max-width:100px"></div>
+    <div class="mt-1"><label class="fld">Minutos</label><input type="number" placeholder="15" style="max-width:100px"></div>
   </div>
 </div>
 
-<!-- ===== PLANNER ===== -->
+<!-- PLANNER -->
 <div class="pane space-y-2" id="pane-planner">
-  <div class="card space-y-2">
+  <div class="card">
     <p class="h">🎯 Intención del día</p>
     <input placeholder="Hoy quiero…">
   </div>
-  <div class="card space-y-2">
+  <div class="card space-y-1.5">
     <p class="h">🙏 Agradecimiento</p>
     <input placeholder="1.">
     <input placeholder="2.">
     <input placeholder="3.">
   </div>
-  <div class="card space-y-2">
+  <div class="card space-y-1.5">
     <p class="h">⭐ Top 3 goals</p>
     <input placeholder="Goal 1">
     <input placeholder="Goal 2">
     <input placeholder="Goal 3">
   </div>
-  <div class="card space-y-1">
-    <p class="h mb-1">✅ Hábitos de hoy</p>
+  <div class="card">
+    <p class="h">✅ Hábitos de hoy</p>
     <div class="hab"><span>Agua 2L+</span><input type="checkbox"></div>
     <div class="hab"><span>No dulce</span><input type="checkbox"></div>
     <div class="hab"><span>Creatina</span><input type="checkbox"></div>
     <div class="hab"><span>Lectura / devocional</span><input type="checkbox"></div>
     <div class="hab"><span>Tracker lleno</span><input type="checkbox"></div>
-    <p class="hint">Puedes enlazarlos con Metas · esto es el check del día</p>
   </div>
-  <div class="card space-y-2">
+  <div class="card">
     <p class="h">🌅 Rutina mañana</p>
     <div class="hab"><span>Bici / movimiento</span><input type="checkbox"></div>
     <div class="hab"><span>Devocional</span><input type="checkbox"></div>
     <div class="hab"><span>Desayuno consciente</span><input type="checkbox"></div>
-    <textarea rows="2" placeholder="Notas mañana…"></textarea>
+    <textarea rows="2" placeholder="Notas mañana…" class="mt-1"></textarea>
   </div>
-  <div class="card space-y-2">
+  <div class="card">
     <p class="h">🌙 Rutina noche</p>
     <div class="hab"><span>Sin pantallas late</span><input type="checkbox"></div>
     <div class="hab"><span>Skincare / higiene</span><input type="checkbox"></div>
     <div class="hab"><span>Revisión del día</span><input type="checkbox"></div>
-    <textarea rows="2" placeholder="Notas noche…"></textarea>
+    <textarea rows="2" placeholder="Notas noche…" class="mt-1"></textarea>
   </div>
-  <div class="card space-y-2">
+  <div class="card">
     <p class="h">📊 Productividad (1–10)</p>
-    <div class="stars" id="prod-stars">
-      <button type="button" class="star" data-v="1">1</button>
-      <button type="button" class="star" data-v="2">2</button>
-      <button type="button" class="star" data-v="3">3</button>
-      <button type="button" class="star" data-v="4">4</button>
-      <button type="button" class="star" data-v="5">5</button>
-      <button type="button" class="star" data-v="6">6</button>
-      <button type="button" class="star" data-v="7">7</button>
-      <button type="button" class="star" data-v="8">8</button>
-      <button type="button" class="star" data-v="9">9</button>
-      <button type="button" class="star" data-v="10">10</button>
-    </div>
+    <div class="stars" id="prod-stars"></div>
   </div>
 </div>
 
-<!-- ===== REFLEXIÓN ===== -->
+<!-- REFLEXIÓN -->
 <div class="pane space-y-2" id="pane-reflexion">
   <div class="card space-y-2">
-    <p class="h">📝 Journal · reflexión</p>
-    <label class="fld">¿Qué salió bien hoy?</label>
-    <textarea rows="2" placeholder="…"></textarea>
-    <label class="fld">¿Qué fue difícil?</label>
-    <textarea rows="2" placeholder="…"></textarea>
-    <label class="fld">¿Qué aprendí o noté?</label>
-    <textarea rows="2" placeholder="…"></textarea>
+    <p class="h">📝 Journal</p>
+    <div><label class="fld">¿Qué salió bien?</label><textarea rows="2" placeholder="…"></textarea></div>
+    <div><label class="fld">¿Qué fue difícil?</label><textarea rows="2" placeholder="…"></textarea></div>
+    <div><label class="fld">¿Qué aprendí o noté?</label><textarea rows="2" placeholder="…"></textarea></div>
   </div>
   <div class="card space-y-2">
     <p class="h">🔍 Revisión del día</p>
-    <label class="fld">¿Cumplí mi intención?</label>
-    <select><option>—</option><option>Sí</option><option>Parcial</option><option>No</option></select>
-    <label class="fld">¿Qué haría distinto mañana?</label>
-    <textarea rows="2" placeholder="…"></textarea>
+    <div><label class="fld">¿Cumplí mi intención?</label>
+      <select><option value="">—</option><option>Sí</option><option>Parcial</option><option>No</option></select>
+    </div>
+    <div><label class="fld">¿Qué haría distinto mañana?</label><textarea rows="2" placeholder="…"></textarea></div>
   </div>
-  <div class="card space-y-2">
+  <div class="card">
     <p class="h">📔 Diario libre</p>
-    <textarea rows="4" placeholder="Escribe libremente cómo te fue…"></textarea>
+    <textarea rows="4" placeholder="Escribe libremente…"></textarea>
   </div>
 </div>
 
 </main>
 
-<footer class="fixed bottom-0 left-0 right-0 p-2.5" style="background:linear-gradient(to top,rgba(253,242,248,.98),rgba(253,242,248,.7));backdrop-filter:blur(8px)">
+<footer class="fixed bottom-0 left-0 right-0 p-2.5" style="background:linear-gradient(to top,rgba(253,242,248,.98),rgba(253,242,248,.75));backdrop-filter:blur(8px)">
   <div class="max-w-lg mx-auto flex gap-2">
-    <button class="btn btn-main flex-1" onclick="alert('En producción: guarda métricas en Fitness/Póker/Espiritual + planner en Daily')">💾 Guardar todo el día</button>
-    <button class="btn btn-ghost" onclick="alert('Editar')">✏️</button>
+    <button type="button" class="btn btn-main flex-1" id="btn-save">💾 Guardar día</button>
+    <button type="button" class="btn btn-ghost" id="btn-edit">✏️</button>
   </div>
 </footer>
+<div id="toast"></div>
 
 <script>
-const MOODS=['Motivada','Feliz','Tranquila','Agradecida','Enfocada','Enérgica','Ansiosa','Pensativa','Cansada','Desmotivada','Estresada','Apática','Bajoneada','Irritable','Insegura','Ilusionada','Contenta','Neutral','Abrumada','Orgullosa','Calmada','Dispersa'];
-let selected=[];
-const panel=document.getElementById('mood-panel');
-panel.innerHTML=MOODS.map(m=>'<button type="button" class="mood-opt" data-m="'+m+'" onclick="pick(\\''+m+'\\')"><span style="width:14px;color:#ec4899"> </span>'+m+'</button>').join('');
-function pick(m){
-  const i=selected.indexOf(m); if(i>=0)selected.splice(i,1); else selected.push(m);
-  panel.querySelectorAll('.mood-opt').forEach(b=>{
-    const on=selected.includes(b.dataset.m);
-    b.classList.toggle('sel',on);
-    b.querySelector('span').textContent=on?'✓':'';
-  });
-  document.getElementById('mood-lab').textContent=selected.length?selected.length+' seleccionados':'Elegir estados…';
-  document.getElementById('mood-lab').style.color=selected.length?'var(--text)':'var(--muted)';
-  document.getElementById('mood-tags').innerHTML=selected.map((m,idx)=>'<span class="mood-tag" onclick="selected.splice('+idx+',1);pick(\\'\\')">'+m+' ×</span>').join('');
-  // re-render tags properly
-  document.getElementById('mood-tags').innerHTML=selected.map(m=>'<span class="mood-tag" data-m="'+m+'">'+m+' ×</span>').join('');
-  document.querySelectorAll('#mood-tags .mood-tag').forEach(t=>{
-    t.onclick=()=>{selected=selected.filter(x=>x!==t.dataset.m);pick('__refresh__');};
-  });
-}
-// fix refresh
-const _pick=pick;
-pick=function(m){
-  if(m!=='__refresh__'){
-    const i=selected.indexOf(m); if(i>=0)selected.splice(i,1); else selected.push(m);
+(function () {
+  const MOODS = [
+    'Motivada','Feliz','Tranquila','Agradecida','Enfocada','Enérgica',
+    'Ansiosa','Pensativa','Cansada','Desmotivada','Estresada','Apática',
+    'Bajoneada','Irritable','Insegura','Ilusionada','Contenta','Neutral',
+    'Abrumada','Orgullosa','Calmada','Dispersa'
+  ];
+  const SINTOMAS = [
+    'Cólicos','Dolor de cabeza','Hinchazón','Fatiga','Antojos',
+    'Náuseas','Dolor de espalda','Sensibilidad senos','Insomnio',
+    'Irritabilidad física','Acné','Ninguno'
+  ];
+
+  const selected = { mood: [], sint: [] };
+
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function () { t.classList.remove('show'); }, 2000);
   }
-  panel.querySelectorAll('.mood-opt').forEach(b=>{
-    const on=selected.includes(b.dataset.m);
-    b.classList.toggle('sel',on);
-    b.querySelector('span').textContent=on?'✓':'';
+
+  function renderDrop(key, list, panelId, labId, tagsId) {
+    const panel = document.getElementById(panelId);
+    panel.innerHTML = list.map(function (item) {
+      return '<button type="button" class="drop-opt" data-key="' + key + '" data-val="' + item + '">' +
+        '<span class="tick"></span><span>' + item + '</span></button>';
+    }).join('');
+
+    panel.querySelectorAll('.drop-opt').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const val = btn.getAttribute('data-val');
+        const arr = selected[key];
+        const i = arr.indexOf(val);
+        if (i >= 0) arr.splice(i, 1);
+        else arr.push(val);
+        updateDropUI(key, labId, tagsId, panelId);
+      });
+    });
+  }
+
+  function updateDropUI(key, labId, tagsId, panelId) {
+    const arr = selected[key];
+    const lab = document.getElementById(labId);
+    if (!arr.length) {
+      lab.textContent = 'Elegir…';
+      lab.className = 'ph';
+    } else {
+      lab.textContent = arr.length + ' seleccionados';
+      lab.className = '';
+    }
+    document.querySelectorAll('#' + panelId + ' .drop-opt').forEach(function (btn) {
+      const on = arr.indexOf(btn.getAttribute('data-val')) >= 0;
+      btn.classList.toggle('sel', on);
+      btn.querySelector('.tick').textContent = on ? '✓' : '';
+    });
+    const tags = document.getElementById(tagsId);
+    tags.innerHTML = arr.map(function (v) {
+      return '<span class="tag" data-key="' + key + '" data-val="' + v + '">' + v + ' ×</span>';
+    }).join('');
+    tags.querySelectorAll('.tag').forEach(function (tag) {
+      tag.addEventListener('click', function () {
+        const k = tag.getAttribute('data-key');
+        const v = tag.getAttribute('data-val');
+        selected[k] = selected[k].filter(function (x) { return x !== v; });
+        if (k === 'mood') updateDropUI('mood', 'lab-mood', 'tags-mood', 'panel-mood');
+        if (k === 'sint') updateDropUI('sint', 'lab-sint', 'tags-sint', 'panel-sint');
+      });
+    });
+  }
+
+  // Build dropdowns
+  renderDrop('mood', MOODS, 'panel-mood', 'lab-mood', 'tags-mood');
+  renderDrop('sint', SINTOMAS, 'panel-sint', 'lab-sint', 'tags-sint');
+
+  // Open/close dropdowns
+  document.querySelectorAll('.drop-btn').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const which = btn.getAttribute('data-drop');
+      const panel = document.getElementById('panel-' + which);
+      const wasOpen = panel.classList.contains('open');
+      document.querySelectorAll('.drop-panel').forEach(function (p) { p.classList.remove('open'); });
+      if (!wasOpen) panel.classList.add('open');
+    });
   });
-  document.getElementById('mood-lab').textContent=selected.length?selected.length+' seleccionados':'Elegir estados…';
-  document.getElementById('mood-lab').style.color=selected.length?'var(--text)':'var(--muted)';
-  document.getElementById('mood-tags').innerHTML=selected.map(m=>'<span class="mood-tag" data-m="'+m+'">'+m+' ×</span>').join('');
-  document.querySelectorAll('#mood-tags .mood-tag').forEach(t=>{
-    t.onclick=()=>{selected=selected.filter(x=>x!==t.dataset.m);pick('__refresh__');};
+
+  // Toggle chips (creatina, dulce, etc.)
+  document.querySelectorAll('.toggle').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      btn.classList.toggle('on');
+    });
   });
-};
 
-function go(btn){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-  btn.classList.add('on');
-  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
-  document.getElementById('pane-'+btn.dataset.p).classList.add('on');
-}
+  // Tabs
+  document.querySelectorAll('#tabs .tab').forEach(function (tab) {
+    tab.addEventListener('click', function (e) {
+      e.preventDefault();
+      document.querySelectorAll('#tabs .tab').forEach(function (t) { t.classList.remove('on'); });
+      tab.classList.add('on');
+      var pane = tab.getAttribute('data-pane');
+      document.querySelectorAll('.pane').forEach(function (p) { p.classList.remove('on'); });
+      document.getElementById('pane-' + pane).classList.add('on');
+      document.querySelectorAll('.drop-panel').forEach(function (p) { p.classList.remove('open'); });
+      window.scrollTo(0, 0);
+    });
+  });
 
-document.querySelectorAll('#prod-stars .star').forEach(s=>{
-  s.onclick=()=>{
-    const v=+s.dataset.v;
-    document.querySelectorAll('#prod-stars .star').forEach(x=>x.classList.toggle('on',+x.dataset.v<=v));
-  };
-});
+  // Productivity stars
+  var stars = document.getElementById('prod-stars');
+  for (var i = 1; i <= 10; i++) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'star';
+    b.textContent = String(i);
+    b.setAttribute('data-v', String(i));
+    b.addEventListener('click', function () {
+      var v = +this.getAttribute('data-v');
+      stars.querySelectorAll('.star').forEach(function (x) {
+        x.classList.toggle('on', +x.getAttribute('data-v') <= v);
+      });
+    });
+    stars.appendChild(b);
+  }
 
-document.getElementById('fecha').value=new Date().toISOString().slice(0,10);
+  document.getElementById('fecha').value = new Date().toISOString().slice(0, 10);
+
+  document.getElementById('btn-save').addEventListener('click', function () {
+    document.querySelectorAll('.drop-panel').forEach(function (p) { p.classList.remove('open'); });
+    toast('✓ Guardado (demo)');
+  });
+  document.getElementById('btn-edit').addEventListener('click', function () {
+    toast('Modo edición');
+  });
+})();
 </script>
 </body>
 </html>
