@@ -76,6 +76,15 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#ec4899;box-sh
 .hint{font-size:9px;font-weight:700;color:var(--muted);margin:4px 0 0}
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(10px);background:#4a2040;color:#fff;padding:10px 16px;border-radius:12px;font-size:12px;font-weight:700;opacity:0;transition:.2s;z-index:50;pointer-events:none}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.btn-add{border:none;background:transparent;color:#a855f7;font-size:10px;font-weight:800;cursor:pointer;padding:4px 6px}
+.row-item{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid rgba(236,72,153,.1)}
+.row-item:last-child{border-bottom:none}
+.row-item input[type=checkbox]{width:18px;height:18px;accent-color:#ec4899;flex-shrink:0}
+.row-item input[type=text]{flex:1;border:1px solid rgba(236,72,153,.2);border-radius:8px;padding:5px 8px;font-size:12px;font-weight:600}
+.row-item.done input[type=text]{text-decoration:line-through;opacity:.55}
+.row-del{border:none;background:transparent;color:#c084a0;font-size:14px;font-weight:800;cursor:pointer;padding:2px 6px;flex-shrink:0}
+.row-del:hover{color:#e11d48}
+
 </style>
 </head>
 <body>
@@ -225,42 +234,54 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#ec4899;box-sh
 <div class="pane space-y-2" id="pane-planner">
   <div class="card">
     <p class="h">🎯 Intención del día</p>
-    <input placeholder="Hoy quiero…">
+    <input id="intention" placeholder="Hoy quiero…">
   </div>
   <div class="card space-y-1.5">
     <p class="h">🙏 Agradecimiento</p>
-    <input placeholder="1.">
-    <input placeholder="2.">
-    <input placeholder="3.">
+    <input id="grat1" placeholder="1.">
+    <input id="grat2" placeholder="2.">
+    <input id="grat3" placeholder="3.">
   </div>
   <div class="card space-y-1.5">
     <p class="h">⭐ Top 3 goals</p>
-    <input placeholder="Goal 1">
-    <input placeholder="Goal 2">
-    <input placeholder="Goal 3">
+    <input id="goal1" placeholder="Goal 1">
+    <input id="goal2" placeholder="Goal 2">
+    <input id="goal3" placeholder="Goal 3">
   </div>
+
   <div class="card">
-    <p class="h">✅ Hábitos de hoy</p>
-    <div class="hab"><span>Agua 2L+</span><input type="checkbox"></div>
-    <div class="hab"><span>No dulce</span><input type="checkbox"></div>
-    <div class="hab"><span>Creatina</span><input type="checkbox"></div>
-    <div class="hab"><span>Lectura / devocional</span><input type="checkbox"></div>
-    <div class="hab"><span>Tracker lleno</span><input type="checkbox"></div>
+    <div class="flex items-center justify-between mb-1">
+      <p class="h" style="margin:0">📋 Pendientes de hoy (To-do)</p>
+      <button type="button" class="btn-add" id="btn-add-todo">+ Añadir</button>
+    </div>
+    <div id="todo-list"></div>
+    <p class="hint">Lo importante del día · marca, edita o borra</p>
   </div>
+
   <div class="card">
-    <p class="h">🌅 Rutina mañana</p>
-    <div class="hab"><span>Bici / movimiento</span><input type="checkbox"></div>
-    <div class="hab"><span>Devocional</span><input type="checkbox"></div>
-    <div class="hab"><span>Desayuno consciente</span><input type="checkbox"></div>
-    <textarea rows="2" placeholder="Notas mañana…" class="mt-1"></textarea>
+    <div class="flex items-center justify-between mb-1">
+      <p class="h" style="margin:0">✅ Hábitos</p>
+      <button type="button" class="btn-add" id="btn-add-habit">+ Añadir</button>
+    </div>
+    <div id="habit-list"></div>
   </div>
+
   <div class="card">
-    <p class="h">🌙 Rutina noche</p>
-    <div class="hab"><span>Sin pantallas late</span><input type="checkbox"></div>
-    <div class="hab"><span>Skincare / higiene</span><input type="checkbox"></div>
-    <div class="hab"><span>Revisión del día</span><input type="checkbox"></div>
-    <textarea rows="2" placeholder="Notas noche…" class="mt-1"></textarea>
+    <div class="flex items-center justify-between mb-1">
+      <p class="h" style="margin:0">🌅 Rutina mañana</p>
+      <button type="button" class="btn-add" id="btn-add-morning">+ Añadir</button>
+    </div>
+    <div id="morning-list"></div>
   </div>
+
+  <div class="card">
+    <div class="flex items-center justify-between mb-1">
+      <p class="h" style="margin:0">🌙 Rutina noche</p>
+      <button type="button" class="btn-add" id="btn-add-night">+ Añadir</button>
+    </div>
+    <div id="night-list"></div>
+  </div>
+
   <div class="card">
     <p class="h">📊 Productividad (1–10)</p>
     <div class="stars" id="prod-stars"></div>
@@ -312,59 +333,73 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#ec4899;box-sh
     'Irritabilidad física','Acné','Ninguno'
   ];
 
+  // Same defaults as Daily Planner real
+  const defaultMorning = [
+    'Pesarme','Tomar agua con sal','Sacar a Moka','Tomar el sol',
+    'Café','Cepillarme','Caminar','Gratitud','Devocional',
+    'Revisión de pendientes','Alistarme'
+  ];
+  const defaultNight = [
+    'Desmaquillarme','Cepillarme','Tomar agua','Sacar a Moka',
+    'Trackers - app','Devocional','Gratitud','Ordenar entorno',
+    'Tomar creatina','Pendientes','Orar'
+  ];
+  const defaultHabits = [
+    'Meditar (10 min)','Leer la Biblia / Devocional','Entrenamiento de Moka',
+    'Skincare','Espacio espiritual','Ejercicio (pesas o cardio)'
+  ];
+
   const selected = { mood: [], sint: [] };
+  let todos = [];
+  let habits = defaultHabits.map(function (t, i) { return { id: i + 1, text: t, done: false }; });
+  let morning = defaultMorning.map(function (t, i) { return { id: i + 1, text: t, done: false }; });
+  let night = defaultNight.map(function (t, i) { return { id: i + 100, text: t, done: false }; });
+  let idSeq = 1000;
 
   function toast(msg) {
-    const t = document.getElementById('toast');
+    var t = document.getElementById('toast');
     t.textContent = msg;
     t.classList.add('show');
     setTimeout(function () { t.classList.remove('show'); }, 2000);
   }
 
   function renderDrop(key, list, panelId, labId, tagsId) {
-    const panel = document.getElementById(panelId);
+    var panel = document.getElementById(panelId);
     panel.innerHTML = list.map(function (item) {
       return '<button type="button" class="drop-opt" data-key="' + key + '" data-val="' + item + '">' +
         '<span class="tick"></span><span>' + item + '</span></button>';
     }).join('');
-
     panel.querySelectorAll('.drop-opt').forEach(function (btn) {
       btn.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
-        const val = btn.getAttribute('data-val');
-        const arr = selected[key];
-        const i = arr.indexOf(val);
-        if (i >= 0) arr.splice(i, 1);
-        else arr.push(val);
+        var val = btn.getAttribute('data-val');
+        var arr = selected[key];
+        var i = arr.indexOf(val);
+        if (i >= 0) arr.splice(i, 1); else arr.push(val);
         updateDropUI(key, labId, tagsId, panelId);
       });
     });
   }
 
   function updateDropUI(key, labId, tagsId, panelId) {
-    const arr = selected[key];
-    const lab = document.getElementById(labId);
-    if (!arr.length) {
-      lab.textContent = 'Elegir…';
-      lab.className = 'ph';
-    } else {
-      lab.textContent = arr.length + ' seleccionados';
-      lab.className = '';
-    }
+    var arr = selected[key];
+    var lab = document.getElementById(labId);
+    if (!arr.length) { lab.textContent = 'Elegir…'; lab.className = 'ph'; }
+    else { lab.textContent = arr.length + ' seleccionados'; lab.className = ''; }
     document.querySelectorAll('#' + panelId + ' .drop-opt').forEach(function (btn) {
-      const on = arr.indexOf(btn.getAttribute('data-val')) >= 0;
+      var on = arr.indexOf(btn.getAttribute('data-val')) >= 0;
       btn.classList.toggle('sel', on);
       btn.querySelector('.tick').textContent = on ? '✓' : '';
     });
-    const tags = document.getElementById(tagsId);
+    var tags = document.getElementById(tagsId);
     tags.innerHTML = arr.map(function (v) {
       return '<span class="tag" data-key="' + key + '" data-val="' + v + '">' + v + ' ×</span>';
     }).join('');
     tags.querySelectorAll('.tag').forEach(function (tag) {
       tag.addEventListener('click', function () {
-        const k = tag.getAttribute('data-key');
-        const v = tag.getAttribute('data-val');
+        var k = tag.getAttribute('data-key');
+        var v = tag.getAttribute('data-val');
         selected[k] = selected[k].filter(function (x) { return x !== v; });
         if (k === 'mood') updateDropUI('mood', 'lab-mood', 'tags-mood', 'panel-mood');
         if (k === 'sint') updateDropUI('sint', 'lab-sint', 'tags-sint', 'panel-sint');
@@ -372,24 +407,21 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#ec4899;box-sh
     });
   }
 
-  // Build dropdowns
   renderDrop('mood', MOODS, 'panel-mood', 'lab-mood', 'tags-mood');
   renderDrop('sint', SINTOMAS, 'panel-sint', 'lab-sint', 'tags-sint');
 
-  // Open/close dropdowns
   document.querySelectorAll('.drop-btn').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
-      const which = btn.getAttribute('data-drop');
-      const panel = document.getElementById('panel-' + which);
-      const wasOpen = panel.classList.contains('open');
+      var which = btn.getAttribute('data-drop');
+      var panel = document.getElementById('panel-' + which);
+      var wasOpen = panel.classList.contains('open');
       document.querySelectorAll('.drop-panel').forEach(function (p) { p.classList.remove('open'); });
       if (!wasOpen) panel.classList.add('open');
     });
   });
 
-  // Toggle chips (creatina, dulce, etc.)
   document.querySelectorAll('.toggle').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       e.preventDefault();
@@ -397,7 +429,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#ec4899;box-sh
     });
   });
 
-  // Tabs
   document.querySelectorAll('#tabs .tab').forEach(function (tab) {
     tab.addEventListener('click', function (e) {
       e.preventDefault();
@@ -410,6 +441,68 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#ec4899;box-sh
       window.scrollTo(0, 0);
     });
   });
+
+  // ---- dynamic lists ----
+  function renderList(arr, containerId, kind) {
+    var box = document.getElementById(containerId);
+    if (!arr.length) {
+      box.innerHTML = '<p class="hint" style="text-align:center;padding:8px">Vacío · pulsa + Añadir</p>';
+      return;
+    }
+    box.innerHTML = arr.map(function (item, idx) {
+      return '<div class="row-item' + (item.done ? ' done' : '') + '" data-idx="' + idx + '">' +
+        '<input type="checkbox" ' + (item.done ? 'checked' : '') + ' data-act="check" data-kind="' + kind + '" data-idx="' + idx + '">' +
+        '<input type="text" value="' + String(item.text).replace(/"/g, '&quot;') + '" data-act="text" data-kind="' + kind + '" data-idx="' + idx + '">' +
+        '<button type="button" class="row-del" data-act="del" data-kind="' + kind + '" data-idx="' + idx + '" title="Quitar">×</button>' +
+        '</div>';
+    }).join('');
+
+    box.querySelectorAll('[data-act]').forEach(function (el) {
+      var act = el.getAttribute('data-act');
+      var k = el.getAttribute('data-kind');
+      var idx = +el.getAttribute('data-idx');
+      if (act === 'check') {
+        el.addEventListener('change', function () {
+          getArr(k)[idx].done = el.checked;
+          renderList(getArr(k), containerId, k);
+        });
+      } else if (act === 'text') {
+        el.addEventListener('input', function () {
+          getArr(k)[idx].text = el.value;
+        });
+      } else if (act === 'del') {
+        el.addEventListener('click', function () {
+          getArr(k).splice(idx, 1);
+          renderList(getArr(k), containerId, k);
+        });
+      }
+    });
+  }
+
+  function getArr(kind) {
+    if (kind === 'todo') return todos;
+    if (kind === 'habit') return habits;
+    if (kind === 'morning') return morning;
+    if (kind === 'night') return night;
+    return [];
+  }
+
+  function addItem(kind) {
+    idSeq++;
+    getArr(kind).push({ id: idSeq, text: '', done: false });
+    var map = { todo: 'todo-list', habit: 'habit-list', morning: 'morning-list', night: 'night-list' };
+    renderList(getArr(kind), map[kind], kind);
+  }
+
+  document.getElementById('btn-add-todo').addEventListener('click', function () { addItem('todo'); });
+  document.getElementById('btn-add-habit').addEventListener('click', function () { addItem('habit'); });
+  document.getElementById('btn-add-morning').addEventListener('click', function () { addItem('morning'); });
+  document.getElementById('btn-add-night').addEventListener('click', function () { addItem('night'); });
+
+  renderList(todos, 'todo-list', 'todo');
+  renderList(habits, 'habit-list', 'habit');
+  renderList(morning, 'morning-list', 'morning');
+  renderList(night, 'night-list', 'night');
 
   // Productivity stars
   var stars = document.getElementById('prod-stars');
@@ -429,7 +522,6 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:#ec4899;box-sh
   }
 
   document.getElementById('fecha').value = new Date().toISOString().slice(0, 10);
-
   document.getElementById('btn-save').addEventListener('click', function () {
     document.querySelectorAll('.drop-panel').forEach(function (p) { p.classList.remove('open'); });
     toast('✓ Guardado (demo)');
