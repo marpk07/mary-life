@@ -127,7 +127,7 @@
     }
     #topbar .title { font-weight: 800; font-size: 0.9rem; letter-spacing: 0.04em; }
     #content-area { flex: 1; position: relative; overflow: hidden; }
-    .view { position: absolute; inset: 0; display: none; overflow: auto; }
+    .view { position: absolute; left: 0; right: 0; bottom: 0; top: 0; display: none; overflow: auto; }
     .view.active { display: block; }
     .module-frame { width: 100%; height: 100%; border: none; display: block; background: #fcf8fa; }
     #view-dashboard {
@@ -166,12 +166,26 @@
     #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 210; backdrop-filter: blur(2px); }
     #overlay.show { display: block; }
     @media (max-width: 900px) {
-      #sidebar { transform: translateX(-100%); }
+      #sidebar {
+        transform: translateX(-100%);
+        padding-top: env(safe-area-inset-top, 0px);
+      }
       #sidebar.open { transform: translateX(0); }
       #main-wrap { margin-left: 0; }
-      #topbar { display: flex; }
-      #content-area { padding-top: calc(64px + env(safe-area-inset-top, 0px)) !important; }
-      #view-dashboard { padding-top: 1.25rem; }
+      #topbar {
+        display: flex;
+        padding-top: max(0.7rem, env(safe-area-inset-top, 0px));
+        padding-bottom: 0.55rem;
+        min-height: calc(52px + env(safe-area-inset-top, 0px));
+      }
+      .view {
+        top: calc(56px + env(safe-area-inset-top, 0px)) !important;
+      }
+      #view-dashboard {
+        padding-top: 0.75rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
     }
   </style>
 </head>
