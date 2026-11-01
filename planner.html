@@ -1,1 +1,128 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARY · Daily Planner</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:linear-gradient(165deg,#fdf2f8,#faf5ff);color:#4a2040;min-height:100vh}
+.card{background:#fff;border:1px solid #f9a8d4;border-radius:14px;padding:12px;margin-bottom:10px}
+input,textarea,select{width:100%;border:1.5px solid #f9a8d4;border-radius:10px;padding:8px;font-weight:600;font-size:12px;box-sizing:border-box}
+.btn{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer;font-size:12px}
+.hab{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #fce7f3;font-size:12px;font-weight:700}
+</style>
+</head>
+<body class="p-3 max-w-lg mx-auto pb-24">
+<header class="mb-3 flex items-center justify-between gap-2">
+  <div>
+    <div class="text-lg font-black" style="color:#db2777">Daily Planner</div>
+    <div class="text-[10px] font-bold text-stone-500">Persistencia real · mary_planner</div>
+  </div>
+  <input type="date" id="planner-date" style="width:auto;max-width:140px">
+</header>
+<div class="card">
+  <div class="text-xs font-black mb-1">Intencion del dia</div>
+  <input id="intention" placeholder="Hoy quiero...">
+</div>
+<div class="card">
+  <div class="text-xs font-black mb-1">Agradecimiento</div>
+  <input class="mb-1" id="g1" placeholder="1."><input class="mb-1" id="g2" placeholder="2."><input id="g3" placeholder="3.">
+</div>
+<div class="card">
+  <div class="text-xs font-black mb-1">Top 3 goals</div>
+  <input class="mb-1" id="goal1"><input class="mb-1" id="goal2"><input id="goal3">
+</div>
+<div class="card">
+  <div class="flex justify-between items-center mb-1"><span class="text-xs font-black">Pendientes</span><button type="button" class="text-[10px] font-black" style="color:#a855f7" id="add-todo">+ Anadir</button></div>
+  <div id="todos"></div>
+</div>
+<div class="card">
+  <div class="text-xs font-black mb-1">Habitos</div>
+  <div id="habits"></div>
+</div>
+<div class="card">
+  <div class="text-xs font-black mb-1">Rutina manana</div>
+  <div id="morning"></div>
+</div>
+<div class="card">
+  <div class="text-xs font-black mb-1">Rutina noche</div>
+  <div id="night"></div>
+</div>
+<div class="card">
+  <div class="text-xs font-black mb-1">Diario</div>
+  <textarea id="diario" rows="4" placeholder="Como te fue..."></textarea>
+</div>
+<button type="button" class="btn w-full" id="save">Guardar dia</button>
+<p id="status" class="text-[10px] font-bold text-stone-400 mt-2"></p>
+<script>
+(function(){
+  const firebaseConfig={apiKey:"AIzaSyCnhvfyXpwJdYOQFCvsyHDhgW9F3X7ARR4",authDomain:"marpk-816dd.firebaseapp.com",projectId:"marpk-816dd",storageBucket:"marpk-816dd.firebasestorage.app",messagingSenderId:"189644122232",appId:"1:189644122232:web:ed7894f1510a373d44658d"};
+  let db=null; try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();}catch(e){}
+  const PREFIX='MARY_DAILY_PLANNER_FIRESTORE_';
+  const defaultMorning=['Pesarme','Tomar agua con sal','Sacar a Moka','Tomar el sol','Cafe','Cepillarme','Caminar','Gratitud','Devocional','Revision de pendientes','Alistarme'];
+  const defaultNight=['Desmaquillarme','Cepillarme','Tomar agua','Sacar a Moka','Trackers - app','Devocional','Gratitud','Ordenar entorno','Tomar creatina','Pendientes','Orar'];
+  const defaultHabits=['Meditar (10 min)','Leer la Biblia / Devocional','Entrenamiento de Moka','Skincare','Espacio espiritual','Ejercicio'];
+  let currentDate=new Date().toISOString().slice(0,10);
+  let data=null;
+  function key(d){return PREFIX+d;}
+  function blank(){
+    return {intention:'',gratitude:['','',''],topGoals:[{text:'',completed:false},{text:'',completed:false},{text:'',completed:false}],todoList:[],habits:defaultHabits.map((t,i)=>({id:i+1,name:t,status:'none'})),morningRoutine:defaultMorning.map((t,i)=>({id:i+1,text:t,checked:false})),nightRoutine:defaultNight.map((t,i)=>({id:i+100,text:t,checked:false})),diario:''};
+  }
+  function loadLocal(d){try{const r=localStorage.getItem(key(d));if(r)return Object.assign(blank(),JSON.parse(r));}catch(e){}return blank();}
+  async function loadDay(d){
+    currentDate=d; document.getElementById('planner-date').value=d;
+    data=loadLocal(d);
+    if(db){try{const doc=await db.collection('mary_planner').doc(d).get(); if(doc.exists){data=Object.assign(blank(),doc.data()); localStorage.setItem(key(d),JSON.stringify(data));}}catch(e){}}
+    render();
+    document.getElementById('status').textContent='Dia '+d+' cargado';
+  }
+  function save(){
+    collect();
+    localStorage.setItem(key(currentDate),JSON.stringify(data));
+    if(db) db.collection('mary_planner').doc(currentDate).set(data).catch(console.warn);
+    document.getElementById('status').textContent='Guardado '+currentDate;
+  }
+  function collect(){
+    data.intention=document.getElementById('intention').value;
+    data.gratitude=[document.getElementById('g1').value,document.getElementById('g2').value,document.getElementById('g3').value];
+    data.topGoals=[{text:document.getElementById('goal1').value,completed:false},{text:document.getElementById('goal2').value,completed:false},{text:document.getElementById('goal3').value,completed:false}];
+    data.diario=document.getElementById('diario').value;
+  }
+  function renderList(el,arr,kind){
+    el.innerHTML='';
+    (arr||[]).forEach((item,idx)=>{
+      const row=document.createElement('div'); row.className='hab';
+      const cb=document.createElement('input'); cb.type='checkbox';
+      const label=document.createElement('span'); label.style.flex='1';
+      if(kind==='habit'){ cb.checked=item.status==='done'; label.textContent=item.name||''; cb.onchange=()=>{item.status=cb.checked?'done':'none';}; }
+      else if(kind==='todo'){ cb.checked=!!item.completed; const inp=document.createElement('input'); inp.value=item.text||''; inp.style.flex='1'; inp.oninput=()=>{item.text=inp.value;}; cb.onchange=()=>{item.completed=cb.checked;}; row.appendChild(cb); row.appendChild(inp); el.appendChild(row); return; }
+      else { cb.checked=!!item.checked; label.textContent=item.text||''; cb.onchange=()=>{item.checked=cb.checked;}; }
+      row.appendChild(label); row.appendChild(cb); el.appendChild(row);
+    });
+  }
+  function render(){
+    document.getElementById('intention').value=data.intention||'';
+    document.getElementById('g1').value=(data.gratitude&&data.gratitude[0])||'';
+    document.getElementById('g2').value=(data.gratitude&&data.gratitude[1])||'';
+    document.getElementById('g3').value=(data.gratitude&&data.gratitude[2])||'';
+    document.getElementById('goal1').value=(data.topGoals&&data.topGoals[0]&&data.topGoals[0].text)||'';
+    document.getElementById('goal2').value=(data.topGoals&&data.topGoals[1]&&data.topGoals[1].text)||'';
+    document.getElementById('goal3').value=(data.topGoals&&data.topGoals[2]&&data.topGoals[2].text)||'';
+    document.getElementById('diario').value=data.diario||'';
+    renderList(document.getElementById('todos'),data.todoList||[],'todo');
+    renderList(document.getElementById('habits'),data.habits||[],'habit');
+    renderList(document.getElementById('morning'),data.morningRoutine||[],'morning');
+    renderList(document.getElementById('night'),data.nightRoutine||[],'night');
+  }
+  document.getElementById('save').onclick=save;
+  document.getElementById('planner-date').onchange=e=>loadDay(e.target.value);
+  document.getElementById('add-todo').onclick=()=>{data.todoList=data.todoList||[]; data.todoList.push({id:Date.now(),text:'',completed:false}); render();};
+  loadDay(currentDate);
+})();
+</script>
+</body>
+</html>
