@@ -136,5 +136,30 @@ function closeSidebar(){document.getElementById('sidebar').classList.remove('ope
 try{const p=JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}'); if(p.name) document.getElementById('profile-name').textContent=p.name;}catch(e){}
 checkSession();
 </script>
+<script src="fitness-cloud-fix.js"></script>
+<script>
+(function(){
+  function injectFitnessFix(){
+    var frame=document.querySelector('#view-fitness iframe.module-frame');
+    if(!frame) return;
+    function tryInject(){
+      try{
+        var doc=frame.contentDocument||frame.contentWindow.document;
+        if(!doc||!doc.head) return;
+        if(doc.getElementById('mary-fit-cloud-fix')) return;
+        var s=doc.createElement('script');
+        s.id='mary-fit-cloud-fix';
+        s.src=(location.origin||'')+'/fitness-cloud-fix.js';
+        doc.head.appendChild(s);
+      }catch(e){console.warn('fit inject',e);}
+    }
+    frame.addEventListener('load', tryInject);
+    tryInject();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', injectFitnessFix);
+  else injectFitnessFix();
+  setInterval(injectFitnessFix, 2000);
+})();
+</script>
 </body>
 </html>
