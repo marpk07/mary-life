@@ -1,1 +1,140 @@
-PLACEHOLDER_INDEX
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#1a1225">
+  <title>MARY · Life Suite</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root { --bg:#0f0a14; --card:#1c1428; --border:rgba(244,114,182,.18); --pink:#f472b6; --text:#f5eef8; --muted:#a89bb5; --side:268px; }
+    *{box-sizing:border-box;font-family:system-ui,sans-serif}
+    body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);overflow:hidden}
+    #lock-screen{position:fixed;inset:0;z-index:9999;background:#0f0a14;display:flex;align-items:center;justify-content:center;padding:1.5rem}
+    #lock-screen.hidden{display:none!important}
+    .lock-card{max-width:360px;width:100%;background:#1c1428;border:1px solid var(--border);border-radius:24px;padding:2rem;text-align:center}
+    .pin-dots{display:flex;gap:12px;justify-content:center;margin:1rem 0}
+    .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--pink)}
+    .pin-dot.filled{background:var(--pink)}
+    .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:260px;margin:0 auto}
+    .pin-key{height:54px;border-radius:16px;border:1px solid var(--border);background:#241b32;color:#fff;font-weight:800;font-size:1.1rem;cursor:pointer}
+    #sidebar{width:var(--side);background:#1a1228;border-right:1px solid var(--border);position:fixed;inset:0 auto 0 0;z-index:220;display:flex;flex-direction:column;transition:transform .3s}
+    #sidebar.closed{transform:translateX(-100%)}
+    .nav-item{display:flex;align-items:center;gap:.7rem;padding:.65rem 1rem;margin:.15rem .55rem;border-radius:12px;font-size:.8rem;font-weight:700;color:rgba(255,255,255,.72);cursor:pointer;border:none;background:transparent;width:calc(100% - 1.1rem);text-align:left}
+    .nav-item.active{background:linear-gradient(135deg,rgba(236,72,153,.35),rgba(167,139,250,.3));color:#fff}
+    #main-wrap{margin-left:var(--side);height:100vh;display:flex;flex-direction:column}
+    #main-wrap.expanded{margin-left:0}
+    #topbar{display:none;align-items:center;justify-content:space-between;padding:.6rem 1rem;background:rgba(15,10,20,.92);border-bottom:1px solid var(--border);position:fixed;top:0;left:0;right:0;z-index:200}
+    #content-area{flex:1;position:relative;overflow:hidden}
+    .view{position:absolute;inset:0;display:none;overflow:auto}
+    .view.active{display:block}
+    .module-frame{width:100%;height:100%;border:none;background:#fcf8fa}
+    #view-dashboard{padding:1.5rem;background:var(--bg)}
+    .area-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1rem;cursor:pointer;margin-bottom:.75rem}
+    #overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:210}
+    #overlay.show{display:block}
+    @media(max-width:900px){#sidebar{transform:translateX(-100%)}#sidebar.open{transform:translateX(0)}#main-wrap{margin-left:0}#topbar{display:flex}#content-area{padding-top:52px}}
+  </style>
+</head>
+<body>
+  <div id="lock-screen">
+    <div class="lock-card">
+      <div style="font-size:2rem;margin-bottom:.5rem">💗</div>
+      <h2 style="margin:0">MARY</h2>
+      <p style="color:var(--muted);font-size:.8rem">Ingresa tu PIN de 4 digitos</p>
+      <div class="pin-dots" id="pin-dots"><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div></div>
+      <div id="pin-error" style="color:#fb7185;font-size:.75rem;min-height:1rem"></div>
+      <div class="pin-pad" id="pin-pad"></div>
+    </div>
+  </div>
+  <div id="overlay" onclick="closeSidebar()"></div>
+  <aside id="sidebar">
+    <div style="padding:1.25rem;border-bottom:1px solid var(--border)">
+      <div style="font-weight:800" id="profile-name">Mary</div>
+      <div style="font-size:.7rem;color:var(--muted)">Life Suite</div>
+    </div>
+    <div style="flex:1;overflow:auto;padding:.6rem 0">
+      <button type="button" class="nav-item active" data-view="dashboard" onclick="navigateTo('dashboard')">🏠 Dashboard</button>
+      <button type="button" class="nav-item" data-view="poker" onclick="navigateTo('poker')">♠️ Poker</button>
+      <button type="button" class="nav-item" data-view="fitness" onclick="navigateTo('fitness')">💪 Fitness</button>
+      <button type="button" class="nav-item" data-view="espiritual" onclick="navigateTo('espiritual')">🕊️ Espiritual</button>
+      <button type="button" class="nav-item" data-view="planner" onclick="navigateTo('planner')">📅 Daily Planner</button>
+      <button type="button" class="nav-item" data-view="pendientes" onclick="navigateTo('pendientes')">✅ Pendientes</button>
+      <button type="button" class="nav-item" data-view="gastos" onclick="navigateTo('gastos')">💸 Gastos</button>
+      <button type="button" class="nav-item" data-view="metas" onclick="navigateTo('metas')">🎯 Metas</button>
+      <button type="button" class="nav-item" data-view="guia" onclick="navigateTo('guia')">🪞 Guia</button>
+      <button type="button" class="nav-item" data-view="cierre" onclick="navigateTo('cierre')">📊 Cierres</button>
+      <button type="button" class="nav-item" data-view="resumenes" onclick="navigateTo('resumenes')">📋 Resumenes</button>
+    </div>
+    <div style="padding:1rem;border-top:1px solid var(--border)">
+      <button type="button" class="nav-item" onclick="lockApp()">🔒 Bloquear</button>
+    </div>
+  </aside>
+  <div id="main-wrap">
+    <div id="topbar">
+      <button type="button" onclick="toggleSidebar(event)" style="background:#241b32;border:1px solid var(--border);color:#fff;border-radius:12px;width:44px;height:44px">☰</button>
+      <div style="font-weight:800">MARY 💗</div>
+      <button type="button" onclick="lockApp()" style="background:#241b32;border:1px solid var(--border);color:#fff;border-radius:12px;width:44px;height:44px">🔒</button>
+    </div>
+    <div id="content-area">
+      <div id="view-dashboard" class="view active">
+        <h1 style="background:linear-gradient(90deg,#f9a8d4,#c4b5fd);-webkit-background-clip:text;color:transparent;font-size:1.4rem">Bienvenida</h1>
+        <p style="color:var(--muted)">Tu sistema personal</p>
+        <div class="area-card" onclick="navigateTo('poker')"><h3>♠️ Poker</h3></div>
+        <div class="area-card" onclick="navigateTo('fitness')"><h3>💪 Fitness</h3></div>
+        <div class="area-card" onclick="navigateTo('planner')"><h3>📅 Planner</h3></div>
+        <div class="area-card" onclick="navigateTo('resumenes')"><h3>📋 Resumenes</h3><p style="color:var(--muted);font-size:.75rem">Reportes detallados para ChatGPT / Notion</p></div>
+        <div class="area-card" onclick="navigateTo('gastos')"><h3>💸 Gastos</h3></div>
+        <div class="area-card" onclick="navigateTo('metas')"><h3>🎯 Metas</h3></div>
+      </div>
+      <div id="view-poker" class="view"><iframe class="module-frame" src="poker.html" title="Poker"></iframe></div>
+      <div id="view-fitness" class="view"><iframe class="module-frame" src="fitness.html" title="Fitness"></iframe></div>
+      <div id="view-espiritual" class="view"><iframe class="module-frame" src="espiritual.html" title="Espiritual"></iframe></div>
+      <div id="view-planner" class="view"><iframe class="module-frame" src="planner.html" title="Planner"></iframe></div>
+      <div id="view-pendientes" class="view"><iframe class="module-frame" src="pendientes.html" title="Pendientes"></iframe></div>
+      <div id="view-gastos" class="view"><iframe class="module-frame" src="gastos.html" title="Gastos"></iframe></div>
+      <div id="view-metas" class="view"><iframe class="module-frame" src="metas.html" title="Metas"></iframe></div>
+      <div id="view-guia" class="view"><iframe class="module-frame" src="guia.html" title="Guia"></iframe></div>
+      <div id="view-cierre" class="view"><iframe class="module-frame" src="cierre.html" title="Cierres"></iframe></div>
+      <div id="view-resumenes" class="view"><iframe class="module-frame" src="resumenes.html" title="Resumenes"></iframe></div>
+    </div>
+  </div>
+<script>
+const PIN_KEY='MARY_PIN_V1', SESSION_KEY='MARY_SESSION_OK', PROFILE_KEY='MARY_PROFILE_V1';
+let pinBuffer='';
+function updateDots(){document.querySelectorAll('#pin-dots .pin-dot').forEach((d,i)=>d.classList.toggle('filled',i<pinBuffer.length));}
+function checkSession(){if(sessionStorage.getItem(SESSION_KEY)==='1'){document.getElementById('lock-screen').classList.add('hidden');}else{document.getElementById('lock-screen').classList.remove('hidden');}}
+function lockApp(){sessionStorage.removeItem(SESSION_KEY);pinBuffer='';updateDots();document.getElementById('lock-screen').classList.remove('hidden');}
+function navigateTo(view){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const el=document.getElementById('view-'+view); if(el) el.classList.add('active');
+  document.querySelectorAll('.nav-item[data-view]').forEach(b=>b.classList.toggle('active',b.getAttribute('data-view')===view));
+  closeSidebar();
+}
+function toggleSidebar(e){if(e)e.stopPropagation();document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('show');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
+(function buildPad(){
+  const pad=document.getElementById('pin-pad');
+  ['1','2','3','4','5','6','7','8','9','clear','0','ok'].forEach(k=>{
+    const b=document.createElement('button'); b.type='button'; b.className='pin-key'; b.textContent=k==='clear'?'BORRAR':(k==='ok'?'OK':k);
+    b.onclick=()=>{
+      const err=document.getElementById('pin-error'); err.textContent='';
+      if(k==='clear'){pinBuffer='';updateDots();return;}
+      if(k==='ok'){
+        const saved=localStorage.getItem(PIN_KEY);
+        if(!saved){localStorage.setItem(PIN_KEY,pinBuffer);sessionStorage.setItem(SESSION_KEY,'1');document.getElementById('lock-screen').classList.add('hidden');pinBuffer='';updateDots();return;}
+        if(pinBuffer===saved){sessionStorage.setItem(SESSION_KEY,'1');document.getElementById('lock-screen').classList.add('hidden');pinBuffer='';updateDots();}
+        else{err.textContent='PIN incorrecto';pinBuffer='';updateDots();}
+        return;
+      }
+      if(pinBuffer.length<4){pinBuffer+=k;updateDots();}
+    };
+    pad.appendChild(b);
+  });
+})();
+try{const p=JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}'); if(p.name) document.getElementById('profile-name').textContent=p.name;}catch(e){}
+checkSession();
+</script>
+</body>
+</html>
