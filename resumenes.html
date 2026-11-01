@@ -2,63 +2,206 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>MARY · Centro de Resúmenes</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
-body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;margin:0;min-height:100vh;background:linear-gradient(165deg,#fdf2f8,#faf5ff 50%,#fff1f2);color:#4a2040}
-.card{background:rgba(255,255,255,.95);border:1.5px solid rgba(236,72,153,.22);border-radius:16px;padding:14px;box-shadow:0 6px 18px rgba(190,50,120,.08)}
-.btn{border:none;border-radius:12px;padding:10px 14px;font-weight:800;font-size:12px;cursor:pointer}
-.btn-main{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff}
-.btn-ghost{background:#fff;border:1.5px solid rgba(236,72,153,.35);color:#be185d}
-input,select{border:1.5px solid rgba(236,72,153,.28);border-radius:10px;padding:8px 10px;font-weight:600;font-size:12px}
-pre{white-space:pre-wrap;word-break:break-word;font-size:11px;line-height:1.45;background:#fff7fb;border:1px solid #fbcfe8;border-radius:12px;padding:12px;max-height:70vh;overflow:auto}
-.chip{font-size:10px;font-weight:800;padding:4px 10px;border-radius:999px;background:#fce7f3;color:#9d174d;border:none;cursor:pointer}
-.chip.on{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff}
+:root { --pink:#ec4899; --purple:#a855f7; --text:#4a2040; }
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; margin:0; min-height:100vh; background:linear-gradient(165deg,#fdf2f8 0%,#faf5ff 45%,#fff1f2 100%); color:var(--text); padding:14px 14px 100px; }
+.hero { background:linear-gradient(135deg,#fce7f3,#ede9fe 55%,#fce7f3); border:1.5px solid rgba(236,72,153,.25); border-radius:22px; padding:16px; margin-bottom:12px; box-shadow:0 10px 28px rgba(190,50,120,.1); }
+.hero h1 { margin:0; font-size:1.15rem; font-weight:800; background:linear-gradient(90deg,#db2777,#7c3aed); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.hero p { margin:4px 0 0; font-size:11px; font-weight:700; color:#9d6b8a; }
+.card { background:rgba(255,255,255,.96); border:1.5px solid rgba(236,72,153,.2); border-radius:18px; padding:14px; margin-bottom:12px; box-shadow:0 8px 22px rgba(190,50,120,.07); }
+.label { font-size:9px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#c084a0; margin-bottom:6px; }
+.chip-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+.chip { border:none; border-radius:999px; padding:8px 14px; font-size:11px; font-weight:800; cursor:pointer; background:#fce7f3; color:#9d174d; min-height:36px; }
+.chip.on { background:linear-gradient(135deg,#ec4899,#a855f7); color:#fff; box-shadow:0 6px 16px rgba(236,72,153,.3); }
+.dates { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+input[type=date] { width:100%; border:1.5px solid #f9a8d4; border-radius:12px; padding:10px 12px; font-weight:700; font-size:13px; color:var(--text); background:#fff; }
+.actions { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+.btn { border:none; border-radius:14px; padding:12px 16px; font-weight:800; font-size:12px; cursor:pointer; min-height:44px; flex:1 1 auto; }
+.btn-main { background:linear-gradient(135deg,#ec4899,#a855f7); color:#fff; box-shadow:0 8px 18px rgba(236,72,153,.28); }
+.btn-ghost { background:#fff; border:1.5px solid #f9a8d4; color:#be185d; }
+.mod-grid { display:flex; flex-wrap:wrap; gap:8px; }
+.mod-btn { border:1.5px solid #fbcfe8; background:#fff7fb; color:#9d174d; border-radius:12px; padding:10px 12px; font-size:11px; font-weight:800; cursor:pointer; min-height:40px; }
+.mod-btn:active { transform:scale(.98); background:#fce7f3; }
+#status { font-size:11px; font-weight:700; color:#a1627a; margin-top:8px; min-height:1.2em; }
+#status.ok { color:#059669; }
+#status.err { color:#dc2626; }
+.out-wrap { background:#fff; border:1.5px solid #f9a8d4; border-radius:16px; padding:12px; max-height:58vh; overflow:auto; }
+#out { margin:0; white-space:pre-wrap; word-break:break-word; font-size:11px; line-height:1.5; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; color:#4a2040; }
+.toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(120%); background:linear-gradient(135deg,#ec4899,#a855f7); color:#fff; font-weight:800; font-size:12px; padding:12px 18px; border-radius:999px; box-shadow:0 10px 30px rgba(0,0,0,.2); transition:transform .25s ease; z-index:50; pointer-events:none; }
+.toast.show { transform:translateX(-50%) translateY(0); }
 </style>
 </head>
-<body class="p-3 pb-24 max-w-2xl mx-auto">
-<header class="mb-3">
-  <div class="text-lg font-black" style="background:linear-gradient(90deg,#db2777,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent">📋 Centro de Resúmenes</div>
-  <p class="text-[11px] font-bold text-stone-500">Detalle completo por día · para copiar a ChatGPT / Notion</p>
-</header>
-<div class="card space-y-3 mb-3">
-  <div class="flex flex-wrap gap-2">
-    <button type="button" class="chip on" data-rango="hoy">Hoy</button>
-    <button type="button" class="chip" data-rango="ayer">Ayer</button>
-    <button type="button" class="chip" data-rango="semana">Esta semana</button>
-    <button type="button" class="chip" data-rango="mes">Este mes</button>
+<body>
+  <div class="hero">
+    <h1>📋 Centro de Resúmenes</h1>
+    <p>Reportes detallados por día, semana o mes · listos para ChatGPT y Notion</p>
   </div>
-  <div class="grid grid-cols-2 gap-2">
-    <div><label class="text-[9px] font-black text-stone-400 uppercase">Desde</label><input type="date" id="from" class="w-full"></div>
-    <div><label class="text-[9px] font-black text-stone-400 uppercase">Hasta</label><input type="date" id="to" class="w-full"></div>
+  <div class="card">
+    <div class="label">Rango rápido</div>
+    <div class="chip-row" id="rangos">
+      <button type="button" class="chip on" data-rango="hoy">Hoy</button>
+      <button type="button" class="chip" data-rango="ayer">Ayer</button>
+      <button type="button" class="chip" data-rango="semana">Esta semana</button>
+      <button type="button" class="chip" data-rango="mes">Este mes</button>
+    </div>
+    <div class="dates">
+      <div><div class="label">Desde</div><input type="date" id="from"></div>
+      <div><div class="label">Hasta</div><input type="date" id="to"></div>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn btn-main" id="btn-gen">✨ Generar reporte</button>
+      <button type="button" class="btn btn-ghost" id="btn-copy">📋 Copiar todo</button>
+      <button type="button" class="btn btn-ghost" id="btn-txt">⬇️ TXT</button>
+    </div>
+    <div class="label">Copiar solo un área</div>
+    <div class="mod-grid" id="mod-btns"></div>
+    <div id="status">Cargando datos…</div>
   </div>
-  <div class="flex flex-wrap gap-2">
-    <button type="button" class="btn btn-main" id="btn-gen">Generar reporte</button>
-    <button type="button" class="btn btn-ghost" id="btn-copy">📋 Copiar todo</button>
-    <button type="button" class="btn btn-ghost" id="btn-txt">⬇️ TXT</button>
+  <div class="card">
+    <div class="label">Vista previa del reporte</div>
+    <div class="out-wrap"><pre id="out">Elige un rango y pulsa Generar reporte.</pre></div>
   </div>
-  <div class="flex flex-wrap gap-1" id="mod-btns"></div>
-  <p id="status" class="text-[10px] font-bold text-stone-400">Cargando datos…</p>
-</div>
-<div class="card"><pre id="out">Elige rango y pulsa Generar reporte.</pre></div>
+  <div class="toast" id="toast">Copiado</div>
 <script>
 (function(){
-  const firebaseConfig={apiKey:"AIzaSyCnhvfyXpwJdYOQFCvsyHDhgW9F3X7ARR4",authDomain:"marpk-816dd.firebaseapp.com",projectId:"marpk-816dd",storageBucket:"marpk-816dd.firebasestorage.app",messagingSenderId:"189644122232",appId:"1:189644122232:web:ed7894f1510a373d44658d"};
-  let db=null; try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();}catch(e){}
-  const store={poker:null,fitness:null,espiritual:null,gastos:null,pendientes:null,metas:null,guia:null,planner:{}};
-  let lastFull='', lastModules={};
-  function ymd(d){return d.toISOString().slice(0,10);}
-  function fieldDate(obj){if(!obj)return '';return obj.date||obj.fecha||obj.sessionDate||obj.day||obj.createdAt||'';}
-  function inRange(dateStr,from,to){if(!dateStr)return false;const d=String(dateStr).slice(0,10);return d>=from&&d<=to;}
+  var firebaseConfig={apiKey:"AIzaSyCnhvfyXpwJdYOQFCvsyHDhgW9F3X7ARR4",authDomain:"marpk-816dd.firebaseapp.com",projectId:"marpk-816dd",storageBucket:"marpk-816dd.firebasestorage.app",messagingSenderId:"189644122232",appId:"1:189644122232:web:ed7894f1510a373d44658d"};
+  var db=null; try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();}catch(e){}
+  var store={poker:null,fitness:null,espiritual:null,gastos:null,pendientes:null,metas:null,guia:null,planner:{}};
+  var lastFull='', lastModules={}, ready=false;
+  function $(id){return document.getElementById(id);}
+  function setStatus(msg,kind){var el=$('status');el.textContent=msg;el.className=kind||'';}
+  function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1800);}
+  function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  function fieldDate(obj){if(!obj)return '';return String(obj.date||obj.fecha||obj.sessionDate||obj.day||obj.createdAt||obj.fechaSesion||'').slice(0,10);}
+  function inRange(dateStr,from,to){if(!dateStr)return false;var d=String(dateStr).slice(0,10);return d>=from&&d<=to;}
+  function copyText(text){
+    text=text||'';
+    if(!text){toast('Nada que copiar · genera el reporte primero');return;}
+    function fallback(){
+      var ta=document.createElement('textarea');ta.value=text;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.left='-9999px';
+      document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,ta.value.length);
+      var ok=false;try{ok=document.execCommand('copy');}catch(e){}
+      document.body.removeChild(ta);toast(ok?'📋 Copiado':'No se pudo copiar');
+    }
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){toast('📋 Copiado');}).catch(fallback);}
+    else fallback();
+  }
+  function dumpObj(lines,item,indent){
+    Object.keys(item||{}).forEach(function(k){
+      var v=item[k]; if(v===''||v==null)return;
+      if((k==='url'||k==='imageUrl')&&String(v).length>80){lines.push(indent+k+': [imagen omitida]');return;}
+      if(Array.isArray(v)){lines.push(indent+k+':');v.forEach(function(row,ri){lines.push(indent+'  ['+ri+'] '+(typeof row==='object'?JSON.stringify(row):row));});}
+      else if(typeof v==='object')lines.push(indent+k+': '+JSON.stringify(v));
+      else lines.push(indent+k+': '+v);
+    });
+  }
+  function reportPoker(from,to){
+    var lines=['===== PÓKER ====='];
+    var sessions=((store.poker&&store.poker.grindSessions)||[]).filter(function(s){return inRange(fieldDate(s),from,to);});
+    if(!sessions.length)lines.push('(Sin sesiones en el rango)');
+    sessions.forEach(function(s,i){lines.push('--- Sesión '+(i+1)+' · '+fieldDate(s)+' ---');dumpObj(lines,s,'  ');});
+    ((store.poker&&store.poker.studyLogs)||[]).filter(function(s){return inRange(fieldDate(s),from,to);}).forEach(function(s,i){lines.push('--- Estudio '+(i+1)+' · '+fieldDate(s)+' ---');dumpObj(lines,s,'  ');});
+    return lines.join('\n');
+  }
+  function reportFitness(from,to){
+    var lines=['===== FITNESS =====']; var f=store.fitness||{};
+    function dumpArr(name,arr){
+      var list=(arr||[]).filter(function(x){return inRange(fieldDate(x),from,to);});
+      lines.push('--- '+name+' ('+list.length+') ---');
+      if(!list.length){lines.push('(sin registros)');return;}
+      list.forEach(function(item,i){lines.push('#'+(i+1)+' · '+fieldDate(item));dumpObj(lines,item,'  ');});
+    }
+    dumpArr('Alimentación',f.alimentacion);dumpArr('Entrenamiento',f.entrenamiento);dumpArr('Cardio',f.cardio);
+    dumpArr('Salud',f.salud);dumpArr('Pesos',f.pesos);dumpArr('Medidas',f.medidas);dumpArr('Fotos (meta)',f.fotos);
+    return lines.join('\n');
+  }
+  function reportGastos(from,to){
+    var lines=['===== GASTOS =====']; var g=store.gastos||{};
+    function dump(name,arr,force){
+      var list=(arr||[]).filter(function(x){return force||inRange(fieldDate(x)||x.fechaPago||x.due||'',from,to);});
+      lines.push('--- '+name+' ('+list.length+') ---');
+      list.forEach(function(item,i){lines.push('#'+(i+1));dumpObj(lines,item,'  ');});
+    }
+    dump('Movimientos',g.items);dump('Deudas',g.deudas);dump('Fijos',g.fijos,true);dump('Ahorros',g.ahorros);dump('Extras',g.extras);
+    if(g.rates)lines.push('rates: '+JSON.stringify(g.rates));
+    return lines.join('\n');
+  }
+  function reportEspiritual(from,to){
+    var lines=['===== ESPIRITUAL =====']; var e=store.espiritual||{};
+    ['devocionales','lecturas','studyPlans'].forEach(function(key){
+      var list=(e[key]||[]).filter(function(x){return inRange(fieldDate(x),from,to);});
+      lines.push('--- '+key+' ('+list.length+') ---');
+      list.forEach(function(item,i){lines.push('#'+(i+1)+' · '+fieldDate(item));dumpObj(lines,item,'  ');});
+    });
+    if(e.bibleProgress)lines.push('bibleProgress: '+JSON.stringify(e.bibleProgress));
+    return lines.join('\n');
+  }
+  function reportPlanner(from,to){
+    var lines=['===== PLANNER ====='];
+    var keys=Object.keys(store.planner||{}).filter(function(d){return d>=from&&d<=to;}).sort();
+    if(!keys.length)lines.push('(Sin días en el rango)');
+    keys.forEach(function(d){lines.push('--- Día '+d+' ---');dumpObj(lines,store.planner[d]||{},'  ');});
+    return lines.join('\n');
+  }
+  function reportPendientes(){
+    var lines=['===== PENDIENTES ====='];
+    var items=((store.pendientes&&store.pendientes.items)||store.pendientes||[]);
+    var list=Array.isArray(items)?items:[];
+    if(!list.length)lines.push('(sin items)');
+    list.forEach(function(item,i){lines.push('#'+(i+1));dumpObj(lines,item,'  ');});
+    return lines.join('\n');
+  }
+  function reportMetas(from,to){
+    var lines=['===== METAS =====','Rango: '+from+' → '+to]; var m=store.metas||{};
+    (m.goals||[]).forEach(function(g,i){lines.push('--- Meta '+(i+1)+' ---');dumpObj(lines,g,'  ');});
+    if(m.days)lines.push('days: '+JSON.stringify(m.days));
+    if(m.tiposReper)lines.push('tiposReper: '+JSON.stringify(m.tiposReper));
+    if(m.hojas)lines.push('hojas: '+JSON.stringify(m.hojas));
+    return lines.join('\n');
+  }
+  function reportGuia(from,to){
+    var lines=['===== GUÍA / TRABAJO INTERNO =====']; var g=store.guia||{};
+    var entries=(g.entries||[]).filter(function(x){return inRange(fieldDate(x),from,to);});
+    lines.push('--- entries ('+entries.length+') ---');
+    entries.forEach(function(item,i){lines.push('#'+(i+1)+' · '+fieldDate(item));dumpObj(lines,item,'  ');});
+    if(g.anclas)lines.push('anclas: '+JSON.stringify(g.anclas));
+    if(g.customAnclas)lines.push('customAnclas: '+JSON.stringify(g.customAnclas));
+    if(g.rueda)lines.push('rueda: '+JSON.stringify(g.rueda));
+    if(g.notas)lines.push('notas: '+JSON.stringify(g.notas));
+    return lines.join('\n');
+  }
+  function generate(){
+    try{
+      var from=$('from').value, to=$('to').value;
+      if(!from||!to){setStatus('Elige fechas desde y hasta','err');toast('Elige el rango de fechas');return;}
+      if(!ready)setStatus('Todavía cargando datos… espera un segundo','err');
+      lastModules={poker:reportPoker(from,to),fitness:reportFitness(from,to),gastos:reportGastos(from,to),espiritual:reportEspiritual(from,to),planner:reportPlanner(from,to),pendientes:reportPendientes(),metas:reportMetas(from,to),guia:reportGuia(from,to)};
+      lastFull=['MARY LIFE · REPORTE DETALLADO','Desde: '+from+'  Hasta: '+to,'Generado: '+new Date().toISOString(),'',lastModules.poker,'',lastModules.fitness,'',lastModules.gastos,'',lastModules.espiritual,'',lastModules.planner,'',lastModules.pendientes,'',lastModules.metas,'',lastModules.guia].join('\n');
+      $('out').textContent=lastFull;
+      setStatus('Reporte listo · '+from+' → '+to,'ok');
+      toast('Reporte generado');
+    }catch(e){console.error(e);setStatus('Error al generar: '+(e.message||e),'err');toast('Error al generar');}
+  }
+  function setRango(tipo){
+    var today=new Date(), from=new Date(today), to=new Date(today);
+    if(tipo==='ayer'){from.setDate(from.getDate()-1);to=new Date(from);}
+    if(tipo==='semana'){from.setDate(from.getDate()-((from.getDay()+6)%7));}
+    if(tipo==='mes'){from=new Date(today.getFullYear(),today.getMonth(),1);}
+    $('from').value=ymd(from); $('to').value=ymd(to);
+    document.querySelectorAll('[data-rango]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-rango')===tipo);});
+  }
   async function loadAll(){
-    const st=document.getElementById('status');
+    setStatus('Cargando datos…');
     try{
       if(db){
-        const gets=await Promise.all([
+        var gets=await Promise.all([
           db.collection('mapkr').doc('poker_data').get(),
           db.collection('mary_fitness').doc('user_data').get(),
           db.collection('mary_spiritual').doc('devotional_data_v6').get(),
@@ -75,126 +218,29 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:11px;line-height:1.45;b
         store.pendientes=gets[4].exists?gets[4].data():null;
         store.metas=gets[5].exists?gets[5].data():null;
         store.guia=gets[6].exists?gets[6].data():null;
-        store.planner={}; gets[7].forEach(doc=>{store.planner[doc.id]=doc.data();});
+        store.planner={}; gets[7].forEach(function(doc){store.planner[doc.id]=doc.data();});
       }
       try{
-        const lp=localStorage.getItem('MARPK_POKER_DATA_V14');
-        if(lp){const j=JSON.parse(lp);if(j&&(!store.poker||(j.grindSessions||[]).length>=(store.poker.grindSessions||[]).length))store.poker=j;}
-        const lf=localStorage.getItem('MARY_FITNESS_DATA_V9');
-        if(lf){const j=JSON.parse(lf);if(j)store.fitness=Object.assign({},store.fitness||{},j);}
+        var lp=localStorage.getItem('MARPK_POKER_DATA_V14');
+        if(lp){var j=JSON.parse(lp);if(j&&(!store.poker||(j.grindSessions||[]).length>=(store.poker.grindSessions||[]).length))store.poker=j;}
+        var lf=localStorage.getItem('MARY_FITNESS_DATA_V9');
+        if(lf){var jf=JSON.parse(lf);if(jf)store.fitness=Object.assign({},store.fitness||{},jf);}
       }catch(e){}
-      st.textContent='Datos listos · genera el reporte';
-    }catch(e){st.textContent='Error cargando: '+e.message;}
+      ready=true; setStatus('Datos listos · genera el reporte','ok');
+    }catch(e){console.error(e);ready=true;setStatus('Error cargando: '+(e.message||e),'err');}
   }
-  function dumpObj(lines,item,indent){
-    Object.keys(item||{}).forEach(k=>{
-      const v=item[k];
-      if(v===''||v==null)return;
-      if(k==='url'&&String(v).length>80){lines.push(indent+k+': [imagen omitida · exportar en Fitness]');return;}
-      if(k==='imageUrl'&&(!v||String(v).length<20))return;
-      if(k==='imageUrl'){lines.push(indent+'imageUrl: [imagen local]');return;}
-      if(Array.isArray(v)){lines.push(indent+k+':');v.forEach((row,ri)=>{lines.push(indent+'  ['+ri+'] '+(typeof row==='object'?JSON.stringify(row):row));});}
-      else if(typeof v==='object')lines.push(indent+k+': '+JSON.stringify(v));
-      else lines.push(indent+k+': '+v);
-    });
-  }
-  function reportPoker(from,to){
-    const lines=['===== PÓKER ====='];
-    const sessions=((store.poker&&store.poker.grindSessions)||[]).filter(s=>inRange(fieldDate(s),from,to));
-    if(!sessions.length)lines.push('(Sin sesiones en el rango)');
-    sessions.forEach((s,i)=>{lines.push('--- Sesión '+(i+1)+' · '+fieldDate(s)+' ---');dumpObj(lines,s,'  ');});
-    ((store.poker&&store.poker.studyLogs)||[]).filter(s=>inRange(fieldDate(s),from,to)).forEach((s,i)=>{lines.push('--- Estudio '+(i+1)+' · '+fieldDate(s)+' ---');dumpObj(lines,s,'  ');});
-    return lines.join('\n');
-  }
-  function reportFitness(from,to){
-    const lines=['===== FITNESS =====']; const f=store.fitness||{};
-    function dumpArr(name,arr){
-      const list=(arr||[]).filter(x=>inRange(fieldDate(x),from,to));
-      lines.push('--- '+name+' ('+list.length+') ---');
-      if(!list.length){lines.push('(sin registros)');return;}
-      list.forEach((item,i)=>{lines.push('#'+(i+1)+' · '+fieldDate(item));dumpObj(lines,item,'  ');});
-    }
-    dumpArr('Alimentación',f.alimentacion);dumpArr('Entrenamiento',f.entrenamiento);dumpArr('Cardio',f.cardio);
-    dumpArr('Salud',f.salud);dumpArr('Pesos',f.pesos);dumpArr('Medidas',f.medidas);dumpArr('Fotos (meta)',f.fotos);
-    return lines.join('\n');
-  }
-  function reportGastos(from,to){
-    const lines=['===== GASTOS =====']; const g=store.gastos||{};
-    function dump(name,arr,force){
-      const list=(arr||[]).filter(x=>force||inRange(fieldDate(x)||x.fechaPago||x.due||'',from,to));
-      lines.push('--- '+name+' ('+list.length+') ---');
-      list.forEach((item,i)=>{lines.push('#'+(i+1));dumpObj(lines,item,'  ');});
-    }
-    dump('Movimientos',g.items);dump('Deudas',g.deudas);dump('Fijos',g.fijos,true);dump('Ahorros',g.ahorros);dump('Extras',g.extras);
-    if(g.rates)lines.push('rates: '+JSON.stringify(g.rates));
-    return lines.join('\n');
-  }
-  function reportEspiritual(from,to){
-    const lines=['===== ESPIRITUAL =====']; const e=store.espiritual||{};
-    ['devocionales','lecturas','studyPlans'].forEach(key=>{
-      const list=(e[key]||[]).filter(x=>inRange(fieldDate(x),from,to));
-      lines.push('--- '+key+' ('+list.length+') ---');
-      list.forEach((item,i)=>{lines.push('#'+(i+1)+' · '+fieldDate(item));dumpObj(lines,item,'  ');});
-    });
-    if(e.bibleProgress)lines.push('bibleProgress: '+JSON.stringify(e.bibleProgress));
-    return lines.join('\n');
-  }
-  function reportPlanner(from,to){
-    const lines=['===== PLANNER ====='];
-    const keys=Object.keys(store.planner||{}).filter(d=>d>=from&&d<=to).sort();
-    if(!keys.length)lines.push('(Sin días en el rango en Firebase)');
-    keys.forEach(d=>{lines.push('--- Día '+d+' ---');dumpObj(lines,store.planner[d]||{},'  ');});
-    return lines.join('\n');
-  }
-  function reportPendientes(){
-    const lines=['===== PENDIENTES ====='];
-    const items=((store.pendientes&&store.pendientes.items)||store.pendientes||[]);
-    const list=Array.isArray(items)?items:[];
-    if(!list.length)lines.push('(sin items)');
-    list.forEach((item,i)=>{lines.push('#'+(i+1));dumpObj(lines,item,'  ');});
-    return lines.join('\n');
-  }
-  function reportMetas(from,to){
-    const lines=['===== METAS =====','Rango: '+from+' → '+to];
-    const m=store.metas||{};
-    (m.goals||[]).forEach((g,i)=>{lines.push('--- Meta '+(i+1)+' ---');dumpObj(lines,g,'  ');});
-    if(m.days)lines.push('days: '+JSON.stringify(m.days));
-    if(m.tiposReper)lines.push('tiposReper: '+JSON.stringify(m.tiposReper));
-    if(m.hojas)lines.push('hojas: '+JSON.stringify(m.hojas));
-    return lines.join('\n');
-  }
-  function reportGuia(from,to){
-    const lines=['===== GUÍA / TRABAJO INTERNO =====']; const g=store.guia||{};
-    const entries=(g.entries||[]).filter(x=>inRange(fieldDate(x),from,to));
-    lines.push('--- entries ('+entries.length+') ---');
-    entries.forEach((item,i)=>{lines.push('#'+(i+1)+' · '+fieldDate(item));dumpObj(lines,item,'  ');});
-    if(g.anclas)lines.push('anclas: '+JSON.stringify(g.anclas));
-    if(g.customAnclas)lines.push('customAnclas: '+JSON.stringify(g.customAnclas));
-    if(g.rueda)lines.push('rueda: '+JSON.stringify(g.rueda));
-    if(g.notas)lines.push('notas: '+JSON.stringify(g.notas));
-    return lines.join('\n');
-  }
-  function generate(){
-    const from=document.getElementById('from').value, to=document.getElementById('to').value;
-    if(!from||!to){alert('Elige desde y hasta');return;}
-    lastModules={poker:reportPoker(from,to),fitness:reportFitness(from,to),gastos:reportGastos(from,to),espiritual:reportEspiritual(from,to),planner:reportPlanner(from,to),pendientes:reportPendientes(),metas:reportMetas(from,to),guia:reportGuia(from,to)};
-    lastFull=['MARY LIFE · REPORTE DETALLADO','Desde: '+from+'  Hasta: '+to,'Generado: '+new Date().toISOString(),'',lastModules.poker,'',lastModules.fitness,'',lastModules.gastos,'',lastModules.espiritual,'',lastModules.planner,'',lastModules.pendientes,'',lastModules.metas,'',lastModules.guia].join('\n');
-    document.getElementById('out').textContent=lastFull;
-    document.getElementById('status').textContent='Reporte listo · '+from+' → '+to;
-  }
-  function setRango(tipo){
-    const today=new Date(); let from=today, to=today;
-    if(tipo==='ayer'){from=new Date(today);from.setDate(from.getDate()-1);to=new Date(from);}
-    if(tipo==='semana'){from=new Date(today);from.setDate(from.getDate()-((from.getDay()+6)%7));}
-    if(tipo==='mes'){from=new Date(today.getFullYear(),today.getMonth(),1);}
-    document.getElementById('from').value=ymd(from); document.getElementById('to').value=ymd(to);
-    document.querySelectorAll('[data-rango]').forEach(b=>b.classList.toggle('on',b.getAttribute('data-rango')===tipo));
-  }
-  document.querySelectorAll('[data-rango]').forEach(b=>b.addEventListener('click',()=>setRango(b.getAttribute('data-rango'))));
-  document.getElementById('btn-gen').addEventListener('click',generate);
-  document.getElementById('btn-copy').addEventListener('click',()=>{if(!lastFull)generate();navigator.clipboard.writeText(lastFull||'').then(()=>alert('Copiado'));});
-  document.getElementById('btn-txt').addEventListener('click',()=>{if(!lastFull)generate();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lastFull||''],{type:'text/plain'}));a.download='mary_reporte_'+document.getElementById('from').value+'_'+document.getElementById('to').value+'.txt';a.click();});
-  ['poker','fitness','gastos','espiritual','planner','pendientes','metas','guia'].forEach(m=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent='Copiar '+m;b.addEventListener('click',()=>{if(!lastModules[m])generate();navigator.clipboard.writeText(lastModules[m]||'').then(()=>alert('Copiado: '+m));});document.getElementById('mod-btns').appendChild(b);});
+  document.querySelectorAll('[data-rango]').forEach(function(b){b.addEventListener('click',function(ev){ev.preventDefault();setRango(b.getAttribute('data-rango'));});});
+  $('btn-gen').addEventListener('click',function(ev){ev.preventDefault();generate();});
+  $('btn-copy').addEventListener('click',function(ev){ev.preventDefault();if(!lastFull)generate();copyText(lastFull);});
+  $('btn-txt').addEventListener('click',function(ev){ev.preventDefault();if(!lastFull)generate();if(!lastFull)return;var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lastFull],{type:'text/plain;charset=utf-8'}));a.download='mary_reporte_'+$('from').value+'_'+$('to').value+'.txt';document.body.appendChild(a);a.click();a.remove();toast('⬇️ Descarga iniciada');});
+  var mods=[['poker','♠️ Póker'],['fitness','💪 Fitness'],['gastos','💸 Gastos'],['espiritual','🕊️ Espiritual'],['planner','📅 Planner'],['pendientes','✅ Pendientes'],['metas','🎯 Metas'],['guia','🪞 Guía']];
+  var box=$('mod-btns');
+  mods.forEach(function(pair){
+    var key=pair[0], label=pair[1];
+    var b=document.createElement('button'); b.type='button'; b.className='mod-btn'; b.textContent='Copiar '+label;
+    b.addEventListener('click',function(ev){ev.preventDefault();if(!lastModules[key])generate();copyText(lastModules[key]||'');});
+    box.appendChild(b);
+  });
   setRango('hoy'); loadAll();
 })();
 </script>
