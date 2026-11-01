@@ -2,109 +2,281 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#1a1225">
   <title>MARY · Life Suite</title>
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%23f9a8d4'/><stop offset='100%25' stop-color='%23a78bfa'/></linearGradient></defs><rect width='100' height='100' rx='22' fill='url(%23g)'/><text x='50' y='58' font-size='48' text-anchor='middle' dominant-baseline='central'>💗</text></svg>">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root { --bg:#0f0a14; --card:#1c1428; --border:rgba(244,114,182,.18); --pink:#f472b6; --text:#f5eef8; --muted:#a89bb5; --side:268px; }
-    *{box-sizing:border-box;font-family:system-ui,sans-serif}
-    body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);overflow:hidden}
-    #lock-screen{position:fixed;inset:0;z-index:9999;background:#0f0a14;display:flex;align-items:center;justify-content:center;padding:1.5rem}
-    #lock-screen.hidden{display:none!important}
-    .lock-card{max-width:360px;width:100%;background:#1c1428;border:1px solid var(--border);border-radius:24px;padding:2rem;text-align:center}
-    .pin-dots{display:flex;gap:12px;justify-content:center;margin:1rem 0}
-    .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--pink)}
-    .pin-dot.filled{background:var(--pink)}
-    .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:260px;margin:0 auto}
-    .pin-key{height:54px;border-radius:16px;border:1px solid var(--border);background:#241b32;color:#fff;font-weight:800;font-size:1.1rem;cursor:pointer}
-    #sidebar{width:var(--side);background:#1a1228;border-right:1px solid var(--border);position:fixed;inset:0 auto 0 0;z-index:220;display:flex;flex-direction:column;transition:transform .3s}
-    #sidebar.closed{transform:translateX(-100%)}
-    .nav-item{display:flex;align-items:center;gap:.7rem;padding:.65rem 1rem;margin:.15rem .55rem;border-radius:12px;font-size:.8rem;font-weight:700;color:rgba(255,255,255,.72);cursor:pointer;border:none;background:transparent;width:calc(100% - 1.1rem);text-align:left}
-    .nav-item.active{background:linear-gradient(135deg,rgba(236,72,153,.35),rgba(167,139,250,.3));color:#fff}
-    #main-wrap{margin-left:var(--side);height:100vh;display:flex;flex-direction:column}
-    #main-wrap.expanded{margin-left:0}
-    #topbar{display:none;align-items:center;justify-content:space-between;padding:.6rem 1rem;background:rgba(15,10,20,.92);border-bottom:1px solid var(--border);position:fixed;top:0;left:0;right:0;z-index:200}
-    #content-area{flex:1;position:relative;overflow:hidden}
-    .view{position:absolute;inset:0;display:none;overflow:auto}
-    .view.active{display:block}
-    .module-frame{width:100%;height:100%;border:none;background:#fcf8fa}
-    #view-dashboard{padding:1.5rem;background:var(--bg)}
-    .area-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1rem;cursor:pointer;margin-bottom:.75rem}
-    #overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:210}
-    #overlay.show{display:block}
-    @media(max-width:900px){#sidebar{transform:translateX(-100%)}#sidebar.open{transform:translateX(0)}#main-wrap{margin-left:0}#topbar{display:flex}#content-area{padding-top:52px}}
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    :root {
+      --bg: #0f0a14;
+      --card: #1c1428;
+      --border: rgba(244, 114, 182, 0.18);
+      --pink: #f472b6;
+      --pink2: #ec4899;
+      --purple: #a78bfa;
+      --text: #f5eef8;
+      --muted: #a89bb5;
+      --sidebar-w: 268px;
+    }
+    * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); overflow: hidden; }
+    #lock-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: radial-gradient(circle at 20% 20%, rgba(244,114,182,0.18), transparent 45%), radial-gradient(circle at 80% 80%, rgba(167,139,250,0.15), transparent 45%), #0f0a14;
+      display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+    }
+    #lock-screen.hidden { display: none !important; }
+    .lock-card {
+      width: 100%; max-width: 360px; background: rgba(28,20,40,0.92);
+      border: 1px solid var(--border); border-radius: 24px; padding: 2rem 1.5rem;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.45); text-align: center;
+    }
+    .lock-logo {
+      width: 72px; height: 72px; margin: 0 auto 1rem; border-radius: 20px;
+      background: linear-gradient(135deg, #f9a8d4, #c084fc);
+      display: flex; align-items: center; justify-content: center; font-size: 2rem;
+      box-shadow: 0 8px 28px rgba(244,114,182,0.35);
+    }
+    .pin-dots { display: flex; gap: 12px; justify-content: center; margin: 1.25rem 0; }
+    .pin-dot {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid var(--pink); background: transparent; transition: 0.15s;
+    }
+    .pin-dot.filled { background: var(--pink); box-shadow: 0 0 12px rgba(244,114,182,0.6); }
+    .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 260px; margin: 0 auto; }
+    .pin-key {
+      height: 54px; border-radius: 16px; border: 1px solid var(--border);
+      background: #241b32; color: var(--text); font-weight: 800; font-size: 1.15rem; cursor: pointer;
+    }
+    .pin-key:active { background: rgba(244,114,182,0.25); }
+    .pin-error { color: #fb7185; font-size: 0.75rem; font-weight: 700; min-height: 1.1rem; margin-top: 0.5rem; }
+    #sidebar {
+      width: var(--sidebar-w);
+      background: linear-gradient(180deg, #1a1228 0%, #120c1c 100%);
+      border-right: 1px solid var(--border); color: white;
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 220;
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    #sidebar.closed { transform: translateX(-100%); }
+    .profile-block {
+      padding: 1.25rem 1.1rem 1rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0.85rem;
+    }
+    .avatar-wrap { position: relative; width: 52px; height: 52px; flex-shrink: 0; }
+    .avatar {
+      width: 52px; height: 52px; border-radius: 16px; object-fit: cover;
+      background: linear-gradient(135deg, #f9a8d4, #a78bfa);
+      border: 2px solid rgba(244,114,182,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; font-weight: 800; color: white; overflow: hidden;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-edit {
+      position: absolute; bottom: -4px; right: -4px; width: 22px; height: 22px; border-radius: 8px;
+      background: var(--pink2); border: none; color: white; font-size: 10px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .profile-name { font-weight: 800; font-size: 0.95rem; line-height: 1.2; }
+    .profile-sub { font-size: 0.7rem; color: var(--muted); font-weight: 600; margin-top: 2px; }
+    .mode-pill {
+      display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; padding: 2px 8px; border-radius: 999px;
+      background: rgba(167,139,250,0.2); color: #c4b5fd; font-size: 0.65rem; font-weight: 700;
+    }
+    .mode-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #34d399; }
+    .nav-scroll { flex: 1; overflow-y: auto; padding: 0.6rem 0; }
+    .nav-label {
+      padding: 0.5rem 1.15rem 0.25rem; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 0.7rem; padding: 0.65rem 1rem; margin: 0.15rem 0.55rem;
+      border-radius: 12px; font-size: 0.8125rem; font-weight: 700; color: rgba(255,255,255,0.72);
+      cursor: pointer; border: none; background: transparent; width: calc(100% - 1.1rem); text-align: left; transition: 0.18s;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
+    .nav-item.active {
+      background: linear-gradient(135deg, rgba(236,72,153,0.35), rgba(167,139,250,0.3));
+      color: white; box-shadow: inset 0 0 0 1px rgba(244,114,182,0.25);
+    }
+    .nav-item .emoji { font-size: 1.05rem; width: 1.4rem; text-align: center; }
+    .sidebar-foot { padding: 0.75rem 1rem 1rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.4rem; }
+    .foot-btn {
+      display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.75rem; border-radius: 10px;
+      background: transparent; border: 1px solid var(--border); color: var(--muted); font-size: 0.75rem; font-weight: 700; cursor: pointer;
+    }
+    .foot-btn:hover { background: rgba(255,255,255,0.05); color: white; }
+    #main-wrap { margin-left: var(--sidebar-w); height: 100vh; display: flex; flex-direction: column; transition: margin-left 0.3s; background: var(--bg); }
+    #main-wrap.expanded { margin-left: 0; }
+    #topbar {
+      display: none; align-items: center; justify-content: space-between;
+      padding: 0.6rem 1rem; padding-top: max(0.85rem, env(safe-area-inset-top, 0px));
+      background: rgba(15,10,20,0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      min-height: calc(56px + env(safe-area-inset-top, 0px));
+    }
+    #topbar button {
+      min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      border-radius: 12px; color: white; font-size: 1.1rem;
+    }
+    #topbar .title { font-weight: 800; font-size: 0.9rem; letter-spacing: 0.04em; }
+    #content-area { flex: 1; position: relative; overflow: hidden; }
+    .view { position: absolute; inset: 0; display: none; overflow: auto; }
+    .view.active { display: block; }
+    .module-frame { width: 100%; height: 100%; border: none; display: block; background: #fcf8fa; }
+    #view-dashboard {
+      background: radial-gradient(circle at 15% 10%, rgba(244,114,182,0.12), transparent 40%), radial-gradient(circle at 90% 90%, rgba(167,139,250,0.1), transparent 40%), var(--bg);
+      padding: 1.5rem 1.25rem 2.5rem; overflow-y: auto;
+    }
+    .dash-top { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+    .dash-greet h1 {
+      font-size: 1.45rem; font-weight: 800; margin: 0 0 0.25rem;
+      background: linear-gradient(90deg, #f9a8d4, #c4b5fd);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .dash-greet p { margin: 0; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
+    .verse { margin-top: 0.5rem; font-size: 0.75rem; color: #c4b5fd; font-weight: 600; max-width: 420px; line-height: 1.4; opacity: 0.9; }
+    .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
+    .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1rem; }
+    .kpi .label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    .kpi .value { font-size: 1.35rem; font-weight: 800; margin-top: 0.35rem; color: var(--pink); }
+    .kpi .hint { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; font-weight: 600; }
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0.9rem; }
+    .area-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 1.15rem;
+      cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; gap: 0.45rem;
+    }
+    .area-card:hover { border-color: rgba(244,114,182,0.4); transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,0,0,0.25); }
+    .card-icon {
+      width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem; margin-bottom: 0.25rem;
+    }
+    .area-card h3 { margin: 0; font-size: 0.95rem; font-weight: 800; }
+    .area-card p { margin: 0; font-size: 0.75rem; color: var(--muted); font-weight: 500; line-height: 1.4; flex: 1; }
+    .enter-btn {
+      margin-top: 0.5rem; align-self: flex-start; padding: 0.4rem 0.85rem; border-radius: 10px;
+      background: linear-gradient(135deg, #ec4899, #a78bfa); border: none; color: white; font-size: 0.7rem; font-weight: 800; cursor: pointer;
+    }
+    #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 210; backdrop-filter: blur(2px); }
+    #overlay.show { display: block; }
+    @media (max-width: 900px) {
+      #sidebar { transform: translateX(-100%); }
+      #sidebar.open { transform: translateX(0); }
+      #main-wrap { margin-left: 0; }
+      #topbar { display: flex; }
+      #content-area { padding-top: calc(64px + env(safe-area-inset-top, 0px)) !important; }
+      #view-dashboard { padding-top: 1.25rem; }
+    }
   </style>
 </head>
 <body>
   <div id="lock-screen">
     <div class="lock-card">
-      <div style="font-size:2rem;margin-bottom:.5rem">💗</div>
-      <h2 style="margin:0">MARY</h2>
-      <p style="color:var(--muted);font-size:.8rem">Ingresa tu PIN de 4 digitos</p>
-      <div class="pin-dots" id="pin-dots"><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div></div>
-      <div id="pin-error" style="color:#fb7185;font-size:.75rem;min-height:1rem"></div>
+      <div class="lock-logo">💗</div>
+      <h2 style="margin:0;font-size:1.25rem;font-weight:800;">MARY</h2>
+      <p style="margin:0.35rem 0 0;color:var(--muted);font-size:0.8rem;font-weight:600;">Life Suite · Personal OS</p>
+      <p id="lock-hint" style="margin:1rem 0 0;font-size:0.75rem;color:var(--muted);font-weight:600;">Ingresa tu PIN de 4 dígitos</p>
+      <div class="pin-dots" id="pin-dots">
+        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+      <div class="pin-error" id="pin-error"></div>
       <div class="pin-pad" id="pin-pad"></div>
+      <p style="margin:1rem 0 0;font-size:0.65rem;color:var(--muted);">Primera vez: el PIN que elijas queda guardado en este dispositivo.</p>
     </div>
   </div>
   <div id="overlay" onclick="closeSidebar()"></div>
   <aside id="sidebar">
-    <div style="padding:1.25rem;border-bottom:1px solid var(--border)">
-      <div style="font-weight:800" id="profile-name">Mary</div>
-      <div style="font-size:.7rem;color:var(--muted)">Life Suite</div>
+    <div class="profile-block">
+      <div class="avatar-wrap">
+        <div class="avatar" id="avatar-el">M</div>
+        <button type="button" class="avatar-edit" onclick="document.getElementById('photo-input').click()" title="Cambiar foto">📷</button>
+        <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="onPhoto(event)">
+      </div>
+      <div style="min-width:0;flex:1;">
+        <div class="profile-name" id="profile-name">Mary</div>
+        <div class="profile-sub">Life Suite</div>
+        <div class="mode-pill">Modo enfoque</div>
+      </div>
     </div>
-    <div style="flex:1;overflow:auto;padding:.6rem 0">
-      <button type="button" class="nav-item active" data-view="dashboard" onclick="navigateTo('dashboard')">🏠 Dashboard</button>
-      <button type="button" class="nav-item" data-view="poker" onclick="navigateTo('poker')">♠️ Poker</button>
-      <button type="button" class="nav-item" data-view="fitness" onclick="navigateTo('fitness')">💪 Fitness</button>
-      <button type="button" class="nav-item" data-view="espiritual" onclick="navigateTo('espiritual')">🕊️ Espiritual</button>
-      <button type="button" class="nav-item" data-view="planner" onclick="navigateTo('planner')">📅 Daily Planner</button>
-      <button type="button" class="nav-item" data-view="pendientes" onclick="navigateTo('pendientes')">✅ Pendientes</button>
-      <button type="button" class="nav-item" data-view="gastos" onclick="navigateTo('gastos')">💸 Gastos</button>
-      <button type="button" class="nav-item" data-view="metas" onclick="navigateTo('metas')">🎯 Metas</button>
-      <button type="button" class="nav-item" data-view="guia" onclick="navigateTo('guia')">🪞 Guia</button>
-      <button type="button" class="nav-item" data-view="cierre" onclick="navigateTo('cierre')">📊 Cierres</button>
-      <button type="button" class="nav-item" data-view="resumenes" onclick="navigateTo('resumenes')">📋 Resumenes</button>
+    <div class="nav-scroll">
+      <div class="nav-label">Inicio</div>
+      <button type="button" class="nav-item active" data-view="dashboard" onclick="navigateTo('dashboard')"><span class="emoji">🏠</span> Dashboard</button>
+      <div class="nav-label">Áreas</div>
+      <button type="button" class="nav-item" data-view="poker" onclick="navigateTo('poker')"><span class="emoji">♠️</span> Póker</button>
+      <button type="button" class="nav-item" data-view="fitness" onclick="navigateTo('fitness')"><span class="emoji">💪</span> Fitness</button>
+      <button type="button" class="nav-item" data-view="espiritual" onclick="navigateTo('espiritual')"><span class="emoji">🕊️</span> Espiritual</button>
+      <button type="button" class="nav-item" data-view="planner" onclick="navigateTo('planner')"><span class="emoji">📅</span> Daily Planner</button>
+      <button type="button" class="nav-item" data-view="pendientes" onclick="navigateTo('pendientes')"><span class="emoji">✅</span> Pendientes</button>
+      <button type="button" class="nav-item" data-view="gastos" onclick="navigateTo('gastos')"><span class="emoji">💸</span> Gastos</button>
+      <button type="button" class="nav-item" data-view="metas" onclick="navigateTo('metas')"><span class="emoji">🎯</span> Metas</button>
+      <button type="button" class="nav-item" data-view="guia" onclick="navigateTo('guia')"><span class="emoji">🪞</span> Guía</button>
+      <button type="button" class="nav-item" data-view="cierre" onclick="navigateTo('cierre')"><span class="emoji">📊</span> Cierres</button>
+      <button type="button" class="nav-item" data-view="resumenes" onclick="navigateTo('resumenes')"><span class="emoji">📋</span> Resúmenes</button>
     </div>
-    <div style="padding:1rem;border-top:1px solid var(--border)">
-      <button type="button" class="nav-item" onclick="lockApp()">🔒 Bloquear</button>
+    <div class="sidebar-foot">
+      <button type="button" class="foot-btn" onclick="openProfile()">✏️ Editar perfil</button>
+      <button type="button" class="foot-btn" onclick="lockApp()">🔒 Bloquear</button>
     </div>
   </aside>
   <div id="main-wrap">
     <div id="topbar">
-      <button type="button" onclick="toggleSidebar(event)" style="background:#241b32;border:1px solid var(--border);color:#fff;border-radius:12px;width:44px;height:44px">☰</button>
-      <div style="font-weight:800">MARY 💗</div>
-      <button type="button" onclick="lockApp()" style="background:#241b32;border:1px solid var(--border);color:#fff;border-radius:12px;width:44px;height:44px">🔒</button>
+      <button type="button" id="btn-menu" onclick="toggleSidebar(event)" aria-label="Menú">☰</button>
+      <div class="title">MARY 💗</div>
+      <button type="button" onclick="lockApp()" aria-label="Bloquear">🔒</button>
     </div>
     <div id="content-area">
       <div id="view-dashboard" class="view active">
-        <h1 style="background:linear-gradient(90deg,#f9a8d4,#c4b5fd);-webkit-background-clip:text;color:transparent;font-size:1.4rem">Bienvenida</h1>
-        <p style="color:var(--muted)">Tu sistema personal</p>
-        <div class="area-card" onclick="navigateTo('poker')"><h3>♠️ Poker</h3></div>
-        <div class="area-card" onclick="navigateTo('fitness')"><h3>💪 Fitness</h3></div>
-        <div class="area-card" onclick="navigateTo('planner')"><h3>📅 Planner</h3></div>
-        <div class="area-card" onclick="navigateTo('resumenes')"><h3>📋 Resumenes</h3><p style="color:var(--muted);font-size:.75rem">Reportes detallados para ChatGPT / Notion</p></div>
-        <div class="area-card" onclick="navigateTo('gastos')"><h3>💸 Gastos</h3></div>
-        <div class="area-card" onclick="navigateTo('metas')"><h3>🎯 Metas</h3></div>
+        <div class="dash-top">
+          <div class="dash-greet">
+            <h1>Bienvenida, <span id="greet-name">Mary</span></h1>
+            <p>Tu sistema personal · todo en un solo lugar</p>
+            <div class="verse">Sean hacedores de la palabra, y no tan solamente oidores. — Santiago 1:22</div>
+          </div>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi"><div class="label">Áreas</div><div class="value">8</div><div class="hint">Módulos activos</div></div>
+          <div class="kpi"><div class="label">Sesión</div><div class="value" style="font-size:1rem;color:#c4b5fd;" id="kpi-date">—</div><div class="hint">Hoy</div></div>
+          <div class="kpi"><div class="label">Acceso</div><div class="value" style="font-size:1rem;color:#34d399;">PIN</div><div class="hint">En este dispositivo</div></div>
+        </div>
+        <div class="cards-grid">
+          <div class="area-card" onclick="navigateTo('poker')"><div class="card-icon" style="background:linear-gradient(135deg,#4c1d95,#a78bfa);">♠️</div><h3>Póker</h3><p>Sesiones, EV, mindset y estudio</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('fitness')"><div class="card-icon" style="background:linear-gradient(135deg,#9d174d,#f472b6);">💪</div><h3>Fitness</h3><p>Alimentación, entrenos, peso y medidas</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('espiritual')"><div class="card-icon" style="background:linear-gradient(135deg,#6d28d9,#c4b5fd);">🕊️</div><h3>Espiritual</h3><p>Devocional, lectura y planes</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('planner')"><div class="card-icon" style="background:linear-gradient(135deg,#be185d,#fb7185);">📅</div><h3>Daily Planner</h3><p>Intención, hábitos y rutinas del día</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('gastos')"><div class="card-icon" style="background:linear-gradient(135deg,#047857,#34d399);">💸</div><h3>Gastos</h3><p>Ingresos, egresos, deudas y ahorros</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('metas')"><div class="card-icon" style="background:linear-gradient(135deg,#b45309,#fbbf24);">🎯</div><h3>Metas</h3><p>Objetivos semanales y cumplimiento</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('guia')"><div class="card-icon" style="background:linear-gradient(135deg,#7c3aed,#e879f9);">🪞</div><h3>Guía</h3><p>Trabajo interno y autoconocimiento</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('resumenes')"><div class="card-icon" style="background:linear-gradient(135deg,#be185d,#a78bfa);">📋</div><h3>Resúmenes</h3><p>Reportes detallados · copiar a ChatGPT / Notion</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('cierre')"><div class="card-icon" style="background:linear-gradient(135deg,#1e3a8a,#60a5fa);">📊</div><h3>Cierres</h3><p>Comparativas semanales y mensuales</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('pendientes')"><div class="card-icon" style="background:linear-gradient(135deg,#0f766e,#2dd4bf);">✅</div><h3>Pendientes</h3><p>Tareas y recordatorios</p><button type="button" class="enter-btn">Abrir</button></div>
+        </div>
       </div>
-      <div id="view-poker" class="view"><iframe class="module-frame" src="poker.html" title="Poker"></iframe></div>
+      <div id="view-poker" class="view"><iframe class="module-frame" src="poker.html" title="Póker"></iframe></div>
       <div id="view-fitness" class="view"><iframe class="module-frame" src="fitness.html" title="Fitness"></iframe></div>
       <div id="view-espiritual" class="view"><iframe class="module-frame" src="espiritual.html" title="Espiritual"></iframe></div>
       <div id="view-planner" class="view"><iframe class="module-frame" src="planner.html" title="Planner"></iframe></div>
       <div id="view-pendientes" class="view"><iframe class="module-frame" src="pendientes.html" title="Pendientes"></iframe></div>
       <div id="view-gastos" class="view"><iframe class="module-frame" src="gastos.html" title="Gastos"></iframe></div>
       <div id="view-metas" class="view"><iframe class="module-frame" src="metas.html" title="Metas"></iframe></div>
-      <div id="view-guia" class="view"><iframe class="module-frame" src="guia.html" title="Guia"></iframe></div>
+      <div id="view-guia" class="view"><iframe class="module-frame" src="guia.html" title="Guía"></iframe></div>
       <div id="view-cierre" class="view"><iframe class="module-frame" src="cierre.html" title="Cierres"></iframe></div>
-      <div id="view-resumenes" class="view"><iframe class="module-frame" src="resumenes.html" title="Resumenes"></iframe></div>
+      <div id="view-resumenes" class="view"><iframe class="module-frame" src="resumenes.html" title="Resúmenes"></iframe></div>
     </div>
   </div>
 <script>
 const PIN_KEY='MARY_PIN_V1', SESSION_KEY='MARY_SESSION_OK', PROFILE_KEY='MARY_PROFILE_V1';
 let pinBuffer='';
 function updateDots(){document.querySelectorAll('#pin-dots .pin-dot').forEach((d,i)=>d.classList.toggle('filled',i<pinBuffer.length));}
-function checkSession(){if(sessionStorage.getItem(SESSION_KEY)==='1'){document.getElementById('lock-screen').classList.add('hidden');}else{document.getElementById('lock-screen').classList.remove('hidden');}}
+function checkSession(){
+  if(sessionStorage.getItem(SESSION_KEY)==='1'){document.getElementById('lock-screen').classList.add('hidden');}
+  else{document.getElementById('lock-screen').classList.remove('hidden');}
+}
 function lockApp(){sessionStorage.removeItem(SESSION_KEY);pinBuffer='';updateDots();document.getElementById('lock-screen').classList.remove('hidden');}
 function navigateTo(view){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -114,10 +286,22 @@ function navigateTo(view){
 }
 function toggleSidebar(e){if(e)e.stopPropagation();document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('show');}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
+function openProfile(){const n=prompt('Nombre de perfil', document.getElementById('profile-name').textContent||'Mary'); if(n){document.getElementById('profile-name').textContent=n; document.getElementById('greet-name').textContent=n; try{const p=JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}'); p.name=n; localStorage.setItem(PROFILE_KEY, JSON.stringify(p));}catch(e){}}}
+function onPhoto(ev){
+  const f=ev.target.files&&ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=function(){
+    const el=document.getElementById('avatar-el');
+    el.innerHTML=''; const img=document.createElement('img'); img.src=r.result; el.appendChild(img);
+    try{const p=JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}'); p.photo=r.result; localStorage.setItem(PROFILE_KEY, JSON.stringify(p));}catch(e){}
+  };
+  r.readAsDataURL(f);
+}
 (function buildPad(){
   const pad=document.getElementById('pin-pad');
   ['1','2','3','4','5','6','7','8','9','clear','0','ok'].forEach(k=>{
-    const b=document.createElement('button'); b.type='button'; b.className='pin-key'; b.textContent=k==='clear'?'BORRAR':(k==='ok'?'OK':k);
+    const b=document.createElement('button'); b.type='button'; b.className='pin-key';
+    b.textContent=k==='clear'?'BORRAR':(k==='ok'?'OK':k);
     b.onclick=()=>{
       const err=document.getElementById('pin-error'); err.textContent='';
       if(k==='clear'){pinBuffer='';updateDots();return;}
@@ -133,7 +317,12 @@ function closeSidebar(){document.getElementById('sidebar').classList.remove('ope
     pad.appendChild(b);
   });
 })();
-try{const p=JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}'); if(p.name) document.getElementById('profile-name').textContent=p.name;}catch(e){}
+try{
+  const p=JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}');
+  if(p.name){document.getElementById('profile-name').textContent=p.name; document.getElementById('greet-name').textContent=p.name;}
+  if(p.photo){const el=document.getElementById('avatar-el'); el.innerHTML=''; const img=document.createElement('img'); img.src=p.photo; el.appendChild(img);}
+}catch(e){}
+document.getElementById('kpi-date').textContent=new Date().toLocaleDateString('es-VE',{weekday:'short',day:'numeric',month:'short'});
 checkSession();
 </script>
 <script src="fitness-cloud-fix.js"></script>
@@ -151,14 +340,14 @@ checkSession();
         s.id='mary-fit-cloud-fix';
         s.src=(location.origin||'')+'/fitness-cloud-fix.js';
         doc.head.appendChild(s);
-      }catch(e){console.warn('fit inject',e);}
+      }catch(e){}
     }
     frame.addEventListener('load', tryInject);
     tryInject();
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', injectFitnessFix);
   else injectFitnessFix();
-  setInterval(injectFitnessFix, 2000);
+  setInterval(injectFitnessFix, 2500);
 })();
 </script>
 </body>
