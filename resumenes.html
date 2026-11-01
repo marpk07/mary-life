@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARY · Centro de Resúmenes</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;margin:0;min-height:100vh;background:linear-gradient(165deg,#fdf2f8,#faf5ff 50%,#fff1f2);color:#4a2040}
+.card{background:rgba(255,255,255,.95);border:1.5px solid rgba(236,72,153,.22);border-radius:16px;padding:14px;box-shadow:0 6px 18px rgba(190,50,120,.08)}
+.btn{border:none;border-radius:12px;padding:10px 14px;font-weight:800;font-size:12px;cursor:pointer}
+.btn-main{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff}
+.btn-ghost{background:#fff;border:1.5px solid rgba(236,72,153,.35);color:#be185d}
+input,select{border:1.5px solid rgba(236,72,153,.28);border-radius:10px;padding:8px 10px;font-weight:600;font-size:12px}
+pre{white-space:pre-wrap;word-break:break-word;font-size:11px;line-height:1.45;background:#fff7fb;border:1px solid #fbcfe8;border-radius:12px;padding:12px;max-height:70vh;overflow:auto}
+.chip{font-size:10px;font-weight:800;padding:4px 10px;border-radius:999px;background:#fce7f3;color:#9d174d;border:none;cursor:pointer}
+.chip.on{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff}
+</style>
+</head>
+<body class="p-3 pb-24 max-w-2xl mx-auto">
+<header class="mb-3">
+  <div class="text-lg font-black" style="background:linear-gradient(90deg,#db2777,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent">📋 Centro de Resúmenes</div>
+  <p class="text-[11px] font-bold text-stone-500">Detalle completo por día · para copiar a ChatGPT / Notion</p>
+</header>
+<div class="card space-y-3 mb-3">
+  <div class="flex flex-wrap gap-2">
+    <button type="button" class="chip on" data-rango="hoy">Hoy</button>
+    <button type="button" class="chip" data-rango="ayer">Ayer</button>
+    <button type="button" class="chip" data-rango="semana">Esta semana</button>
+    <button type="button" class="chip" data-rango="mes">Este mes</button>
+  </div>
+  <div class="grid grid-cols-2 gap-2">
+    <div><label class="text-[9px] font-black text-stone-400 uppercase">Desde</label><input type="date" id="from" class="w-full"></div>
+    <div><label class="text-[9px] font-black text-stone-400 uppercase">Hasta</label><input type="date" id="to" class="w-full"></div>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <button type="button" class="btn btn-main" id="btn-gen">Generar reporte</button>
+    <button type="button" class="btn btn-ghost" id="btn-copy">📋 Copiar todo</button>
+    <button type="button" class="btn btn-ghost" id="btn-txt">⬇️ TXT</button>
+  </div>
+  <div class="flex flex-wrap gap-1" id="mod-btns"></div>
+  <p id="status" class="text-[10px] font-bold text-stone-400">Cargando datos…</p>
+</div>
+<div class="card"><pre id="out">Elige rango y pulsa Generar reporte.</pre></div>
+<script>
+(function(){
+  const firebaseConfig={apiKey:"AIzaSyCnhvfyXpwJdYOQFCvsyHDhgW9F3X7ARR4",authDomain:"marpk-816dd.firebaseapp.com",projectId:"marpk-816dd",storageBucket:"marpk-816dd.firebasestorage.app",messagingSenderId:"189644122232",appId:"1:189644122232:web:ed7894f1510a373d44658d"};
+  let db=null; try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();}catch(e){}
+  const store={poker:null,fitness:null,espiritual:null,gastos:null,pendientes:null,metas:null,guia:null,planner:{}};
+  let lastFull='', lastModules={};
+  function ymd(d){return d.toISOString().slice(0,10);}
+  function fieldDate(obj){if(!obj)return '';return obj.date||obj.fecha||obj.sessionDate||obj.day||obj.createdAt||'';}
+  function inRange(dateStr,from,to){if(!dateStr)return false;const d=String(dateStr).slice(0,10);return d>=from&&d<=to;}
+  async function loadAll(){
+    const st=document.getElementById('status');
+    try{
+      if(db){
+        const gets=await Promise.all([
+          db.collection('mapkr').doc('poker_data').get(),
+          db.collection('mary_fitness').doc('user_data').get(),
+          db.collection('mary_spiritual').doc('devotional_data_v6').get(),
+          db.collection('mary_gastos').doc('all').get(),
+          db.collection('mary_pendientes').doc('all').get(),
+          db.collection('mapkr').doc('metas_data').get(),
+          db.collection('mapkr').doc('guia_data').get(),
+          db.collection('mary_planner').get()
+        ]);
+        store.poker=gets[0].exists?gets[0].data():null;
+        store.fitness=gets[1].exists?gets[1].data():null;
+        store.espiritual=gets[2].exists?gets[2].data():null;
+        store.gastos=gets[3].exists?gets[3].data():null;
+        store.pendientes=gets[4].exists?gets[4].data():null;
+        store.metas=gets[5].exists?gets[5].data():null;
+        store.guia=gets[6].exists?gets[6].data():null;
+        store.planner={}; gets[7].forEach(doc=>{store.planner[doc.id]=doc.data();});
+      }
+      try{
+        const lp=localStorage.getItem('MARPK_POKER_DATA_V14');
+        if(lp){const j=JSON.parse(lp);if(j&&(!store.poker||(j.grindSessions||[]).length>=(store.poker.grindSessions||[]).length))store.poker=j;}
+        const lf=localStorage.getItem('MARY_FITNESS_DATA_V9');
+        if(lf){const j=JSON.parse(lf);if(j)store.fitness=Object.assign({},store.fitness||{},j);}
+      }catch(e){}
+      st.textContent='Datos listos · genera el reporte';
+    }catch(e){st.textContent='Error cargando: '+e.message;}
+  }
+  function dumpObj(lines,item,indent){
+    Object.keys(item||{}).forEach(k=>{
+      const v=item[k];
+      if(v===''||v==null)return;
+      if(k==='url'&&String(v).length>80){lines.push(indent+k+': [imagen omitida · exportar en Fitness]');return;}
+      if(k==='imageUrl'&&(!v||String(v).length<20))return;
+      if(k==='imageUrl'){lines.push(indent+'imageUrl: [imagen local]');return;}
+      if(Array.isArray(v)){lines.push(indent+k+':');v.forEach((row,ri)=>{lines.push(indent+'  ['+ri+'] '+(typeof row==='object'?JSON.stringify(row):row));});}
+      else if(typeof v==='object')lines.push(indent+k+': '+JSON.stringify(v));
+      else lines.push(indent+k+': '+v);
+    });
+  }
+  function reportPoker(from,to){
+    const lines=['===== PÓKER ====='];
+    const sessions=((store.poker&&store.poker.grindSessions)||[]).filter(s=>inRange(fieldDate(s),from,to));
+    if(!sessions.length)lines.push('(Sin sesiones en el rango)');
+    sessions.forEach((s,i)=>{lines.push('--- Sesión '+(i+1)+' · '+fieldDate(s)+' ---');dumpObj(lines,s,'  ');});
+    ((store.poker&&store.poker.studyLogs)||[]).filter(s=>inRange(fieldDate(s),from,to)).forEach((s,i)=>{lines.push('--- Estudio '+(i+1)+' · '+fieldDate(s)+' ---');dumpObj(lines,s,'  ');});
+    return lines.join('\n');
+  }
+  function reportFitness(from,to){
+    const lines=['===== FITNESS =====']; const f=store.fitness||{};
+    function dumpArr(name,arr){
+      const list=(arr||[]).filter(x=>inRange(fieldDate(x),from,to));
+      lines.push('--- '+name+' ('+list.length+') ---');
+      if(!list.length){lines.push('(sin registros)');return;}
+      list.forEach((item,i)=>{lines.push('#'+(i+1)+' · '+fieldDate(item));dumpObj(lines,item,'  ');});
+    }
+    dumpArr('Alimentación',f.alimentacion);dumpArr('Entrenamiento',f.entrenamiento);dumpArr('Cardio',f.cardio);
+    dumpArr('Salud',f.salud);dumpArr('Pesos',f.pesos);dumpArr('Medidas',f.medidas);dumpArr('Fotos (meta)',f.fotos);
+    return lines.join('\n');
+  }
+  function reportGastos(from,to){
+    const lines=['===== GASTOS =====']; const g=store.gastos||{};
+    function dump(name,arr,force){
+      const list=(arr||[]).filter(x=>force||inRange(fieldDate(x)||x.fechaPago||x.due||'',from,to));
+      lines.push('--- '+name+' ('+list.length+') ---');
+      list.forEach((item,i)=>{lines.push('#'+(i+1));dumpObj(lines,item,'  ');});
+    }
+    dump('Movimientos',g.items);dump('Deudas',g.deudas);dump('Fijos',g.fijos,true);dump('Ahorros',g.ahorros);dump('Extras',g.extras);
+    if(g.rates)lines.push('rates: '+JSON.stringify(g.rates));
+    return lines.join('\n');
+  }
+  function reportEspiritual(from,to){
+    const lines=['===== ESPIRITUAL =====']; const e=store.espiritual||{};
+    ['devocionales','lecturas','studyPlans'].forEach(key=>{
+      const list=(e[key]||[]).filter(x=>inRange(fieldDate(x),from,to));
+      lines.push('--- '+key+' ('+list.length+') ---');
+      list.forEach((item,i)=>{lines.push('#'+(i+1)+' · '+fieldDate(item));dumpObj(lines,item,'  ');});
+    });
+    if(e.bibleProgress)lines.push('bibleProgress: '+JSON.stringify(e.bibleProgress));
+    return lines.join('\n');
+  }
+  function reportPlanner(from,to){
+    const lines=['===== PLANNER ====='];
+    const keys=Object.keys(store.planner||{}).filter(d=>d>=from&&d<=to).sort();
+    if(!keys.length)lines.push('(Sin días en el rango en Firebase)');
+    keys.forEach(d=>{lines.push('--- Día '+d+' ---');dumpObj(lines,store.planner[d]||{},'  ');});
+    return lines.join('\n');
+  }
+  function reportPendientes(){
+    const lines=['===== PENDIENTES ====='];
+    const items=((store.pendientes&&store.pendientes.items)||store.pendientes||[]);
+    const list=Array.isArray(items)?items:[];
+    if(!list.length)lines.push('(sin items)');
+    list.forEach((item,i)=>{lines.push('#'+(i+1));dumpObj(lines,item,'  ');});
+    return lines.join('\n');
+  }
+  function reportMetas(from,to){
+    const lines=['===== METAS =====','Rango: '+from+' → '+to];
+    const m=store.metas||{};
+    (m.goals||[]).forEach((g,i)=>{lines.push('--- Meta '+(i+1)+' ---');dumpObj(lines,g,'  ');});
+    if(m.days)lines.push('days: '+JSON.stringify(m.days));
+    if(m.tiposReper)lines.push('tiposReper: '+JSON.stringify(m.tiposReper));
+    if(m.hojas)lines.push('hojas: '+JSON.stringify(m.hojas));
+    return lines.join('\n');
+  }
+  function reportGuia(from,to){
+    const lines=['===== GUÍA / TRABAJO INTERNO =====']; const g=store.guia||{};
+    const entries=(g.entries||[]).filter(x=>inRange(fieldDate(x),from,to));
+    lines.push('--- entries ('+entries.length+') ---');
+    entries.forEach((item,i)=>{lines.push('#'+(i+1)+' · '+fieldDate(item));dumpObj(lines,item,'  ');});
+    if(g.anclas)lines.push('anclas: '+JSON.stringify(g.anclas));
+    if(g.customAnclas)lines.push('customAnclas: '+JSON.stringify(g.customAnclas));
+    if(g.rueda)lines.push('rueda: '+JSON.stringify(g.rueda));
+    if(g.notas)lines.push('notas: '+JSON.stringify(g.notas));
+    return lines.join('\n');
+  }
+  function generate(){
+    const from=document.getElementById('from').value, to=document.getElementById('to').value;
+    if(!from||!to){alert('Elige desde y hasta');return;}
+    lastModules={poker:reportPoker(from,to),fitness:reportFitness(from,to),gastos:reportGastos(from,to),espiritual:reportEspiritual(from,to),planner:reportPlanner(from,to),pendientes:reportPendientes(),metas:reportMetas(from,to),guia:reportGuia(from,to)};
+    lastFull=['MARY LIFE · REPORTE DETALLADO','Desde: '+from+'  Hasta: '+to,'Generado: '+new Date().toISOString(),'',lastModules.poker,'',lastModules.fitness,'',lastModules.gastos,'',lastModules.espiritual,'',lastModules.planner,'',lastModules.pendientes,'',lastModules.metas,'',lastModules.guia].join('\n');
+    document.getElementById('out').textContent=lastFull;
+    document.getElementById('status').textContent='Reporte listo · '+from+' → '+to;
+  }
+  function setRango(tipo){
+    const today=new Date(); let from=today, to=today;
+    if(tipo==='ayer'){from=new Date(today);from.setDate(from.getDate()-1);to=new Date(from);}
+    if(tipo==='semana'){from=new Date(today);from.setDate(from.getDate()-((from.getDay()+6)%7));}
+    if(tipo==='mes'){from=new Date(today.getFullYear(),today.getMonth(),1);}
+    document.getElementById('from').value=ymd(from); document.getElementById('to').value=ymd(to);
+    document.querySelectorAll('[data-rango]').forEach(b=>b.classList.toggle('on',b.getAttribute('data-rango')===tipo));
+  }
+  document.querySelectorAll('[data-rango]').forEach(b=>b.addEventListener('click',()=>setRango(b.getAttribute('data-rango'))));
+  document.getElementById('btn-gen').addEventListener('click',generate);
+  document.getElementById('btn-copy').addEventListener('click',()=>{if(!lastFull)generate();navigator.clipboard.writeText(lastFull||'').then(()=>alert('Copiado'));});
+  document.getElementById('btn-txt').addEventListener('click',()=>{if(!lastFull)generate();const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lastFull||''],{type:'text/plain'}));a.download='mary_reporte_'+document.getElementById('from').value+'_'+document.getElementById('to').value+'.txt';a.click();});
+  ['poker','fitness','gastos','espiritual','planner','pendientes','metas','guia'].forEach(m=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent='Copiar '+m;b.addEventListener('click',()=>{if(!lastModules[m])generate();navigator.clipboard.writeText(lastModules[m]||'').then(()=>alert('Copiado: '+m));});document.getElementById('mod-btns').appendChild(b);});
+  setRango('hoy'); loadAll();
+})();
+</script>
+</body>
+</html>
