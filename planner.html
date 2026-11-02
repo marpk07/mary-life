@@ -2,125 +2,137 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>MARY · Daily Planner</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
-body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:linear-gradient(165deg,#fdf2f8,#faf5ff);color:#4a2040;min-height:100vh}
-.card{background:#fff;border:1px solid #f9a8d4;border-radius:14px;padding:12px;margin-bottom:10px}
-input,textarea,select{width:100%;border:1.5px solid #f9a8d4;border-radius:10px;padding:8px;font-weight:600;font-size:12px;box-sizing:border-box}
-.btn{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border:none;border-radius:12px;padding:10px 14px;font-weight:800;cursor:pointer;font-size:12px}
-.hab{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #fce7f3;font-size:12px;font-weight:700}
+:root{--pink:#ec4899;--purple:#a855f7;--muted:#a1627a;--text:#4a2040}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:linear-gradient(165deg,#fdf2f8,#faf5ff 50%,#fff1f2);color:var(--text);min-height:100vh;padding:12px 12px 100px}
+.card{background:rgba(255,255,255,.95);border:1.5px solid rgba(236,72,153,.22);border-radius:16px;padding:12px;margin-bottom:10px;box-shadow:0 8px 20px rgba(190,50,120,.06)}
+.tabs{display:flex;gap:4px;padding:3px;background:rgba(255,255,255,.8);border-radius:14px;border:1.5px solid rgba(236,72,153,.2);margin-bottom:12px}
+.tab{flex:1;text-align:center;padding:10px 4px;border-radius:11px;font-size:11px;font-weight:800;cursor:pointer;color:var(--muted);border:none;background:transparent}
+.tab.on{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;box-shadow:0 6px 14px rgba(236,72,153,.28)}
+.pane{display:none}.pane.on{display:block}
+input,textarea,select{width:100%;border:1.5px solid #f9a8d4;border-radius:12px;padding:9px 11px;font-weight:600;font-size:13px;background:#fff;color:var(--text)}
+label.lbl{font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#c084a0;display:block;margin:0 0 4px}
+.btn{border:none;border-radius:14px;padding:11px 14px;font-weight:800;font-size:12px;cursor:pointer;min-height:42px}
+.btn-main{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff}
+.btn-ghost{background:#fff;border:1.5px solid #f9a8d4;color:#be185d}
+.row{display:flex;gap:8px;align-items:center}
+.hab{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #fce7f3;font-size:12px;font-weight:700;gap:8px}
+.hab:last-child{border-bottom:none}
+.chk{width:22px;height:22px;accent-color:#ec4899}
+.moods,.syms{display:flex;flex-wrap:wrap;gap:6px}
+.pill{border:1.5px solid #f9a8d4;background:#fff;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800;cursor:pointer;color:#9d174d}
+.pill.on{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border-color:transparent}
+.star{width:32px;height:32px;border-radius:10px;border:1.5px solid #f9a8d4;background:#fff;font-weight:800;font-size:12px;cursor:pointer;color:#9d174d}
+.star.on{background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;border-color:transparent}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(120%);background:linear-gradient(135deg,#ec4899,#a855f7);color:#fff;font-weight:800;font-size:12px;padding:12px 16px;border-radius:999px;z-index:50;transition:.25s}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.title{font-size:1.05rem;font-weight:800;background:linear-gradient(90deg,#db2777,#7c3aed);-webkit-background-clip:text;background-clip:text;color:transparent}
+.muted{font-size:11px;font-weight:700;color:var(--muted)}
 </style>
 </head>
-<body class="p-3 max-w-lg mx-auto pb-24">
-<header class="mb-3 flex items-center justify-between gap-2">
+<body>
+<header class="flex items-start justify-between gap-2 mb-2">
   <div>
-    <div class="text-lg font-black" style="color:#db2777">Daily Planner</div>
-    <div class="text-[10px] font-bold text-stone-500">Persistencia real · mary_planner</div>
+    <div class="title">Daily Planner</div>
+    <div class="muted">Métricas · planner · reflexión · se guarda en la nube</div>
   </div>
-  <input type="date" id="planner-date" style="width:auto;max-width:140px">
+  <input type="date" id="fecha" style="width:auto;max-width:150px">
 </header>
-<div class="card">
-  <div class="text-xs font-black mb-1">Intencion del dia</div>
-  <input id="intention" placeholder="Hoy quiero...">
+<div class="tabs" id="tabs">
+  <button type="button" class="tab on" data-pane="metricas">💗 Métricas</button>
+  <button type="button" class="tab" data-pane="planner">✨ Planner</button>
+  <button type="button" class="tab" data-pane="reflexion">📝 Reflexión</button>
 </div>
-<div class="card">
-  <div class="text-xs font-black mb-1">Agradecimiento</div>
-  <input class="mb-1" id="g1" placeholder="1."><input class="mb-1" id="g2" placeholder="2."><input id="g3" placeholder="3.">
+<div class="pane on" id="pane-metricas">
+  <div class="card"><div class="text-xs font-black mb-2">Estado de ánimo</div><div class="moods" id="moods"></div></div>
+  <div class="card"><div class="text-xs font-black mb-2">Síntomas</div><div class="syms" id="syms"></div></div>
+  <div class="card grid grid-cols-2 gap-2">
+    <div><label class="lbl">Energía actividad (1-10)</label><input type="number" id="en-act" min="1" max="10"></div>
+    <div><label class="lbl">Energía reposo (1-10)</label><input type="number" id="en-rep" min="1" max="10"></div>
+    <div><label class="lbl">Horas de sueño</label><input type="number" id="sleep-h" step="0.1" min="0" max="16"></div>
+    <div><label class="lbl">Calidad sueño (1-10)</label><input type="number" id="sleep-q" min="1" max="10"></div>
+    <div><label class="lbl">Pasos</label><input type="number" id="steps" min="0"></div>
+    <div><label class="lbl">Agua (vasos)</label><input type="number" id="water" min="0"></div>
+  </div>
+  <div class="card"><div class="text-xs font-black mb-1">Fase del ciclo</div>
+    <select id="ciclo"><option value="">—</option><option>Menstrual</option><option>Folicular</option><option>Ovulación</option><option>Lútea</option><option>No aplica</option></select>
+  </div>
+  <div class="card"><div class="text-xs font-black mb-2">Productividad del día (1-10)</div><div class="flex flex-wrap gap-1" id="prod-stars"></div></div>
+  <div class="card grid grid-cols-2 gap-2">
+    <div><label class="lbl">Creatina</label><select id="creatina"><option value="no">No</option><option value="si">Sí</option></select></div>
+    <div><label class="lbl">Magnesio</label><select id="magnesio"><option value="no">No</option><option value="si">Sí</option></select></div>
+    <div><label class="lbl">Dulce</label><select id="dulce"><option value="no">No</option><option value="si">Sí</option></select></div>
+    <div><label class="lbl">Capítulo Biblia</label><input id="cap-biblia" placeholder="Ej. Jeremías 12"></div>
+  </div>
 </div>
-<div class="card">
-  <div class="text-xs font-black mb-1">Top 3 goals</div>
-  <input class="mb-1" id="goal1"><input class="mb-1" id="goal2"><input id="goal3">
+<div class="pane" id="pane-planner">
+  <div class="card"><label class="lbl">Intención del día</label><input id="intention" placeholder="Hoy quiero…"></div>
+  <div class="card"><div class="text-xs font-black mb-1">Agradecimiento</div>
+    <input class="mb-1" id="g1" placeholder="1."><input class="mb-1" id="g2" placeholder="2."><input id="g3" placeholder="3."></div>
+  <div class="card"><div class="text-xs font-black mb-1">Top 3 goals</div>
+    <div class="hab"><input id="goal1" placeholder="Goal 1"><input type="checkbox" class="chk" id="goal1c"></div>
+    <div class="hab"><input id="goal2" placeholder="Goal 2"><input type="checkbox" class="chk" id="goal2c"></div>
+    <div class="hab"><input id="goal3" placeholder="Goal 3"><input type="checkbox" class="chk" id="goal3c"></div></div>
+  <div class="card"><div class="flex justify-between items-center mb-1"><span class="text-xs font-black">Pendientes del día</span><button type="button" class="text-[11px] font-black" style="color:#a855f7" id="add-todo">+ Añadir</button></div><div id="todo-list"></div></div>
+  <div class="card"><div class="flex justify-between items-center mb-1"><span class="text-xs font-black">Hábitos</span><button type="button" class="text-[11px] font-black" style="color:#a855f7" id="add-habit">+ Añadir</button></div><div id="habit-list"></div></div>
+  <div class="card"><div class="flex justify-between items-center mb-1"><span class="text-xs font-black">Rutina mañana</span><button type="button" class="text-[11px] font-black" style="color:#a855f7" id="add-morning">+ Añadir</button></div><div id="morning-list"></div></div>
+  <div class="card"><div class="flex justify-between items-center mb-1"><span class="text-xs font-black">Rutina noche</span><button type="button" class="text-[11px] font-black" style="color:#a855f7" id="add-night">+ Añadir</button></div><div id="night-list"></div></div>
 </div>
-<div class="card">
-  <div class="flex justify-between items-center mb-1"><span class="text-xs font-black">Pendientes</span><button type="button" class="text-[10px] font-black" style="color:#a855f7" id="add-todo">+ Anadir</button></div>
-  <div id="todos"></div>
+<div class="pane" id="pane-reflexion">
+  <div class="card"><label class="lbl">¿Qué salió bien hoy?</label><textarea id="r-bien" rows="2"></textarea></div>
+  <div class="card"><label class="lbl">¿Qué me costó?</label><textarea id="r-costo" rows="2"></textarea></div>
+  <div class="card"><label class="lbl">¿Qué aprendí?</label><textarea id="r-aprendi" rows="2"></textarea></div>
+  <div class="card"><label class="lbl">Revisión del día</label><textarea id="r-revision" rows="3"></textarea></div>
+  <div class="card"><label class="lbl">Diario libre</label><textarea id="diario" rows="5" placeholder="Escribe lo que quieras del día…"></textarea></div>
 </div>
-<div class="card">
-  <div class="text-xs font-black mb-1">Habitos</div>
-  <div id="habits"></div>
+<div class="row mt-2">
+  <button type="button" class="btn btn-main flex-1" id="btn-save">💾 Guardar día</button>
+  <button type="button" class="btn btn-ghost" id="btn-copy">📋 Resumen</button>
 </div>
-<div class="card">
-  <div class="text-xs font-black mb-1">Rutina manana</div>
-  <div id="morning"></div>
-</div>
-<div class="card">
-  <div class="text-xs font-black mb-1">Rutina noche</div>
-  <div id="night"></div>
-</div>
-<div class="card">
-  <div class="text-xs font-black mb-1">Diario</div>
-  <textarea id="diario" rows="4" placeholder="Como te fue..."></textarea>
-</div>
-<button type="button" class="btn w-full" id="save">Guardar dia</button>
-<p id="status" class="text-[10px] font-bold text-stone-400 mt-2"></p>
+<p class="muted mt-2" id="status">—</p>
+<div class="toast" id="toast">Guardado</div>
 <script>
 (function(){
-  const firebaseConfig={apiKey:"AIzaSyCnhvfyXpwJdYOQFCvsyHDhgW9F3X7ARR4",authDomain:"marpk-816dd.firebaseapp.com",projectId:"marpk-816dd",storageBucket:"marpk-816dd.firebasestorage.app",messagingSenderId:"189644122232",appId:"1:189644122232:web:ed7894f1510a373d44658d"};
-  let db=null; try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();}catch(e){}
-  const PREFIX='MARY_DAILY_PLANNER_FIRESTORE_';
-  const defaultMorning=['Pesarme','Tomar agua con sal','Sacar a Moka','Tomar el sol','Cafe','Cepillarme','Caminar','Gratitud','Devocional','Revision de pendientes','Alistarme'];
-  const defaultNight=['Desmaquillarme','Cepillarme','Tomar agua','Sacar a Moka','Trackers - app','Devocional','Gratitud','Ordenar entorno','Tomar creatina','Pendientes','Orar'];
-  const defaultHabits=['Meditar (10 min)','Leer la Biblia / Devocional','Entrenamiento de Moka','Skincare','Espacio espiritual','Ejercicio'];
-  let currentDate=new Date().toISOString().slice(0,10);
-  let data=null;
+  var firebaseConfig={apiKey:"AIzaSyCnhvfyXpwJdYOQFCvsyHDhgW9F3X7ARR4",authDomain:"marpk-816dd.firebaseapp.com",projectId:"marpk-816dd",storageBucket:"marpk-816dd.firebasestorage.app",messagingSenderId:"189644122232",appId:"1:189644122232:web:ed7894f1510a373d44658d"};
+  var db=null;try{firebase.initializeApp(firebaseConfig);db=firebase.firestore();}catch(e){}
+  var PREFIX='MARY_DAILY_PLANNER_FIRESTORE_';
+  var MOODS=['Motivada','Enfocada','Tranquila','Alegre','Agradecida','Cansada','Ansiosa','Bajoneada','Irritable','Insegura','Ilusionada','Contenta','Neutral','Pensativa','Apática','Desmotivada','Emocionada','Serena'];
+  var SYMS=['Dolor de cabeza','Cólicos','Hinchazón','Antojo','Fatiga','Insomnio','Dolor de espalda','Náusea','Irritabilidad física','Acné','Ninguno'];
+  var defMorning=['Pesarme','Tomar agua','Sacar a Moka','Tomar el sol','Café','Cepillarme','Caminar / bici','Gratitud','Devocional','Revisión de pendientes','Alistarme'];
+  var defNight=['Desmaquillarme','Cepillarme','Tomar agua','Sacar a Moka','Trackers app','Devocional / journal','Gratitud','Ordenar entorno','Creatina / magnesio','Pendientes','Orar'];
+  var defHabits=['Meditar','Leer Biblia / Devocional','Entrenamiento','Skincare','Convicciones','Cardio / pasos'];
+  var currentDate=(function(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
+  var data=blank();
+  function blank(){return{intention:'',gratitude:['','',''],topGoals:[{text:'',completed:false},{text:'',completed:false},{text:'',completed:false}],todoList:[],habits:defHabits.map(function(t,i){return{id:i+1,name:t,done:false};}),morningRoutine:defMorning.map(function(t,i){return{id:i+1,text:t,checked:false};}),nightRoutine:defNight.map(function(t,i){return{id:i+100,text:t,checked:false};}),moods:[],symptoms:[],energyAct:null,energyRest:null,sleepHours:null,sleepQuality:null,steps:null,water:null,cycle:'',productivity:null,creatina:'no',magnesio:'no',dulce:'no',bibleChapter:'',reflection:{bien:'',costo:'',aprendi:'',revision:''},diario:'',_updatedAt:null};}
   function key(d){return PREFIX+d;}
-  function blank(){
-    return {intention:'',gratitude:['','',''],topGoals:[{text:'',completed:false},{text:'',completed:false},{text:'',completed:false}],todoList:[],habits:defaultHabits.map((t,i)=>({id:i+1,name:t,status:'none'})),morningRoutine:defaultMorning.map((t,i)=>({id:i+1,text:t,checked:false})),nightRoutine:defaultNight.map((t,i)=>({id:i+100,text:t,checked:false})),diario:''};
-  }
-  function loadLocal(d){try{const r=localStorage.getItem(key(d));if(r)return Object.assign(blank(),JSON.parse(r));}catch(e){}return blank();}
-  async function loadDay(d){
-    currentDate=d; document.getElementById('planner-date').value=d;
-    data=loadLocal(d);
-    if(db){try{const doc=await db.collection('mary_planner').doc(d).get(); if(doc.exists){data=Object.assign(blank(),doc.data()); localStorage.setItem(key(d),JSON.stringify(data));}}catch(e){}}
-    render();
-    document.getElementById('status').textContent='Dia '+d+' cargado';
-  }
-  function save(){
-    collect();
-    localStorage.setItem(key(currentDate),JSON.stringify(data));
-    if(db) db.collection('mary_planner').doc(currentDate).set(data).catch(console.warn);
-    document.getElementById('status').textContent='Guardado '+currentDate;
-  }
-  function collect(){
-    data.intention=document.getElementById('intention').value;
-    data.gratitude=[document.getElementById('g1').value,document.getElementById('g2').value,document.getElementById('g3').value];
-    data.topGoals=[{text:document.getElementById('goal1').value,completed:false},{text:document.getElementById('goal2').value,completed:false},{text:document.getElementById('goal3').value,completed:false}];
-    data.diario=document.getElementById('diario').value;
-  }
-  function renderList(el,arr,kind){
-    el.innerHTML='';
-    (arr||[]).forEach((item,idx)=>{
-      const row=document.createElement('div'); row.className='hab';
-      const cb=document.createElement('input'); cb.type='checkbox';
-      const label=document.createElement('span'); label.style.flex='1';
-      if(kind==='habit'){ cb.checked=item.status==='done'; label.textContent=item.name||''; cb.onchange=()=>{item.status=cb.checked?'done':'none';}; }
-      else if(kind==='todo'){ cb.checked=!!item.completed; const inp=document.createElement('input'); inp.value=item.text||''; inp.style.flex='1'; inp.oninput=()=>{item.text=inp.value;}; cb.onchange=()=>{item.completed=cb.checked;}; row.appendChild(cb); row.appendChild(inp); el.appendChild(row); return; }
-      else { cb.checked=!!item.checked; label.textContent=item.text||''; cb.onchange=()=>{item.checked=cb.checked;}; }
-      row.appendChild(label); row.appendChild(cb); el.appendChild(row);
-    });
-  }
-  function render(){
-    document.getElementById('intention').value=data.intention||'';
-    document.getElementById('g1').value=(data.gratitude&&data.gratitude[0])||'';
-    document.getElementById('g2').value=(data.gratitude&&data.gratitude[1])||'';
-    document.getElementById('g3').value=(data.gratitude&&data.gratitude[2])||'';
-    document.getElementById('goal1').value=(data.topGoals&&data.topGoals[0]&&data.topGoals[0].text)||'';
-    document.getElementById('goal2').value=(data.topGoals&&data.topGoals[1]&&data.topGoals[1].text)||'';
-    document.getElementById('goal3').value=(data.topGoals&&data.topGoals[2]&&data.topGoals[2].text)||'';
-    document.getElementById('diario').value=data.diario||'';
-    renderList(document.getElementById('todos'),data.todoList||[],'todo');
-    renderList(document.getElementById('habits'),data.habits||[],'habit');
-    renderList(document.getElementById('morning'),data.morningRoutine||[],'morning');
-    renderList(document.getElementById('night'),data.nightRoutine||[],'night');
-  }
-  document.getElementById('save').onclick=save;
-  document.getElementById('planner-date').onchange=e=>loadDay(e.target.value);
-  document.getElementById('add-todo').onclick=()=>{data.todoList=data.todoList||[]; data.todoList.push({id:Date.now(),text:'',completed:false}); render();};
+  function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},1600);}
+  function setStatus(m){document.getElementById('status').textContent=m;}
+  function loadLocal(d){try{var r=localStorage.getItem(key(d));if(r)return Object.assign(blank(),JSON.parse(r));}catch(e){}return blank();}
+  async function loadDay(d){currentDate=d;document.getElementById('fecha').value=d;data=loadLocal(d);if(db){try{var doc=await db.collection('mary_planner').doc(d).get();if(doc.exists){data=Object.assign(blank(),doc.data());localStorage.setItem(key(d),JSON.stringify(data));}}catch(e){}}render();setStatus('Día '+d+' cargado');}
+  function num(id){var v=document.getElementById(id).value;return v===''?null:Number(v);}
+  function selPills(id){return Array.prototype.map.call(document.querySelectorAll('#'+id+' .pill.on'),function(p){return p.getAttribute('data-v');});}
+  function collect(){data.intention=document.getElementById('intention').value;data.gratitude=[document.getElementById('g1').value,document.getElementById('g2').value,document.getElementById('g3').value];data.topGoals=[{text:document.getElementById('goal1').value,completed:document.getElementById('goal1c').checked},{text:document.getElementById('goal2').value,completed:document.getElementById('goal2c').checked},{text:document.getElementById('goal3').value,completed:document.getElementById('goal3c').checked}];data.energyAct=num('en-act');data.energyRest=num('en-rep');data.sleepHours=num('sleep-h');data.sleepQuality=num('sleep-q');data.steps=num('steps');data.water=num('water');data.cycle=document.getElementById('ciclo').value;data.creatina=document.getElementById('creatina').value;data.magnesio=document.getElementById('magnesio').value;data.dulce=document.getElementById('dulce').value;data.bibleChapter=document.getElementById('cap-biblia').value;data.reflection={bien:document.getElementById('r-bien').value,costo:document.getElementById('r-costo').value,aprendi:document.getElementById('r-aprendi').value,revision:document.getElementById('r-revision').value};data.diario=document.getElementById('diario').value;data.moods=selPills('moods');data.symptoms=selPills('syms');data._updatedAt=new Date().toISOString();}
+  function save(){collect();localStorage.setItem(key(currentDate),JSON.stringify(data));if(db)db.collection('mary_planner').doc(currentDate).set(data).catch(console.warn);setStatus('Guardado · '+currentDate);toast('💾 Día guardado');}
+  function renderList(arr,elId,kind){var box=document.getElementById(elId);box.innerHTML='';(arr||[]).forEach(function(item,idx){var row=document.createElement('div');row.className='hab';var left=document.createElement('div');left.style.flex='1';left.style.minWidth='0';if(kind==='todo'||kind==='habit'){var inp=document.createElement('input');inp.value=item.name||item.text||'';inp.onchange=function(){if(kind==='todo')data.todoList[idx].text=inp.value;else data.habits[idx].name=inp.value;};left.appendChild(inp);}else left.textContent=item.text||item.name||'';var ck=document.createElement('input');ck.type='checkbox';ck.className='chk';ck.checked=!!(item.checked||item.done||item.completed);ck.onchange=function(){if(kind==='todo')data.todoList[idx].done=ck.checked;else if(kind==='habit')data.habits[idx].done=ck.checked;else if(kind==='morning')data.morningRoutine[idx].checked=ck.checked;else if(kind==='night')data.nightRoutine[idx].checked=ck.checked;};var del=document.createElement('button');del.type='button';del.textContent='✕';del.className='text-pink-400 font-black';del.onclick=function(){if(kind==='todo')data.todoList.splice(idx,1);else if(kind==='habit')data.habits.splice(idx,1);else if(kind==='morning')data.morningRoutine.splice(idx,1);else if(kind==='night')data.nightRoutine.splice(idx,1);render();};row.appendChild(left);row.appendChild(ck);row.appendChild(del);box.appendChild(row);});}
+  function renderPills(id,options,selected){var box=document.getElementById(id);box.innerHTML='';options.forEach(function(o){var b=document.createElement('button');b.type='button';b.className='pill'+(selected&&selected.indexOf(o)>=0?' on':'');b.textContent=o;b.setAttribute('data-v',o);b.onclick=function(){b.classList.toggle('on');};box.appendChild(b);});}
+  function render(){document.getElementById('intention').value=data.intention||'';document.getElementById('g1').value=(data.gratitude&&data.gratitude[0])||'';document.getElementById('g2').value=(data.gratitude&&data.gratitude[1])||'';document.getElementById('g3').value=(data.gratitude&&data.gratitude[2])||'';var tg=data.topGoals||[];document.getElementById('goal1').value=(tg[0]&&tg[0].text)||'';document.getElementById('goal2').value=(tg[1]&&tg[1].text)||'';document.getElementById('goal3').value=(tg[2]&&tg[2].text)||'';document.getElementById('goal1c').checked=!!(tg[0]&&tg[0].completed);document.getElementById('goal2c').checked=!!(tg[1]&&tg[1].completed);document.getElementById('goal3c').checked=!!(tg[2]&&tg[2].completed);document.getElementById('en-act').value=data.energyAct!=null?data.energyAct:'';document.getElementById('en-rep').value=data.energyRest!=null?data.energyRest:'';document.getElementById('sleep-h').value=data.sleepHours!=null?data.sleepHours:'';document.getElementById('sleep-q').value=data.sleepQuality!=null?data.sleepQuality:'';document.getElementById('steps').value=data.steps!=null?data.steps:'';document.getElementById('water').value=data.water!=null?data.water:'';document.getElementById('ciclo').value=data.cycle||'';document.getElementById('creatina').value=data.creatina||'no';document.getElementById('magnesio').value=data.magnesio||'no';document.getElementById('dulce').value=data.dulce||'no';document.getElementById('cap-biblia').value=data.bibleChapter||'';var r=data.reflection||{};document.getElementById('r-bien').value=r.bien||'';document.getElementById('r-costo').value=r.costo||'';document.getElementById('r-aprendi').value=r.aprendi||'';document.getElementById('r-revision').value=r.revision||'';document.getElementById('diario').value=data.diario||'';renderPills('moods',MOODS,data.moods||[]);renderPills('syms',SYMS,data.symptoms||[]);data.todoList=(data.todoList||[]).map(function(t,i){if(typeof t==='string')return{id:i+1,text:t,done:false};return{id:t.id||i+1,text:t.text||t.name||'',done:!!(t.done||t.completed)};});data.habits=(data.habits||defHabits.map(function(n,i){return{id:i+1,name:n,done:false};})).map(function(h,i){return{id:h.id||i+1,name:h.name||h.text||'',done:!!(h.done||h.checked||h.status==='done')};});renderList(data.todoList,'todo-list','todo');renderList(data.habits,'habit-list','habit');renderList(data.morningRoutine||[],'morning-list','morning');renderList(data.nightRoutine||[],'night-list','night');var stars=document.getElementById('prod-stars');stars.innerHTML='';for(var i=1;i<=10;i++){var b=document.createElement('button');b.type='button';b.className='star'+(data.productivity&&i<=data.productivity?' on':'');b.textContent=String(i);b.setAttribute('data-v',String(i));b.onclick=function(){data.productivity=+this.getAttribute('data-v');stars.querySelectorAll('.star').forEach(function(x){x.classList.toggle('on',+x.getAttribute('data-v')<=data.productivity);});};stars.appendChild(b);}}
+  function summaryText(){collect();var lines=['📅 DAILY PLANNER · '+currentDate,''];if(data.intention)lines.push('🎯 Intención: '+data.intention);if(data.moods&&data.moods.length)lines.push('💗 Ánimo: '+data.moods.join(', '));if(data.energyAct!=null)lines.push('⚡ Energía act: '+data.energyAct+'/10');if(data.sleepHours!=null)lines.push('😴 Sueño: '+data.sleepHours+' h');if(data.steps!=null)lines.push('👟 Pasos: '+data.steps);if(data.productivity!=null)lines.push('📊 Productividad: '+data.productivity+'/10');if(data.bibleChapter)lines.push('📖 Biblia: '+data.bibleChapter);var goals=(data.topGoals||[]).filter(function(g){return g.text;});if(goals.length){lines.push('','Top goals:');goals.forEach(function(g){lines.push((g.completed?'✅':'⬜')+' '+g.text);});}var todos=(data.todoList||[]).filter(function(t){return t.text;});if(todos.length){lines.push('','Pendientes:');todos.forEach(function(t){lines.push((t.done?'✅':'⬜')+' '+t.text);});}if(data.reflection&&data.reflection.bien)lines.push('','Bien: '+data.reflection.bien);if(data.diario)lines.push('','Diario: '+data.diario);return lines.join('\n');}
+  function copySummary(){var text=summaryText();function fb(){var ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('📋 Resumen copiado');}catch(e){}ta.remove();}if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(function(){toast('📋 Resumen copiado');}).catch(fb);else fb();}
+  document.querySelectorAll('#tabs .tab').forEach(function(tab){tab.addEventListener('click',function(){document.querySelectorAll('#tabs .tab').forEach(function(t){t.classList.remove('on');});tab.classList.add('on');var pane=tab.getAttribute('data-pane');document.querySelectorAll('.pane').forEach(function(p){p.classList.remove('on');});document.getElementById('pane-'+pane).classList.add('on');});});
+  document.getElementById('fecha').onchange=function(){loadDay(this.value);};
+  document.getElementById('btn-save').onclick=function(){save();};
+  document.getElementById('btn-copy').onclick=function(){copySummary();};
+  document.getElementById('add-todo').onclick=function(){data.todoList.push({id:Date.now(),text:'',done:false});render();};
+  document.getElementById('add-habit').onclick=function(){var n=prompt('Nombre del hábito');if(!n)return;data.habits.push({id:Date.now(),name:n,done:false});render();};
+  document.getElementById('add-morning').onclick=function(){var n=prompt('Ítem mañana');if(!n)return;data.morningRoutine.push({id:Date.now(),text:n,checked:false});render();};
+  document.getElementById('add-night').onclick=function(){var n=prompt('Ítem noche');if(!n)return;data.nightRoutine.push({id:Date.now(),text:n,checked:false});render();};
   loadDay(currentDate);
 })();
 </script>
