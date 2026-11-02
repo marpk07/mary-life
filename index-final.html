@@ -230,6 +230,7 @@
       <button type="button" class="nav-item" data-view="gastos" onclick="navigateTo('gastos')"><span class="emoji">💸</span> Gastos</button>
       <button type="button" class="nav-item" data-view="metas" onclick="navigateTo('metas')"><span class="emoji">🎯</span> Metas</button>
       <button type="button" class="nav-item" data-view="guia" onclick="navigateTo('guia')"><span class="emoji">🪞</span> Guía</button>
+      <button type="button" class="nav-item" data-view="convicciones" onclick="navigateTo('convicciones')"><span class="emoji">✝️</span> Convicciones</button>
       <button type="button" class="nav-item" data-view="cierre" onclick="navigateTo('cierre')"><span class="emoji">📊</span> Cierres</button>
       <button type="button" class="nav-item" data-view="resumenes" onclick="navigateTo('resumenes')"><span class="emoji">📋</span> Resúmenes</button>
     </div>
@@ -266,6 +267,7 @@
           <div class="area-card" onclick="navigateTo('gastos')"><div class="card-icon" style="background:linear-gradient(135deg,#047857,#34d399);">💸</div><h3>Gastos</h3><p>Ingresos, egresos, deudas y ahorros</p><button type="button" class="enter-btn">Abrir</button></div>
           <div class="area-card" onclick="navigateTo('metas')"><div class="card-icon" style="background:linear-gradient(135deg,#b45309,#fbbf24);">🎯</div><h3>Metas</h3><p>Objetivos semanales y cumplimiento</p><button type="button" class="enter-btn">Abrir</button></div>
           <div class="area-card" onclick="navigateTo('guia')"><div class="card-icon" style="background:linear-gradient(135deg,#7c3aed,#e879f9);">🪞</div><h3>Guía</h3><p>Trabajo interno y autoconocimiento</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('convicciones')"><div class="card-icon" style="background:linear-gradient(135deg,#6d28d9,#c4b5fd);">✝️</div><h3>Convicciones</h3><p>Proyecto cristiano · 21 pilares · fichas</p><button type="button" class="enter-btn">Abrir</button></div>
           <div class="area-card" onclick="navigateTo('resumenes')"><div class="card-icon" style="background:linear-gradient(135deg,#be185d,#a78bfa);">📋</div><h3>Resúmenes</h3><p>Reportes detallados · copiar a ChatGPT / Notion</p><button type="button" class="enter-btn">Abrir</button></div>
           <div class="area-card" onclick="navigateTo('cierre')"><div class="card-icon" style="background:linear-gradient(135deg,#1e3a8a,#60a5fa);">📊</div><h3>Cierres</h3><p>Comparativas semanales y mensuales</p><button type="button" class="enter-btn">Abrir</button></div>
           <div class="area-card" onclick="navigateTo('pendientes')"><div class="card-icon" style="background:linear-gradient(135deg,#0f766e,#2dd4bf);">✅</div><h3>Pendientes</h3><p>Tareas y recordatorios</p><button type="button" class="enter-btn">Abrir</button></div>
@@ -279,89 +281,63 @@
       <div id="view-gastos" class="view"><iframe class="module-frame" src="gastos.html" title="Gastos"></iframe></div>
       <div id="view-metas" class="view"><iframe class="module-frame" src="metas.html" title="Metas"></iframe></div>
       <div id="view-guia" class="view"><iframe class="module-frame" src="guia.html" title="Guía"></iframe></div>
+      <div id="view-convicciones" class="view"><iframe class="module-frame" src="convicciones.html" title="Convicciones"></iframe></div>
       <div id="view-cierre" class="view"><iframe class="module-frame" src="cierre.html" title="Cierres"></iframe></div>
       <div id="view-resumenes" class="view"><iframe class="module-frame" src="resumenes.html" title="Resúmenes"></iframe></div>
     </div>
   </div>
 <script>
-const PIN_KEY='MARY_PIN_V1', SESSION_KEY='MARY_SESSION_OK', PROFILE_KEY='MARY_PROFILE_V1';
-let pinBuffer='';
-function updateDots(){document.querySelectorAll('#pin-dots .pin-dot').forEach((d,i)=>d.classList.toggle('filled',i<pinBuffer.length));}
-function checkSession(){
-  if(sessionStorage.getItem(SESSION_KEY)==='1'){document.getElementById('lock-screen').classList.add('hidden');}
-  else{document.getElementById('lock-screen').classList.remove('hidden');}
-}
-function lockApp(){sessionStorage.removeItem(SESSION_KEY);pinBuffer='';updateDots();document.getElementById('lock-screen').classList.remove('hidden');}
-function navigateTo(view){
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  const el=document.getElementById('view-'+view); if(el) el.classList.add('active');
-  document.querySelectorAll('.nav-item[data-view]').forEach(b=>b.classList.toggle('active',b.getAttribute('data-view')===view));
-  closeSidebar();
-}
-function toggleSidebar(e){if(e)e.stopPropagation();document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('show');}
-function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
-function openProfile(){const n=prompt('Nombre de perfil', document.getElementById('profile-name').textContent||'Mary'); if(n){document.getElementById('profile-name').textContent=n; document.getElementById('greet-name').textContent=n; try{const p=JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}'); p.name=n; localStorage.setItem(PROFILE_KEY, JSON.stringify(p));}catch(e){}}}
-function onPhoto(ev){
-  const f=ev.target.files&&ev.target.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=function(){
-    const el=document.getElementById('avatar-el');
-    el.innerHTML=''; const img=document.createElement('img'); img.src=r.result; el.appendChild(img);
-    try{const p=JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}'); p.photo=r.result; localStorage.setItem(PROFILE_KEY, JSON.stringify(p));}catch(e){}
-  };
-  r.readAsDataURL(f);
-}
-(function buildPad(){
-  const pad=document.getElementById('pin-pad');
-  ['1','2','3','4','5','6','7','8','9','clear','0','ok'].forEach(k=>{
-    const b=document.createElement('button'); b.type='button'; b.className='pin-key';
-    b.textContent=k==='clear'?'BORRAR':(k==='ok'?'OK':k);
-    b.onclick=()=>{
-      const err=document.getElementById('pin-error'); err.textContent='';
-      if(k==='clear'){pinBuffer='';updateDots();return;}
-      if(k==='ok'){
-        const saved=localStorage.getItem(PIN_KEY);
-        if(!saved){localStorage.setItem(PIN_KEY,pinBuffer);sessionStorage.setItem(SESSION_KEY,'1');document.getElementById('lock-screen').classList.add('hidden');pinBuffer='';updateDots();return;}
-        if(pinBuffer===saved){sessionStorage.setItem(SESSION_KEY,'1');document.getElementById('lock-screen').classList.add('hidden');pinBuffer='';updateDots();}
-        else{err.textContent='PIN incorrecto';pinBuffer='';updateDots();}
-        return;
-      }
-      if(pinBuffer.length<4){pinBuffer+=k;updateDots();}
-    };
-    pad.appendChild(b);
-  });
-})();
-try{
-  const p=JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}');
-  if(p.name){document.getElementById('profile-name').textContent=p.name; document.getElementById('greet-name').textContent=p.name;}
-  if(p.photo){const el=document.getElementById('avatar-el'); el.innerHTML=''; const img=document.createElement('img'); img.src=p.photo; el.appendChild(img);}
-}catch(e){}
-document.getElementById('kpi-date').textContent=new Date().toLocaleDateString('es-VE',{weekday:'short',day:'numeric',month:'short'});
-checkSession();
-</script>
-<script src="fitness-cloud-fix.js"></script>
-<script>
 (function(){
-  function injectFitnessFix(){
-    var frame=document.querySelector('#view-fitness iframe.module-frame');
-    if(!frame) return;
-    function tryInject(){
-      try{
-        var doc=frame.contentDocument||frame.contentWindow.document;
-        if(!doc||!doc.head) return;
-        if(doc.getElementById('mary-fit-cloud-fix')) return;
-        var s=doc.createElement('script');
-        s.id='mary-fit-cloud-fix';
-        s.src=(location.origin||'')+'/fitness-cloud-fix.js';
-        doc.head.appendChild(s);
-      }catch(e){}
-    }
-    frame.addEventListener('load', tryInject);
-    tryInject();
+  const PIN_KEY='mary_pin_v1';
+  const PROFILE_KEY='mary_profile_v1';
+  let pin='';
+  let stored=localStorage.getItem(PIN_KEY)||'';
+  function renderDots(){
+    document.querySelectorAll('#pin-dots .pin-dot').forEach((d,i)=>d.classList.toggle('filled',i<pin.length));
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', injectFitnessFix);
-  else injectFitnessFix();
-  setInterval(injectFitnessFix, 2500);
+  function unlock(){
+    document.getElementById('lock-screen').classList.add('hidden');
+    try{ const p=JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}'); if(p.name){ document.getElementById('profile-name').textContent=p.name; document.getElementById('greet-name').textContent=p.name; } if(p.photo){ const a=document.getElementById('avatar-el'); a.innerHTML='<img src="'+p.photo+'" alt="">'; } }catch(e){}
+    const d=new Date(); document.getElementById('kpi-date').textContent=d.toLocaleDateString('es-VE',{weekday:'short',day:'numeric',month:'short'});
+  }
+  if(stored && sessionStorage.getItem('mary_unlocked')==='1'){ unlock(); }
+  const pad=document.getElementById('pin-pad');
+  for(let i=1;i<=9;i++){ const b=document.createElement('button'); b.type='button'; b.className='pin-key'; b.textContent=i; b.onclick=()=>press(String(i)); pad.appendChild(b); }
+  const zero=document.createElement('button'); zero.type='button'; zero.className='pin-key'; zero.style.gridColumn='2'; zero.textContent='0'; zero.onclick=()=>press('0'); pad.appendChild(zero);
+  const del=document.createElement('button'); del.type='button'; del.className='pin-key'; del.textContent='⌫'; del.onclick=()=>{ pin=pin.slice(0,-1); renderDots(); document.getElementById('pin-error').textContent=''; }; pad.appendChild(del);
+  function press(n){
+    if(pin.length>=4) return;
+    pin+=n; renderDots();
+    if(pin.length===4){
+      if(!stored){ localStorage.setItem(PIN_KEY,pin); stored=pin; sessionStorage.setItem('mary_unlocked','1'); unlock(); pin=''; renderDots(); return; }
+      if(pin===stored){ sessionStorage.setItem('mary_unlocked','1'); unlock(); pin=''; renderDots(); }
+      else { document.getElementById('pin-error').textContent='PIN incorrecto'; pin=''; setTimeout(renderDots,250); }
+    }
+  }
+  window.lockApp=function(){ sessionStorage.removeItem('mary_unlocked'); pin=''; renderDots(); document.getElementById('pin-error').textContent=''; document.getElementById('lock-screen').classList.remove('hidden'); closeSidebar(); };
+  window.toggleSidebar=function(e){ if(e) e.stopPropagation(); document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); };
+  window.closeSidebar=function(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('show'); };
+  window.navigateTo=function(view){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    const el=document.getElementById('view-'+view); if(el) el.classList.add('active');
+    document.querySelectorAll('.nav-item[data-view]').forEach(b=>b.classList.toggle('active',b.getAttribute('data-view')===view));
+    closeSidebar();
+  };
+  window.openProfile=function(){
+    const name=prompt('Nombre', document.getElementById('profile-name').textContent||'Mary');
+    if(name===null) return;
+    let p={}; try{ p=JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}'); }catch(e){}
+    p.name=name.trim()||'Mary';
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
+    document.getElementById('profile-name').textContent=p.name;
+    document.getElementById('greet-name').textContent=p.name;
+  };
+  window.onPhoto=function(ev){
+    const f=ev.target.files&&ev.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ let p={}; try{ p=JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}'); }catch(e){} p.photo=r.result; localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); document.getElementById('avatar-el').innerHTML='<img src="'+r.result+'" alt="">'; };
+    r.readAsDataURL(f);
+  };
 })();
 </script>
 </body>
