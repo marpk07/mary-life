@@ -1,1 +1,27 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><title>MARY Metas</title></head><body><p>Cargando Metas…</p><script>location.replace('metas-app.js');</script></body></html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARY · Metas</title>
+</head>
+<body style="font-family:system-ui;padding:24px;background:#fdf2f8;color:#4a2040">
+<p style="font-weight:800">Cargando Metas (Challenge noviembre)…</p>
+<script>
+(function(){
+  var urls=[
+    'https://raw.githubusercontent.com/marpk07/mary-life/0cf6fb1173f6f5a901f35db7d4b352b24f2e0311/metas.html',
+    'https://cdn.jsdelivr.net/gh/marpk07/mary-life@0cf6fb1173f6f5a901f35db7d4b352b24f2e0311/metas.html'
+  ];
+  function load(i){
+    if(i>=urls.length){document.body.innerHTML='<p>No se pudo cargar Metas. Recarga o avísame.</p>';return;}
+    fetch(urls[i]).then(function(r){if(!r.ok)throw new Error('fail');return r.text();}).then(function(t){
+      if(t.length<1000||t.indexOf('loading')===0)throw new Error('short');
+      document.open();document.write(t);document.close();
+    }).catch(function(){load(i+1);});
+  }
+  load(0);
+})();
+</script>
+</body>
+</html>
