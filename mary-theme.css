@@ -20,39 +20,31 @@
 }
 
 html {
-  background: var(--mary-bg) !important;
+  background: #0f0a14 !important;
+  background-color: #0f0a14 !important;
   color-scheme: dark;
 }
 
+html body,
 body {
   background:
-    radial-gradient(circle at 15% 10%, rgba(244,114,182,0.12), transparent 42%),
-    radial-gradient(circle at 90% 90%, rgba(167,139,250,0.10), transparent 42%),
-    var(--mary-bg) !important;
-  color: var(--mary-text) !important;
+    radial-gradient(circle at 15% 10%, rgba(244,114,182,0.14), transparent 42%),
+    radial-gradient(circle at 90% 90%, rgba(167,139,250,0.12), transparent 42%),
+    #0f0a14 !important;
+  background-color: #0f0a14 !important;
+  color: #f5eef8 !important;
 }
 
-body, p, span, label, li, td, th, h1, h2, h3, h4, h5, h6 {
-  color: inherit;
-}
-
-input, textarea, select, button {
-  color: var(--mary-text);
-}
+/* Inputs */
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
 textarea, select {
-  background: var(--mary-card2) !important;
-  border-color: var(--mary-border) !important;
-  color: var(--mary-text) !important;
+  background: #241b32 !important;
+  border-color: rgba(244,114,182,0.22) !important;
+  color: #f5eef8 !important;
 }
 input::placeholder, textarea::placeholder {
-  color: var(--mary-muted) !important;
+  color: #a89bb5 !important;
   opacity: 0.85;
-}
-
-.glass, .card, .panel, .box, .kpi, .area-card, .pilar-card,
-.stat-card, .block, .section-card, .modal, .sheet {
-  border-color: var(--mary-border);
 }
 
 a { color: #f9a8d4; }
@@ -62,23 +54,8 @@ a:hover { color: #c4b5fd; }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb { background: rgba(244,114,182,0.28); border-radius: 999px; }
 
-table { color: var(--mary-text); }
-th, td { border-color: var(--mary-border); }
-
 .bg-white, .bg-slate-50, .bg-gray-50, .bg-pink-50 {
   background-color: rgba(28,20,40,0.92) !important;
-  color: var(--mary-text) !important;
-}
-
-body[style*="background"],
-body[style*="#fdf2f8"],
-body[style*="#fff1f2"],
-body[style*="#faf5ff"],
-body[style*="#ffe4e6"] {
-  background:
-    radial-gradient(circle at 15% 10%, rgba(244,114,182,0.12), transparent 42%),
-    radial-gradient(circle at 90% 90%, rgba(167,139,250,0.10), transparent 42%),
-    #0f0a14 !important;
   color: #f5eef8 !important;
 }
 
@@ -86,4 +63,10 @@ body[style*="#ffe4e6"] {
   background: linear-gradient(135deg, #ec4899, #a78bfa) !important;
   color: #fff !important;
   border: none !important;
+}
+
+/* Suavizar fondos muy claros residuales */
+body.mary-themed,
+body.mary-themed * {
+  scrollbar-color: rgba(244,114,182,0.35) transparent;
 }
