@@ -22,13 +22,13 @@
   * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
   body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 10%, rgba(244,114,182,0.12), transparent 40%), radial-gradient(circle at 90% 90%, rgba(167,139,250,0.1), transparent 40%), var(--bg); color: var(--text); padding: max(0.75rem, env(safe-area-inset-top)) 0.85rem 2rem; }
   .glass { background: rgba(28,20,40,0.85); border: 1px solid var(--border); border-radius: 18px; backdrop-filter: blur(12px); }
-  .btn { border: none; border-radius: 12px; padding: 0.55rem 1rem; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: 0.15s; }
+  .btn { border: none; border-radius: 12px; padding: 0.55rem 1rem; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: 0.15s; touch-action: manipulation; }
   .btn-pink { background: linear-gradient(135deg, #ec4899, #a78bfa); color: white; }
   .btn-ghost { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid var(--border); }
   .btn:active { transform: scale(0.97); }
-  .tab { padding: 0.45rem 0.9rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; border: 1px solid transparent; cursor: pointer; color: var(--muted); background: transparent; }
+  .tab { padding: 0.55rem 1rem; border-radius: 999px; font-size: 0.8rem; font-weight: 700; border: 1px solid transparent; cursor: pointer; color: var(--muted); background: transparent; touch-action: manipulation; -webkit-tap-highlight-color: transparent; min-height: 40px; }
   .tab.active { background: rgba(236,72,153,0.25); color: white; border-color: rgba(244,114,182,0.35); }
-  .pilar-card { padding: 1rem; border-radius: 16px; border: 1px solid var(--border); background: var(--card); cursor: pointer; transition: 0.15s; }
+  .pilar-card { padding: 1rem; border-radius: 16px; border: 1px solid var(--border); background: var(--card); cursor: pointer; transition: 0.15s; touch-action: manipulation; }
   .pilar-card:hover { border-color: rgba(244,114,182,0.4); }
   .pilar-card.done { border-color: rgba(52,211,153,0.45); background: rgba(16,185,129,0.08); }
   .badge { font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
@@ -117,7 +117,6 @@
     messagingSenderId: "123",
     appId: "1:123:web:abc"
   };
-  // Use same Firebase as other modules if already configured in parent; fallback local
   let db = null;
   try {
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -128,7 +127,6 @@
   const COL = 'mapkr';
   const DOC = 'convicciones_data';
 
-  // PILARES literales del PDF "Proyecto: Construir mis convicciones cristianas"
   const PILARES = [
     { id:1, titulo:"Dios existe", pregunta:"¿Existe Dios? ¿Cómo lo sé?", tipo:"doctrina" },
     { id:2, titulo:"La Biblia es la Palabra de Dios", pregunta:"¿Es la Biblia realmente la Palabra de Dios? ¿Por qué confiar en ella?", tipo:"doctrina" },
@@ -210,10 +208,15 @@
 
   function showT(t){
     document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.t === t));
-    document.getElementById('panel-inicio').style.display = t==='inicio' ? '' : 'none';
-    document.getElementById('panel-pilares').style.display = t==='pilares' ? '' : 'none';
-    document.getElementById('panel-fichas').style.display = t==='fichas' ? '' : 'none';
+    var pi = document.getElementById('panel-inicio');
+    var pp = document.getElementById('panel-pilares');
+    var pf = document.getElementById('panel-fichas');
+    if(pi) pi.style.display = t==='inicio' ? '' : 'none';
+    if(pp) pp.style.display = t==='pilares' ? '' : 'none';
+    if(pf) pf.style.display = t==='fichas' ? '' : 'none';
   }
+  // CRITICAL: expose for onclick handlers on mobile
+  window.showT = showT;
 
   function renderAll(){
     const { n, total } = progress();
@@ -223,15 +226,14 @@
     const list = document.getElementById('pilares-list');
     list.innerHTML = PILARES.filter(p => p.id !== 18).map(p => {
       const done = isDone(p.id);
-      return `<div class="pilar-card ${done?'done':''}" onclick="openFicha(${p.id})">
-        <div style="display:flex;justify-content:space-between;gap:0.5rem;align-items:flex-start;">
-          <div>
-            <div style="font-weight:800;font-size:0.9rem;">${p.id}. ${p.titulo}</div>
-            <div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;line-height:1.35;">${p.pregunta}</div>
-          </div>
-          <span class="badge" style="background:${done?'rgba(52,211,153,0.2)':'rgba(244,114,182,0.15)'};color:${done?'#34d399':'#f9a8d4'};">${done?'✓ Hecha':'Abrir'}</span>
-        </div>
-      </div>`;
+      return '<div class="pilar-card '+(done?'done':'')+'" onclick="openFicha('+p.id+')">' +
+        '<div style="display:flex;justify-content:space-between;gap:0.5rem;align-items:flex-start;">' +
+          '<div>' +
+            '<div style="font-weight:800;font-size:0.9rem;">'+p.id+'. '+p.titulo+'</div>' +
+            '<div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;line-height:1.35;">'+p.pregunta+'</div>' +
+          '</div>' +
+          '<span class="badge" style="background:'+(done?'rgba(52,211,153,0.2)':'rgba(244,114,182,0.15)')+';color:'+(done?'#34d399':'#f9a8d4')+';">'+(done?'✓ Hecha':'Abrir')+'</span>' +
+        '</div></div>';
     }).join('');
 
     const fl = document.getElementById('fichas-list');
@@ -241,11 +243,10 @@
     } else {
       fl.innerHTML = filled.map(p => {
         const f = store.fichas[p.id] || {};
-        return `<div class="pilar-card" onclick="openFicha(${p.id})">
-          <div style="font-weight:800;">${p.id}. ${p.titulo}</div>
-          <div style="font-size:0.75rem;color:var(--muted);margin-top:0.3rem;">${(f.conviccion||'').slice(0,120)}${(f.conviccion||'').length>120?'…':''}</div>
-          <div style="margin-top:0.4rem;font-size:0.7rem;color:#c4b5fd;">Certeza: ${f.certeza||'—'} · ${f.fecha||''}</div>
-        </div>`;
+        return '<div class="pilar-card" onclick="openFicha('+p.id+')">' +
+          '<div style="font-weight:800;">'+p.id+'. '+p.titulo+'</div>' +
+          '<div style="font-size:0.75rem;color:var(--muted);margin-top:0.3rem;">'+(f.conviccion||'').slice(0,120)+((f.conviccion||'').length>120?'…':'')+'</div>' +
+          '<div style="margin-top:0.4rem;font-size:0.7rem;color:#c4b5fd;">Certeza: '+(f.certeza||'—')+' · '+(f.fecha||'')+'</div></div>';
       }).join('');
     }
   }
@@ -255,33 +256,32 @@
     if(!p) return;
     const f = store.fichas[id] || {};
     const isStory = p.tipo === 'historia';
-    document.getElementById('modal-title').textContent = `Pilar ${id}: ${p.titulo}`;
-    document.getElementById('modal-body').innerHTML = `
-      <div style="margin-bottom:0.75rem;font-size:0.8rem;color:var(--muted);line-height:1.4;"><b>Pregunta guía:</b> ${p.pregunta}</div>
-      <div style="display:grid;gap:0.65rem;">
-        <div><label>Tema</label><input id="f-tema" value="${esc(f.tema||p.titulo)}"></div>
-        <div><label>Pregunta</label><input id="f-pregunta" value="${esc(f.pregunta||p.pregunta)}"></div>
-        <div><label>Pasajes bíblicos</label><textarea id="f-biblia">${esc(f.biblia||'')}</textarea></div>
-        <div><label>Interpretaciones / notas de estudio</label><textarea id="f-interp">${esc(f.interp||'')}</textarea></div>
-        <div><label>Análisis (razones, objeciones, claridad)</label><textarea id="f-analisis">${esc(f.analisis||'')}</textarea></div>
-        <div class="story-fields ${isStory?'show':''}">
-          <div style="font-size:0.75rem;font-weight:800;color:#c4b5fd;margin:0.25rem 0;">Campos de historia (pilares 4 y 5)</div>
-          <div><label>Personajes / eventos clave</label><textarea id="f-personajes">${esc(f.personajes||'')}</textarea></div>
-          <div><label>Arco narrativo (problema → promesa → cumplimiento)</label><textarea id="f-arco">${esc(f.arco||'')}</textarea></div>
-          <div><label>Cómo apunta a Cristo</label><textarea id="f-cristo">${esc(f.cristo||'')}</textarea></div>
-        </div>
-        <div><label>Mi convicción (en mis palabras)</label><textarea id="f-conviccion">${esc(f.conviccion||'')}</textarea></div>
-        <div><label>Nivel de certeza (1-5 o descripción)</label><input id="f-certeza" value="${esc(f.certeza||'')}" placeholder="ej. 4/5 · sólida con dudas menores"></div>
-        <div><label>Aplicación práctica</label><textarea id="f-aplicacion">${esc(f.aplicacion||'')}</textarea></div>
-        <div><label>Próximo paso</label><input id="f-proximo" value="${esc(f.proximo||'')}"></div>
-        <div><label>Fecha</label><input id="f-fecha" type="date" value="${esc(f.fecha||'')}"></div>
-      </div>
-      <div style="display:flex;gap:0.5rem;margin-top:1rem;flex-wrap:wrap;">
-        <button type="button" class="btn btn-pink" onclick="saveFicha(${id})">💾 Guardar</button>
-        <button type="button" class="btn btn-ghost" onclick="copyFicha(${id})">📋 Copiar ficha</button>
-        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cerrar</button>
-      </div>
-    `;
+    document.getElementById('modal-title').textContent = 'Pilar '+id+': '+p.titulo;
+    document.getElementById('modal-body').innerHTML =
+      '<div style="margin-bottom:0.75rem;font-size:0.8rem;color:var(--muted);line-height:1.4;"><b>Pregunta guía:</b> '+p.pregunta+'</div>' +
+      '<div style="display:grid;gap:0.65rem;">' +
+        '<div><label>Tema</label><input id="f-tema" value="'+esc(f.tema||p.titulo)+'"></div>' +
+        '<div><label>Pregunta</label><input id="f-pregunta" value="'+esc(f.pregunta||p.pregunta)+'"></div>' +
+        '<div><label>Pasajes bíblicos</label><textarea id="f-biblia">'+esc(f.biblia||'')+'</textarea></div>' +
+        '<div><label>Interpretaciones / notas de estudio</label><textarea id="f-interp">'+esc(f.interp||'')+'</textarea></div>' +
+        '<div><label>Análisis (razones, objeciones, claridad)</label><textarea id="f-analisis">'+esc(f.analisis||'')+'</textarea></div>' +
+        '<div class="story-fields '+(isStory?'show':'')+'">' +
+          '<div style="font-size:0.75rem;font-weight:800;color:#c4b5fd;margin:0.25rem 0;">Campos de historia (pilares 4 y 5)</div>' +
+          '<div><label>Personajes / eventos clave</label><textarea id="f-personajes">'+esc(f.personajes||'')+'</textarea></div>' +
+          '<div><label>Arco narrativo (problema → promesa → cumplimiento)</label><textarea id="f-arco">'+esc(f.arco||'')+'</textarea></div>' +
+          '<div><label>Cómo apunta a Cristo</label><textarea id="f-cristo">'+esc(f.cristo||'')+'</textarea></div>' +
+        '</div>' +
+        '<div><label>Mi convicción (en mis palabras)</label><textarea id="f-conviccion">'+esc(f.conviccion||'')+'</textarea></div>' +
+        '<div><label>Nivel de certeza (1-5 o descripción)</label><input id="f-certeza" value="'+esc(f.certeza||'')+'" placeholder="ej. 4/5 · sólida con dudas menores"></div>' +
+        '<div><label>Aplicación práctica</label><textarea id="f-aplicacion">'+esc(f.aplicacion||'')+'</textarea></div>' +
+        '<div><label>Próximo paso</label><input id="f-proximo" value="'+esc(f.proximo||'')+'"></div>' +
+        '<div><label>Fecha</label><input id="f-fecha" type="date" value="'+esc(f.fecha||'')+'"></div>' +
+      '</div>' +
+      '<div style="display:flex;gap:0.5rem;margin-top:1rem;flex-wrap:wrap;">' +
+        '<button type="button" class="btn btn-pink" onclick="saveFicha('+id+')">💾 Guardar</button>' +
+        '<button type="button" class="btn btn-ghost" onclick="copyFicha('+id+')">📋 Copiar ficha</button>' +
+        '<button type="button" class="btn btn-ghost" onclick="closeModal()">Cerrar</button>' +
+      '</div>';
     document.getElementById('modal').style.display = 'flex';
   }
   function esc(s){ return String(s||'').replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"'); }
@@ -312,7 +312,7 @@
 
   function copyText(t){
     if(navigator.clipboard && navigator.clipboard.writeText){
-      return navigator.clipboard.writeText(t).then(()=>alert('Copiado ✓')).catch(()=>fallbackCopy(t));
+      return navigator.clipboard.writeText(t).then(function(){ alert('Copiado ✓'); }).catch(function(){ fallbackCopy(t); });
     }
     return fallbackCopy(t);
   }
@@ -327,9 +327,9 @@
     const p = PILARES.find(x => x.id === id);
     const f = store.fichas[id] || {};
     const lines = [
-      `PILAR ${id}: ${p.titulo}`,
-      `Pregunta: ${f.pregunta||p.pregunta}`,
-      `Tema: ${f.tema||p.titulo}`,
+      'PILAR '+id+': '+p.titulo,
+      'Pregunta: '+(f.pregunta||p.pregunta),
+      'Tema: '+(f.tema||p.titulo),
       '',
       'Pasajes bíblicos:', f.biblia||'—',
       '',
@@ -337,12 +337,11 @@
       '',
       'Análisis:', f.analisis||'—',
       '',
-      ...(p.tipo==='historia' ? ['Personajes/eventos:', f.personajes||'—', '', 'Arco narrativo:', f.arco||'—', '', 'Apunta a Cristo:', f.cristo||'—', ''] : []),
       'Mi convicción:', f.conviccion||'—',
-      `Certeza: ${f.certeza||'—'}`,
+      'Certeza: '+(f.certeza||'—'),
       'Aplicación:', f.aplicacion||'—',
-      `Próximo paso: ${f.proximo||'—'}`,
-      `Fecha: ${f.fecha||'—'}`
+      'Próximo paso: '+(f.proximo||'—'),
+      'Fecha: '+(f.fecha||'—')
     ];
     copyText(lines.join('\n'));
   };
@@ -350,7 +349,7 @@
   window.copyAllFichas = function(){
     const parts = PILARES.filter(p => p.id!==18 && store.fichas[p.id]).map(p => {
       const f = store.fichas[p.id];
-      return `## Pilar ${p.id}: ${p.titulo}\n${f.conviccion||''}\nCerteza: ${f.certeza||''}\n`;
+      return '## Pilar '+p.id+': '+p.titulo+'\n'+(f.conviccion||'')+'\nCerteza: '+(f.certeza||'')+'\n';
     });
     if(!parts.length){ alert('No hay fichas aún'); return; }
     copyText('# Mis Convicciones\n\n' + parts.join('\n'));
@@ -359,7 +358,7 @@
   window.exportTxt = function(){
     const parts = PILARES.filter(p => p.id!==18).map(p => {
       const f = store.fichas[p.id] || {};
-      return [`=== PILAR ${p.id}: ${p.titulo} ===`, f.pregunta||p.pregunta, '', f.conviccion||'(sin convicción)', `Certeza: ${f.certeza||'—'}`, ''].join('\n');
+      return ['=== PILAR '+p.id+': '+p.titulo+' ===', f.pregunta||p.pregunta, '', f.conviccion||'(sin convicción)', 'Certeza: '+(f.certeza||'—'), ''].join('\n');
     });
     const blob = new Blob(['MARY · Convicciones\n\n' + parts.join('\n')], {type:'text/plain'});
     const a = document.createElement('a');
@@ -369,32 +368,15 @@
   };
 
   window.copyMarco = function(){
-    const marco = `MARCO DEL PROYECTO — Construir mis convicciones cristianas
-
-Objetivo: documentar 21 pilares de fe de forma bíblica, ordenada y personal.
-
-Plantilla de ficha (Pilar 18):
-- Tema
-- Pregunta
-- Pasajes bíblicos
-- Interpretaciones
-- Análisis
-- Convicción (en mis palabras)
-- Nivel de certeza
-- Aplicación práctica
-- Próximo paso
-- Fecha
-
-Pilares de historia (4 y 5) incluyen campos extra de narrativa.
-
-Progreso actual: ${progress().n} / ${progress().total}`;
+    const pr = progress();
+    const marco = 'MARCO DEL PROYECTO — Construir mis convicciones cristianas\n\n'+
+      'Objetivo: documentar 21 pilares de fe de forma bíblica, ordenada y personal.\n\n'+
+      'Plantilla de ficha:\n- Tema\n- Pregunta\n- Pasajes bíblicos\n- Interpretaciones\n- Análisis\n- Convicción\n- Nivel de certeza\n- Aplicación práctica\n- Próximo paso\n- Fecha\n\n'+
+      'Progreso actual: '+pr.n+' / '+pr.total;
     copyText(marco);
   };
 
   window.reopen = openFicha;
-  window.copyAllFichas = copyAllFichas;
-  window.exportTxt = exportTxt;
-  window.copyMarco = copyMarco;
   window.store = store;
 
   load();
