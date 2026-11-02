@@ -37,7 +37,7 @@
     width:100%; background:#241b32; border:1px solid var(--border); border-radius:12px;
     color:var(--text); padding:0.55rem 0.7rem; font-size:0.85rem;
   }
-  textarea { min-height:64px; resize:vertical; }
+  textarea { min-height:72px; resize:vertical; }
   .sec { font-size:0.82rem; font-weight:800; color:#f9a8d4; margin:1rem 0 0.55rem; padding-bottom:0.3rem; border-bottom:1px solid var(--border); }
   .eval-card { border:1px solid var(--border); border-radius:16px; padding:0.85rem; background:rgba(15,10,20,0.45); margin-bottom:0.65rem; }
   .eval-card h4 { margin:0 0 0.55rem; font-size:0.85rem; font-weight:800; }
@@ -61,6 +61,9 @@
   .status-badge.enfermedad { background:rgba(251,191,36,0.2); color:#fbbf24; }
   .status-badge.otro { background:rgba(244,114,182,0.15); color:#f9a8d4; }
   .day-summary { margin-bottom:1rem; }
+  .pend-row { display:grid; grid-template-columns:1fr 120px 36px; gap:0.35rem; align-items:start; margin-bottom:0.4rem; }
+  @media(max-width:560px){ .pend-row { grid-template-columns:1fr 36px; } .pend-row select { grid-column:1/-1; } }
+  .btn-row { display:flex; flex-wrap:wrap; gap:0.4rem; margin-top:0.65rem; }
 </style>
 </head>
 <body>
@@ -68,12 +71,12 @@
   <header class="glass" style="padding:1rem 1.15rem;margin-bottom:1rem;display:flex;flex-wrap:wrap;justify-content:space-between;gap:0.75rem;align-items:center;">
     <div>
       <h1 style="margin:0;font-size:1.15rem;font-weight:800;background:linear-gradient(90deg,#f9a8d4,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent;">📝 Calificaciones</h1>
-      <p class="muted" style="margin:0.2rem 0 0;">Mary · Laura · Valery · productividad + proactividad − descuentos</p>
+      <p class="muted" style="margin:0.2rem 0 0;">Mary · Laura · Valery · cierre diario · bonos</p>
       <p id="sync-status" class="muted" style="margin:0.15rem 0 0;font-size:0.68rem;">Sincronizando…</p>
     </div>
     <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
-      <button type="button" class="btn btn-ghost" onclick="exportPDF()">📄 PDF</button>
-      <button type="button" class="btn btn-ghost" onclick="copyReport()">📋 Copiar</button>
+      <button type="button" class="btn btn-ghost" onclick="exportPDFSemana()">📄 PDF período</button>
+      <button type="button" class="btn btn-ghost" onclick="copyReport()">📋 Copiar período</button>
     </div>
   </header>
 
@@ -95,7 +98,11 @@
           <button type="button" class="btn btn-ghost" onclick="loadDayForm()">↻</button>
         </div>
       </div>
-      <p class="muted" style="margin:0.55rem 0 0;">Arriba ves el resumen del día (como la semana). Abajo registras notas o el motivo si no hubo evaluación.</p>
+      <div class="btn-row">
+        <button type="button" class="btn btn-pink" onclick="exportPDFDiario()">📄 PDF diario (Martín)</button>
+        <button type="button" class="btn btn-ghost" onclick="copyParaEquipo()">📋 Copiar para Laura/Valery</button>
+      </div>
+      <p class="muted" style="margin:0.55rem 0 0;">PDF diario = reporte completo para Martín. Copiar para el equipo = solo tus actividades, horas, proactividad y descuentos (sin las notas que les das).</p>
     </div>
     <div id="day-form"></div>
   </div>
@@ -115,12 +122,20 @@
           <button type="button" class="btn btn-ghost" style="width:100%;" onclick="setThisWeek()">Esta semana</button>
         </div>
       </div>
+      <div class="btn-row">
+        <button type="button" class="btn btn-pink" onclick="exportPDFSemana()">📄 PDF semanal / período</button>
+        <button type="button" class="btn btn-ghost" onclick="exportPDFQuincena()">📄 PDF quincenal</button>
+      </div>
     </div>
     <div id="week-kpis" class="grid3" style="margin-bottom:1rem;"></div>
     <div id="week-tables"></div>
     <div class="glass" style="padding:1rem;margin-top:1rem;">
       <div class="sec" style="margin-top:0;">Errores / descuentos del período</div>
       <div id="week-errors"></div>
+    </div>
+    <div class="glass" style="padding:1rem;margin-top:1rem;">
+      <div class="sec" style="margin-top:0;">Bonos del período (según promedio)</div>
+      <div id="week-bonos"></div>
     </div>
   </div>
 
