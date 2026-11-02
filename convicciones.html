@@ -1,1 +1,406 @@
-PLACEHOLDER_WILL_FAIL
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MARY · Convicciones cristianas</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+  :root {
+    --bg: #0f0a14;
+    --card: #1c1428;
+    --border: rgba(244, 114, 182, 0.18);
+    --pink: #f472b6;
+    --pink2: #ec4899;
+    --purple: #a78bfa;
+    --text: #f5eef8;
+    --muted: #a89bb5;
+  }
+  * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 10%, rgba(244,114,182,0.12), transparent 40%), radial-gradient(circle at 90% 90%, rgba(167,139,250,0.1), transparent 40%), var(--bg); color: var(--text); padding: max(0.75rem, env(safe-area-inset-top)) 0.85rem 2rem; }
+  .glass { background: rgba(28,20,40,0.85); border: 1px solid var(--border); border-radius: 18px; backdrop-filter: blur(12px); }
+  .btn { border: none; border-radius: 12px; padding: 0.55rem 1rem; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: 0.15s; }
+  .btn-pink { background: linear-gradient(135deg, #ec4899, #a78bfa); color: white; }
+  .btn-ghost { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid var(--border); }
+  .btn:active { transform: scale(0.97); }
+  .tab { padding: 0.45rem 0.9rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; border: 1px solid transparent; cursor: pointer; color: var(--muted); background: transparent; }
+  .tab.active { background: rgba(236,72,153,0.25); color: white; border-color: rgba(244,114,182,0.35); }
+  .pilar-card { padding: 1rem; border-radius: 16px; border: 1px solid var(--border); background: var(--card); cursor: pointer; transition: 0.15s; }
+  .pilar-card:hover { border-color: rgba(244,114,182,0.4); }
+  .pilar-card.done { border-color: rgba(52,211,153,0.45); background: rgba(16,185,129,0.08); }
+  .badge { font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
+  input, textarea, select { width: 100%; background: #241b32; border: 1px solid var(--border); border-radius: 12px; color: var(--text); padding: 0.6rem 0.75rem; font-size: 0.85rem; }
+  textarea { min-height: 90px; resize: vertical; }
+  label { display: block; font-size: 0.7rem; font-weight: 800; color: var(--muted); margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; display: flex; align-items: flex-end; justify-content: center; padding: 0; }
+  .modal { width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto; background: #1a1228; border-radius: 24px 24px 0 0; border: 1px solid var(--border); padding: 1.25rem; }
+  @media (min-width: 640px) { .modal-bg { align-items: center; } .modal { border-radius: 20px; max-height: 85vh; } }
+  .progress-bar { height: 8px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #ec4899, #a78bfa); border-radius: 999px; transition: width 0.3s; }
+  .story-fields { display: none; }
+  .story-fields.show { display: block; }
+</style>
+</head>
+<body>
+<div style="max-width:720px;margin:0 auto;">
+  <header class="glass" style="padding:1rem 1.15rem;margin-bottom:1rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.75rem;">
+    <div>
+      <h1 style="margin:0;font-size:1.2rem;font-weight:800;background:linear-gradient(90deg,#f9a8d4,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent;">✝️ Convicciones cristianas</h1>
+      <p style="margin:0.2rem 0 0;font-size:0.75rem;color:var(--muted);font-weight:600;">Proyecto: construir mis 21 pilares · ficha literal</p>
+    </div>
+    <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+      <button type="button" class="btn btn-ghost" onclick="copyMarco()">📋 Marco</button>
+      <button type="button" class="btn btn-ghost" onclick="copyAllFichas()">📋 Todas</button>
+      <button type="button" class="btn btn-ghost" onclick="exportTxt()">⬇️ Export</button>
+    </div>
+  </header>
+
+  <div class="glass" style="padding:0.85rem 1rem;margin-bottom:1rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+      <span style="font-size:0.75rem;font-weight:700;color:var(--muted);">Progreso</span>
+      <span id="prog-label" style="font-size:0.75rem;font-weight:800;color:var(--pink);">0 / 21</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1rem;">
+    <button type="button" class="tab active" data-t="inicio" onclick="showT('inicio')">Inicio</button>
+    <button type="button" class="tab" data-t="pilares" onclick="showT('pilares')">21 Pilares</button>
+    <button type="button" class="tab" data-t="fichas" onclick="showT('fichas')">Mis fichas</button>
+  </div>
+
+  <div id="panel-inicio">
+    <div class="glass" style="padding:1.15rem;margin-bottom:1rem;">
+      <h2 style="margin:0 0 0.5rem;font-size:1rem;font-weight:800;">Propósito</h2>
+      <p style="margin:0;font-size:0.85rem;line-height:1.55;color:var(--muted);">Construir y documentar mis convicciones cristianas de forma ordenada, bíblica y personal. Cada pilar se trabaja con la ficha oficial del proyecto (tema, pregunta, pasajes, interpretaciones, análisis, convicción, certeza, aplicación y próximo paso).</p>
+    </div>
+    <div class="glass" style="padding:1.15rem;">
+      <h2 style="margin:0 0 0.5rem;font-size:1rem;font-weight:800;">Cómo usarlo</h2>
+      <ol style="margin:0;padding-left:1.2rem;font-size:0.85rem;line-height:1.6;color:var(--muted);">
+        <li>Ve a <b>21 Pilares</b> y abre el que quieras trabajar.</li>
+        <li>Completa la ficha (campos del PDF, sin cambiar temas ni preguntas).</li>
+        <li>Guarda. Se sincroniza con Firebase + local.</li>
+        <li>Usa copiar / exportar para Notion o ChatGPT.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div id="panel-pilares" style="display:none;">
+    <div id="pilares-list" style="display:grid;gap:0.65rem;"></div>
+  </div>
+
+  <div id="panel-fichas" style="display:none;">
+    <div id="fichas-list" style="display:grid;gap:0.65rem;"></div>
+  </div>
+</div>
+
+<div id="modal" class="modal-bg" style="display:none;" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-inner">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+      <h2 id="modal-title" style="margin:0;font-size:1.05rem;font-weight:800;">Ficha</h2>
+      <button type="button" class="btn btn-ghost" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const firebaseConfig = {
+    apiKey: "AIzaSyDummy-ReplaceIfNeeded",
+    authDomain: "mapkr.firebaseapp.com",
+    projectId: "mapkr",
+    storageBucket: "mapkr.appspot.com",
+    messagingSenderId: "123",
+    appId: "1:123:web:abc"
+  };
+  // Use same Firebase as other modules if already configured in parent; fallback local
+  let db = null;
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+  } catch(e) { console.warn('Firebase init', e); }
+
+  const LS_KEY = 'mary_convicciones_v1';
+  const COL = 'mapkr';
+  const DOC = 'convicciones_data';
+
+  // PILARES literales del PDF "Proyecto: Construir mis convicciones cristianas"
+  const PILARES = [
+    { id:1, titulo:"Dios existe", pregunta:"¿Existe Dios? ¿Cómo lo sé?", tipo:"doctrina" },
+    { id:2, titulo:"La Biblia es la Palabra de Dios", pregunta:"¿Es la Biblia realmente la Palabra de Dios? ¿Por qué confiar en ella?", tipo:"doctrina" },
+    { id:3, titulo:"Jesús es Dios y es el único camino", pregunta:"¿Quién es Jesús realmente? ¿Es el único camino a Dios?", tipo:"doctrina" },
+    { id:4, titulo:"Historia de la salvación (Antiguo Testamento)", pregunta:"¿Cuál es el hilo de la historia de Dios con la humanidad en el AT?", tipo:"historia" },
+    { id:5, titulo:"Historia de la salvación (Nuevo Testamento)", pregunta:"¿Cómo se cumple y se completa la historia de salvación en el NT?", tipo:"historia" },
+    { id:6, titulo:"El pecado y la naturaleza humana", pregunta:"¿Qué es el pecado? ¿Cuál es el estado del ser humano sin Cristo?", tipo:"doctrina" },
+    { id:7, titulo:"La salvación por gracia mediante la fe", pregunta:"¿Cómo se salva una persona? ¿Qué papel tiene la gracia y la fe?", tipo:"doctrina" },
+    { id:8, titulo:"El Espíritu Santo", pregunta:"¿Quién es el Espíritu Santo y qué hace en la vida del creyente?", tipo:"doctrina" },
+    { id:9, titulo:"La Trinidad", pregunta:"¿Cómo puede Dios ser uno y tres al mismo tiempo?", tipo:"doctrina" },
+    { id:10, titulo:"La iglesia", pregunta:"¿Qué es la iglesia y cuál es mi lugar en ella?", tipo:"doctrina" },
+    { id:11, titulo:"Los sacramentos / ordenanzas", pregunta:"¿Qué son el bautismo y la cena del Señor? ¿Por qué importan?", tipo:"doctrina" },
+    { id:12, titulo:"La oración", pregunta:"¿Por qué y cómo debo orar?", tipo:"practica" },
+    { id:13, titulo:"La voluntad de Dios", pregunta:"¿Cómo conozco y sigo la voluntad de Dios para mi vida?", tipo:"practica" },
+    { id:14, titulo:"El sufrimiento y el mal", pregunta:"Si Dios es bueno y poderoso, ¿por qué hay sufrimiento y mal?", tipo:"doctrina" },
+    { id:15, titulo:"El fin de los tiempos y la esperanza eterna", pregunta:"¿Qué enseña la Biblia sobre el futuro, el juicio y la eternidad?", tipo:"doctrina" },
+    { id:16, titulo:"La identidad en Cristo", pregunta:"¿Quién soy yo en Cristo? ¿Cómo define eso mi valor y propósito?", tipo:"practica" },
+    { id:17, titulo:"El discipulado y la obediencia", pregunta:"¿Qué significa seguir a Jesús día a día?", tipo:"practica" },
+    { id:18, titulo:"Plantilla de ficha de convicción", pregunta:"(Plantilla oficial del proyecto — usar para cada pilar)", tipo:"plantilla" },
+    { id:19, titulo:"El amor y las relaciones", pregunta:"¿Cómo debo amar a Dios y al prójimo según la Escritura?", tipo:"practica" },
+    { id:20, titulo:"El dinero y la mayordomía", pregunta:"¿Qué enseña la Biblia sobre el dinero, la generosidad y la mayordomía?", tipo:"practica" },
+    { id:21, titulo:"La misión y el evangelismo", pregunta:"¿Cuál es mi responsabilidad de compartir el evangelio?", tipo:"practica" }
+  ];
+
+  let store = { fichas: {}, updatedAt: null };
+
+  function loadLocal(){
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if(raw){
+        const p = JSON.parse(raw);
+        if(p && typeof p === 'object') store = p;
+      }
+    } catch(e){}
+  }
+  function saveLocal(){
+    store.updatedAt = Date.now();
+    try { localStorage.setItem(LS_KEY, JSON.stringify(store)); } catch(e){}
+  }
+  async function loadCloud(){
+    if(!db) return;
+    try {
+      const snap = await db.collection(COL).doc(DOC).get();
+      if(snap.exists){
+        const d = snap.data();
+        if(d && (!store.updatedAt || (d.updatedAt||0) > store.updatedAt)){
+          store = d;
+          saveLocal();
+        }
+      }
+    } catch(e){ console.warn('cloud load', e); }
+  }
+  async function saveCloud(){
+    if(!db) return;
+    try {
+      await db.collection(COL).doc(DOC).set({ ...store, updatedAt: Date.now() }, { merge: true });
+    } catch(e){ console.warn('cloud save', e); }
+  }
+  async function load(){
+    loadLocal();
+    await loadCloud();
+    renderAll();
+  }
+  function save(){
+    saveLocal();
+    saveCloud();
+    renderAll();
+  }
+
+  function isDone(id){
+    const f = store.fichas[id];
+    if(!f) return false;
+    return !!(f.conviccion && String(f.conviccion).trim().length > 10);
+  }
+  function progress(){
+    const n = PILARES.filter(p => p.id !== 18 && isDone(p.id)).length;
+    return { n, total: 20 };
+  }
+
+  function showT(t){
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.t === t));
+    document.getElementById('panel-inicio').style.display = t==='inicio' ? '' : 'none';
+    document.getElementById('panel-pilares').style.display = t==='pilares' ? '' : 'none';
+    document.getElementById('panel-fichas').style.display = t==='fichas' ? '' : 'none';
+  }
+
+  function renderAll(){
+    const { n, total } = progress();
+    document.getElementById('prog-label').textContent = n + ' / ' + total;
+    document.getElementById('prog-fill').style.width = (n/total*100) + '%';
+
+    const list = document.getElementById('pilares-list');
+    list.innerHTML = PILARES.filter(p => p.id !== 18).map(p => {
+      const done = isDone(p.id);
+      return `<div class="pilar-card ${done?'done':''}" onclick="openFicha(${p.id})">
+        <div style="display:flex;justify-content:space-between;gap:0.5rem;align-items:flex-start;">
+          <div>
+            <div style="font-weight:800;font-size:0.9rem;">${p.id}. ${p.titulo}</div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;line-height:1.35;">${p.pregunta}</div>
+          </div>
+          <span class="badge" style="background:${done?'rgba(52,211,153,0.2)':'rgba(244,114,182,0.15)'};color:${done?'#34d399':'#f9a8d4'};">${done?'✓ Hecha':'Abrir'}</span>
+        </div>
+      </div>`;
+    }).join('');
+
+    const fl = document.getElementById('fichas-list');
+    const filled = PILARES.filter(p => p.id !== 18 && store.fichas[p.id]);
+    if(!filled.length){
+      fl.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;text-align:center;padding:1.5rem;">Aún no hay fichas guardadas. Abre un pilar para empezar.</p>';
+    } else {
+      fl.innerHTML = filled.map(p => {
+        const f = store.fichas[p.id] || {};
+        return `<div class="pilar-card" onclick="openFicha(${p.id})">
+          <div style="font-weight:800;">${p.id}. ${p.titulo}</div>
+          <div style="font-size:0.75rem;color:var(--muted);margin-top:0.3rem;">${(f.conviccion||'').slice(0,120)}${(f.conviccion||'').length>120?'…':''}</div>
+          <div style="margin-top:0.4rem;font-size:0.7rem;color:#c4b5fd;">Certeza: ${f.certeza||'—'} · ${f.fecha||''}</div>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  function openFicha(id){
+    const p = PILARES.find(x => x.id === id);
+    if(!p) return;
+    const f = store.fichas[id] || {};
+    const isStory = p.tipo === 'historia';
+    document.getElementById('modal-title').textContent = `Pilar ${id}: ${p.titulo}`;
+    document.getElementById('modal-body').innerHTML = `
+      <div style="margin-bottom:0.75rem;font-size:0.8rem;color:var(--muted);line-height:1.4;"><b>Pregunta guía:</b> ${p.pregunta}</div>
+      <div style="display:grid;gap:0.65rem;">
+        <div><label>Tema</label><input id="f-tema" value="${esc(f.tema||p.titulo)}"></div>
+        <div><label>Pregunta</label><input id="f-pregunta" value="${esc(f.pregunta||p.pregunta)}"></div>
+        <div><label>Pasajes bíblicos</label><textarea id="f-biblia">${esc(f.biblia||'')}</textarea></div>
+        <div><label>Interpretaciones / notas de estudio</label><textarea id="f-interp">${esc(f.interp||'')}</textarea></div>
+        <div><label>Análisis (razones, objeciones, claridad)</label><textarea id="f-analisis">${esc(f.analisis||'')}</textarea></div>
+        <div class="story-fields ${isStory?'show':''}">
+          <div style="font-size:0.75rem;font-weight:800;color:#c4b5fd;margin:0.25rem 0;">Campos de historia (pilares 4 y 5)</div>
+          <div><label>Personajes / eventos clave</label><textarea id="f-personajes">${esc(f.personajes||'')}</textarea></div>
+          <div><label>Arco narrativo (problema → promesa → cumplimiento)</label><textarea id="f-arco">${esc(f.arco||'')}</textarea></div>
+          <div><label>Cómo apunta a Cristo</label><textarea id="f-cristo">${esc(f.cristo||'')}</textarea></div>
+        </div>
+        <div><label>Mi convicción (en mis palabras)</label><textarea id="f-conviccion">${esc(f.conviccion||'')}</textarea></div>
+        <div><label>Nivel de certeza (1-5 o descripción)</label><input id="f-certeza" value="${esc(f.certeza||'')}" placeholder="ej. 4/5 · sólida con dudas menores"></div>
+        <div><label>Aplicación práctica</label><textarea id="f-aplicacion">${esc(f.aplicacion||'')}</textarea></div>
+        <div><label>Próximo paso</label><input id="f-proximo" value="${esc(f.proximo||'')}"></div>
+        <div><label>Fecha</label><input id="f-fecha" type="date" value="${esc(f.fecha||'')}"></div>
+      </div>
+      <div style="display:flex;gap:0.5rem;margin-top:1rem;flex-wrap:wrap;">
+        <button type="button" class="btn btn-pink" onclick="saveFicha(${id})">💾 Guardar</button>
+        <button type="button" class="btn btn-ghost" onclick="copyFicha(${id})">📋 Copiar ficha</button>
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Cerrar</button>
+      </div>
+    `;
+    document.getElementById('modal').style.display = 'flex';
+  }
+  function esc(s){ return String(s||'').replace(/&/g,'&').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"'); }
+  function closeModal(){ document.getElementById('modal').style.display = 'none'; }
+
+  window.saveFicha = function(id){
+    const get = (x) => (document.getElementById(x)||{}).value || '';
+    store.fichas[id] = {
+      tema: get('f-tema'),
+      pregunta: get('f-pregunta'),
+      biblia: get('f-biblia'),
+      interp: get('f-interp'),
+      analisis: get('f-analisis'),
+      personajes: get('f-personajes'),
+      arco: get('f-arco'),
+      cristo: get('f-cristo'),
+      conviccion: get('f-conviccion'),
+      certeza: get('f-certeza'),
+      aplicacion: get('f-aplicacion'),
+      proximo: get('f-proximo'),
+      fecha: get('f-fecha')
+    };
+    save();
+    closeModal();
+  };
+  window.openFicha = openFicha;
+  window.closeModal = closeModal;
+
+  function copyText(t){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      return navigator.clipboard.writeText(t).then(()=>alert('Copiado ✓')).catch(()=>fallbackCopy(t));
+    }
+    return fallbackCopy(t);
+  }
+  function fallbackCopy(t){
+    const ta = document.createElement('textarea');
+    ta.value = t; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); alert('Copiado ✓'); } catch(e){ prompt('Copia manualmente:', t); }
+    document.body.removeChild(ta);
+  }
+
+  window.copyFicha = function(id){
+    const p = PILARES.find(x => x.id === id);
+    const f = store.fichas[id] || {};
+    const lines = [
+      `PILAR ${id}: ${p.titulo}`,
+      `Pregunta: ${f.pregunta||p.pregunta}`,
+      `Tema: ${f.tema||p.titulo}`,
+      '',
+      'Pasajes bíblicos:', f.biblia||'—',
+      '',
+      'Interpretaciones:', f.interp||'—',
+      '',
+      'Análisis:', f.analisis||'—',
+      '',
+      ...(p.tipo==='historia' ? ['Personajes/eventos:', f.personajes||'—', '', 'Arco narrativo:', f.arco||'—', '', 'Apunta a Cristo:', f.cristo||'—', ''] : []),
+      'Mi convicción:', f.conviccion||'—',
+      `Certeza: ${f.certeza||'—'}`,
+      'Aplicación:', f.aplicacion||'—',
+      `Próximo paso: ${f.proximo||'—'}`,
+      `Fecha: ${f.fecha||'—'}`
+    ];
+    copyText(lines.join('\n'));
+  };
+
+  window.copyAllFichas = function(){
+    const parts = PILARES.filter(p => p.id!==18 && store.fichas[p.id]).map(p => {
+      const f = store.fichas[p.id];
+      return `## Pilar ${p.id}: ${p.titulo}\n${f.conviccion||''}\nCerteza: ${f.certeza||''}\n`;
+    });
+    if(!parts.length){ alert('No hay fichas aún'); return; }
+    copyText('# Mis Convicciones\n\n' + parts.join('\n'));
+  };
+
+  window.exportTxt = function(){
+    const parts = PILARES.filter(p => p.id!==18).map(p => {
+      const f = store.fichas[p.id] || {};
+      return [`=== PILAR ${p.id}: ${p.titulo} ===`, f.pregunta||p.pregunta, '', f.conviccion||'(sin convicción)', `Certeza: ${f.certeza||'—'}`, ''].join('\n');
+    });
+    const blob = new Blob(['MARY · Convicciones\n\n' + parts.join('\n')], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'mary-convicciones.txt';
+    a.click();
+  };
+
+  window.copyMarco = function(){
+    const marco = `MARCO DEL PROYECTO — Construir mis convicciones cristianas
+
+Objetivo: documentar 21 pilares de fe de forma bíblica, ordenada y personal.
+
+Plantilla de ficha (Pilar 18):
+- Tema
+- Pregunta
+- Pasajes bíblicos
+- Interpretaciones
+- Análisis
+- Convicción (en mis palabras)
+- Nivel de certeza
+- Aplicación práctica
+- Próximo paso
+- Fecha
+
+Pilares de historia (4 y 5) incluyen campos extra de narrativa.
+
+Progreso actual: ${progress().n} / ${progress().total}`;
+    copyText(marco);
+  };
+
+  window.reopen = openFicha;
+  window.copyAllFichas = copyAllFichas;
+  window.exportTxt = exportTxt;
+  window.copyMarco = copyMarco;
+  window.store = store;
+
+  load();
+  renderAll();
+  showT('inicio');
+})();
+</script>
+</body>
+</html>
