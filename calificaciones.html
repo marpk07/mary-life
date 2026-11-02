@@ -8,6 +8,8 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
   :root {
@@ -61,6 +63,7 @@
     <div>
       <h1 style="margin:0;font-size:1.15rem;font-weight:800;background:linear-gradient(90deg,#f9a8d4,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent;">📝 Calificaciones</h1>
       <p class="muted" style="margin:0.2rem 0 0;">Mary · Laura · Valery · productividad + proactividad − descuentos</p>
+      <p id="sync-status" class="muted" style="margin:0.15rem 0 0;font-size:0.68rem;">Sincronizando…</p>
     </div>
     <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
       <button type="button" class="btn btn-ghost" onclick="exportPDF()">📄 PDF</button>
@@ -131,19 +134,77 @@
 (function(){
   const PEOPLE = ['Mary','Laura','Valery'];
   const LS = 'mary_calificaciones_v1';
+  const COL = 'mary_calificaciones';
+  const DOC = 'team_data';
   let store = { days: {}, updatedAt: null };
+  let db = null;
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnhvfyXpwJdYOQFCvsyHDhgW9F3X7ARR4",
+    authDomain: "marpk-816dd.firebaseapp.com",
+    projectId: "marpk-816dd",
+    storageBucket: "marpk-816dd.firebasestorage.app",
+    messagingSenderId: "189644122232",
+    appId: "1:189644122232:web:ed7894f1510a373d44658d"
+  };
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+  } catch (e) { console.warn('Firebase init', e); }
+
+  function setStatus(msg){
+    var el = document.getElementById('sync-status');
+    if (el) el.textContent = msg || '';
+  }
 
   function todayISO(){
     const d = new Date();
     return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   }
-  function load(){
-    try { const r = localStorage.getItem(LS); if(r){ const p=JSON.parse(r); if(p&&p.days) store=p; } } catch(e){}
+  function loadLocal(){
+    try { const r = localStorage.getItem(LS); if(r){ const p=JSON.parse(r); if(p&&typeof p==='object'){ store=p; if(!store.days) store.days={}; } } } catch(e){}
     if(!store.days) store.days={};
   }
-  function save(){
+  function saveLocal(){
     store.updatedAt = Date.now();
     try { localStorage.setItem(LS, JSON.stringify(store)); } catch(e){}
+  }
+  async function loadCloud(){
+    if(!db){ setStatus('Sin nube · solo local'); return; }
+    try {
+      setStatus('Sincronizando…');
+      const snap = await db.collection(COL).doc(DOC).get();
+      if (snap.exists) {
+        const d = snap.data();
+        if (d && (!store.updatedAt || (d.updatedAt||0) >= store.updatedAt)) {
+          store = d;
+          if (!store.days) store.days = {};
+          saveLocal();
+        }
+      }
+      setStatus('☁ Firebase listo');
+    } catch(e){
+      console.warn('cloud load', e);
+      setStatus('Local (nube no disponible)');
+    }
+  }
+  async function saveCloud(){
+    if(!db) return;
+    try {
+      store.updatedAt = Date.now();
+      await db.collection(COL).doc(DOC).set({...store, updatedAt: store.updatedAt}, {merge:true});
+      setStatus('☁ Guardado en Firebase · ' + new Date().toLocaleTimeString());
+    } catch(e){
+      console.warn('cloud save', e);
+      setStatus('Guardado local (error nube)');
+    }
+  }
+  async function load(){
+    loadLocal();
+    await loadCloud();
+  }
+  function save(){
+    saveLocal();
+    saveCloud();
   }
   function num(v){ const n=parseFloat(String(v).replace(',','.')); return isNaN(n)?0:n; }
   function totalOf(ev){
@@ -166,7 +227,7 @@
     const rows = (list&&list.length?list:[{amount:'',reason:''}]).map((d,i)=>`
       <div class="disc-row">
         <input data-k="${evalKey}" data-di="${i}" data-f="amount" type="number" step="0.5" placeholder="-0.5" value="${d.amount!=null?d.amount:''}">
-        <input data-k="${evalKey}" data-di="${i}" data-f="reason" placeholder="Motivo del descuento" value="${(d.reason||'').replace(/"/g,'"')}">
+        <input data-k="${evalKey}" data-di="${i}" data-f="reason" placeholder="Motivo del descuento" value="${(d.reason||'').replace(/"/g,'&quot;')}">
         <button type="button" class="btn btn-ghost" style="padding:0.35rem;" onclick="removeDisc('${evalKey}',${i})">✕</button>
       </div>`).join('');
     return rows + `<button type="button" class="btn btn-ghost" style="margin-top:0.25rem;font-size:0.7rem;" onclick="addDisc('${evalKey}')">+ Descuento</button>`;
@@ -262,11 +323,13 @@
   }
 
   window.loadDayForm = function(){ renderDayForm(); };
-  window.saveDay = function(){
+  window.saveDay = async function(){
     collectForm();
-    save();
+    saveLocal();
     renderDayForm();
-    alert('Día guardado ✓');
+    setStatus('Guardando en Firebase…');
+    await saveCloud();
+    alert('Día guardado ✓ (local + Firebase)');
   };
 
   function mondayOf(d){
@@ -317,7 +380,6 @@
     const days = daysInRange(from, to);
     const weekAvgs = {};
     PEOPLE.forEach(p=>weekAvgs[p]={sum:0,n:0});
-
     let kpis = '';
     let tables = '';
     const allErrors = [];
@@ -332,7 +394,6 @@
         if(sc.avg!=null){ weekAvgs[person].sum+=sc.avg; weekAvgs[person].n++; }
         const cell = v => v==null?'<span class="muted">—</span>':'<span class="score">'+v.toFixed(1)+'</span>';
         tables += `<tr><td>${day.slice(5)}</td><td>${cell(sc.Mary)}</td><td>${cell(sc.Laura)}</td><td>${cell(sc.Valery)}</td><td>${cell(sc.avg)}</td></tr>`;
-
         const data = (store.days[day]&&store.days[day].evaluations)||{};
         PEOPLE.forEach(function(ev){
           const e = data[ev+'→'+person];
@@ -380,7 +441,6 @@
     const to = document.getElementById('range-to').value;
     const days = daysInRange(from, to);
     const colors = {Mary:'#f472b6', Laura:'#a78bfa', Valery:'#34d399'};
-
     const c1 = document.getElementById('chart-avg');
     if(c1){
       const ctx = c1.getContext('2d');
@@ -414,7 +474,6 @@
         ctx.fillText(p, pad + pi*70, 14);
       });
     }
-
     const c2 = document.getElementById('chart-disc');
     if(c2){
       const ctx = c2.getContext('2d');
@@ -504,14 +563,13 @@
       doc.text('Calificaciones — Mary · Laura · Valery', 40, y); y+=18;
       doc.setFontSize(10);
       doc.setTextColor(100);
-      doc.text('Período: '+from+' a '+to, 40, y); y+=16;
+      doc.text('Periodo: '+from+' a '+to, 40, y); y+=16;
       doc.setTextColor(0);
-      doc.text('Fórmula: Total = Productividad + Proactividad - Descuentos', 40, y); y+=20;
-
+      doc.text('Formula: Total = Productividad + Proactividad - Descuentos', 40, y); y+=20;
       PEOPLE.forEach(function(person){
         if(y>720){ doc.addPage(); y=40; }
         doc.setFontSize(12);
-        doc.text('Evaluación de '+person, 40, y); y+=8;
+        doc.text('Evaluacion de '+person, 40, y); y+=8;
         const body = days.map(function(day){
           const sc = dayScores(day, person);
           const f = v => v==null?'-':v.toFixed(1);
@@ -519,19 +577,11 @@
         });
         let sum=0,n=0;
         days.forEach(d=>{ const sc=dayScores(d,person); if(sc.avg!=null){sum+=sc.avg;n++;}});
-        doc.autoTable({
-          startY: y,
-          head: [['Dia','Mary','Laura','Valery','Prom. dia']],
-          body: body,
-          theme: 'striped',
-          styles: { fontSize: 9 },
-          margin: { left:40, right:40 }
-        });
+        doc.autoTable({ startY: y, head: [['Dia','Mary','Laura','Valery','Prom. dia']], body: body, theme: 'striped', styles: { fontSize: 9 }, margin: { left:40, right:40 } });
         y = doc.lastAutoTable.finalY + 10;
         doc.setFontSize(10);
         doc.text('Promedio del periodo: '+(n?(sum/n).toFixed(2):'-'), 40, y); y+=22;
       });
-
       if(y>680){ doc.addPage(); y=40; }
       doc.setFontSize(12);
       doc.text('Descuentos / errores del periodo', 40, y); y+=8;
@@ -550,28 +600,24 @@
         });
       });
       if(!errBody.length) errBody.push(['-','-','-','-','Sin descuentos']);
-      doc.autoTable({
-        startY: y,
-        head: [['Dia','Responsable','Registro','Pts','Motivo']],
-        body: errBody,
-        theme: 'striped',
-        styles: { fontSize: 9 },
-        margin: { left:40, right:40 }
-      });
+      doc.autoTable({ startY: y, head: [['Dia','Responsable','Registro','Pts','Motivo']], body: errBody, theme: 'striped', styles: { fontSize: 9 }, margin: { left:40, right:40 } });
       doc.save('calificaciones_'+from+'_'+to+'.pdf');
     } catch(err){
       console.error(err);
-      alert('No se pudo generar el PDF. Usa Copiar y pegalo en ChatGPT para el reporte.');
+      alert('No se pudo generar el PDF. Usa Copiar.');
       copyReport();
     }
   };
 
-  load();
   document.getElementById('day-date').value = todayISO();
   document.getElementById('day-date').addEventListener('change', function(){ renderDayForm(); });
   setThisWeek();
-  renderDayForm();
   showT('dia');
+  load().then(function(){
+    renderDayForm();
+    renderWeek();
+    setStatus(db ? '☁ Firebase listo' : 'Solo local');
+  });
 })();
 </script>
 </body>
