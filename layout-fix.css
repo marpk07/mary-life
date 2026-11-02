@@ -1,4 +1,4 @@
-/* Fix: barra MARY no tapa Gastos/Fitness/etc en movil */
+/* Fix: barra MARY no tapa módulos en móvil + tema */
 @media (max-width: 900px) {
   #content-area {
     padding-top: 0 !important;
@@ -7,4 +7,7 @@
   }
   .view, .module-frame { height: 100% !important; min-height: 100% !important; }
   #topbar { box-sizing: border-box; }
+}
+.module-frame {
+  background: #0f0a14 !important;
 }
