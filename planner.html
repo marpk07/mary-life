@@ -1,1 +1,232 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MARY · Daily Planner</title>
+<link rel="stylesheet" href="mary-theme.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+:root{
+  --bg:#0f0a14; --card:rgba(28,20,40,0.92); --card2:#241b32;
+  --border:rgba(244,114,182,0.22); --pink:#f472b6; --pink2:#ec4899; --purple:#a78bfa;
+  --text:#f5eef8; --muted:#c4b5d4;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:radial-gradient(circle at 15% 10%,rgba(244,114,182,0.12),transparent 42%),
+             radial-gradient(circle at 90% 90%,rgba(167,139,250,0.1),transparent 42%),var(--bg);
+  color:var(--text);min-height:100vh;padding:max(0.75rem,env(safe-area-inset-top)) 0.85rem 2.5rem;
+}
+.wrap{max-width:720px;margin:0 auto}
+.glass{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1rem;margin-bottom:0.85rem}
+h1{margin:0;font-size:1.15rem;font-weight:800;background:linear-gradient(90deg,#f9a8d4,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
+.muted{color:var(--muted);font-size:0.78rem}
+.tabs{display:flex;gap:0.4rem;flex-wrap:wrap;margin:0.85rem 0}
+.tab{padding:0.5rem 0.9rem;border-radius:999px;font-size:0.78rem;font-weight:700;border:1px solid transparent;
+  cursor:pointer;color:var(--muted);background:transparent;min-height:40px}
+.tab.on{background:rgba(236,72,153,0.28);color:#fff;border-color:rgba(244,114,182,0.4)}
+label{display:block;font-size:0.65rem;font-weight:800;color:var(--muted);margin-bottom:0.2rem;text-transform:uppercase;letter-spacing:0.04em}
+input,textarea,select{
+  width:100%;background:var(--card2);border:1px solid var(--border);border-radius:12px;
+  color:var(--text);padding:0.55rem 0.7rem;font-size:0.85rem;font-weight:600
+}
+textarea{min-height:80px;resize:vertical}
+.btn{border:none;border-radius:12px;padding:0.55rem 0.95rem;font-weight:700;font-size:0.78rem;cursor:pointer}
+.btn-main{background:linear-gradient(135deg,#ec4899,#a78bfa);color:#fff}
+.btn-ghost{background:rgba(255,255,255,0.06);color:var(--text);border:1px solid var(--border)}
+.sec{font-size:0.82rem;font-weight:800;color:#f9a8d4;margin:0.85rem 0 0.5rem;padding-bottom:0.3rem;border-bottom:1px solid var(--border)}
+.pill{border:1px solid var(--border);background:rgba(255,255,255,0.04);border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800;cursor:pointer;color:var(--muted);display:inline-block;margin:2px}
+.pill.on{background:linear-gradient(135deg,#ec4899,#a78bfa);color:#fff;border-color:transparent}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0.55rem}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}}
+.row{display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center}
+.hab{display:flex;align-items:center;gap:0.5rem;padding:0.45rem 0;border-bottom:1px solid rgba(244,114,182,0.1)}
+.chk{width:18px;height:18px;accent-color:#ec4899}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(120%);background:linear-gradient(135deg,#ec4899,#a78bfa);color:#fff;font-weight:800;font-size:12px;padding:12px 16px;border-radius:999px;z-index:50;transition:.25s}
+.toast.show{transform:translateX(-50%) translateY(0)}
+input[type=range]{accent-color:#ec4899;background:transparent}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="glass" style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;flex-wrap:wrap">
+    <div>
+      <h1>📅 Daily Planner</h1>
+      <p class="muted" style="margin:0.2rem 0 0">Métricas · planner · reflexión · nube</p>
+    </div>
+    <input type="date" id="day" style="width:auto;min-width:140px">
+  </div>
+  <div class="tabs">
+    <button type="button" class="tab on" data-t="met" onclick="showT('met')">♥ Métricas</button>
+    <button type="button" class="tab" data-t="plan" onclick="showT('plan')">✦ Planner</button>
+    <button type="button" class="tab" data-t="ref" onclick="showT('ref')">✎ Reflexión</button>
+  </div>
+  <div id="p-met">
+    <div class="glass">
+      <div class="sec" style="margin-top:0">Ánimo</div>
+      <div id="moods" class="row"></div>
+      <div class="sec">Síntomas</div>
+      <div id="symptoms" class="row"></div>
+      <div class="sec">Energía y cuerpo</div>
+      <div class="grid2">
+        <div><label>Energía actividad (1-10)</label><input type="range" id="enAct" min="1" max="10" value="5"></div>
+        <div><label>Energía reposo (1-10)</label><input type="range" id="enRest" min="1" max="10" value="5"></div>
+        <div><label>Horas de sueño</label><input type="number" step="0.5" id="sleepH" placeholder="7.5"></div>
+        <div><label>Calidad sueño (1-10)</label><input type="range" id="sleepQ" min="1" max="10" value="5"></div>
+        <div><label>Pasos</label><input type="number" id="steps" placeholder="8000"></div>
+        <div><label>Agua (vasos)</label><input type="number" id="water" placeholder="8"></div>
+      </div>
+      <div class="sec">Suplementos / otros</div>
+      <div class="grid2">
+        <div><label>Creatina</label><select id="creatina"><option>No</option><option>Sí</option></select></div>
+        <div><label>Magnesio</label><select id="magnesio"><option>No</option><option>Sí</option></select></div>
+        <div><label>Dulce</label><select id="dulce"><option>No</option><option>Sí</option></select></div>
+        <div><label>Capítulo Biblia</label><input id="bible" placeholder="ej. Jeremías 12"></div>
+      </div>
+      <div class="row" style="margin-top:0.85rem">
+        <button type="button" class="btn btn-main" onclick="saveDay()">💾 Guardar día</button>
+        <button type="button" class="btn btn-ghost" onclick="copySum()">📋 Copiar resumen</button>
+      </div>
+    </div>
+  </div>
+  <div id="p-plan" style="display:none">
+    <div class="glass">
+      <div class="sec" style="margin-top:0">To-do</div>
+      <div id="todos"></div>
+      <div class="row" style="margin-top:0.5rem">
+        <input id="newTodo" placeholder="Nueva tarea…" style="flex:1">
+        <button type="button" class="btn btn-main" onclick="addTodo()">+</button>
+      </div>
+      <div class="sec">Hábitos</div>
+      <div id="habits"></div>
+      <div class="row" style="margin-top:0.5rem">
+        <input id="newHabit" placeholder="Nuevo hábito…" style="flex:1">
+        <button type="button" class="btn btn-main" onclick="addHabit()">+</button>
+      </div>
+      <div class="row" style="margin-top:0.85rem">
+        <button type="button" class="btn btn-main" onclick="saveDay()">💾 Guardar</button>
+      </div>
+    </div>
+  </div>
+  <div id="p-ref" style="display:none">
+    <div class="glass">
+      <div class="sec" style="margin-top:0">Reflexión del día</div>
+      <label>Gratitud</label>
+      <textarea id="grat" placeholder="Hoy agradezco…"></textarea>
+      <label style="margin-top:0.5rem">Lo mejor del día</label>
+      <textarea id="best" placeholder="…"></textarea>
+      <label style="margin-top:0.5rem">A mejorar</label>
+      <textarea id="improve" placeholder="…"></textarea>
+      <label style="margin-top:0.5rem">Notas libres</label>
+      <textarea id="notes" placeholder="…"></textarea>
+      <div class="row" style="margin-top:0.85rem">
+        <button type="button" class="btn btn-main" onclick="saveDay()">💾 Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast">Guardado ✓</div>
+<script>
+(function(){
+  const LS='mary_planner_v1';
+  const MOODS=['Motivada','Enfocada','Tranquila','Alegre','Agradecida','Cansada','Ansiosa','Bajoneada','Irritable','Insegura','Ilusionada','Contenta','Neutral','Pensativa','Apática','Desmotivada','Emocionada','Serena'];
+  const SYMP=['Dolor de cabeza','Cólicos','Hinchazón','Antojo','Fatiga','Insomnio','Dolor de espalda','Náusea','Irritabilidad física','Acné','Ninguno'];
+  let store={days:{}};
+  try{const r=localStorage.getItem(LS);if(r)store=JSON.parse(r);if(!store.days)store.days={};}catch(e){}
+  function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  function toast(m){const t=document.getElementById('toast');t.textContent=m||'Guardado ✓';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
+  function empty(){return{moods:[],symptoms:[],enAct:5,enRest:5,sleepH:'',sleepQ:5,steps:'',water:'',creatina:'No',magnesio:'No',dulce:'No',bible:'',todos:[],habits:[],grat:'',best:'',improve:'',notes:''};}
+  function getDay(){const day=document.getElementById('day').value||today();if(!store.days[day])store.days[day]=empty();return store.days[day];}
+  window.showT=function(t){
+    document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+    document.getElementById('p-met').style.display=t==='met'?'':'none';
+    document.getElementById('p-plan').style.display=t==='plan'?'':'none';
+    document.getElementById('p-ref').style.display=t==='ref'?'':'none';
+  };
+  function renderPills(){
+    const d=getDay();
+    const mb=document.getElementById('moods');mb.innerHTML='';
+    MOODS.forEach(m=>{const s=document.createElement('span');s.className='pill'+(d.moods.includes(m)?' on':'');s.textContent=m;
+      s.onclick=()=>{const i=d.moods.indexOf(m);if(i>=0)d.moods.splice(i,1);else d.moods.push(m);renderPills();};mb.appendChild(s);});
+    const sb=document.getElementById('symptoms');sb.innerHTML='';
+    SYMP.forEach(m=>{const s=document.createElement('span');s.className='pill'+(d.symptoms.includes(m)?' on':'');s.textContent=m;
+      s.onclick=()=>{const i=d.symptoms.indexOf(m);if(i>=0)d.symptoms.splice(i,1);else d.symptoms.push(m);renderPills();};sb.appendChild(s);});
+  }
+  function renderLists(){
+    const d=getDay();
+    const tb=document.getElementById('todos');tb.innerHTML='';
+    (d.todos||[]).forEach((item,idx)=>{
+      const row=document.createElement('div');row.className='hab';
+      const inp=document.createElement('input');inp.value=item.text||'';inp.style.flex='1';inp.onchange=()=>{d.todos[idx].text=inp.value;};
+      const ck=document.createElement('input');ck.type='checkbox';ck.className='chk';ck.checked=!!item.done;ck.onchange=()=>{d.todos[idx].done=ck.checked;};
+      const del=document.createElement('button');del.type='button';del.className='btn btn-ghost';del.textContent='✕';del.onclick=()=>{d.todos.splice(idx,1);renderLists();};
+      row.appendChild(inp);row.appendChild(ck);row.appendChild(del);tb.appendChild(row);
+    });
+    const hb=document.getElementById('habits');hb.innerHTML='';
+    (d.habits||[]).forEach((item,idx)=>{
+      const row=document.createElement('div');row.className='hab';
+      const inp=document.createElement('input');inp.value=item.name||'';inp.style.flex='1';inp.onchange=()=>{d.habits[idx].name=inp.value;};
+      const ck=document.createElement('input');ck.type='checkbox';ck.className='chk';ck.checked=!!item.done;ck.onchange=()=>{d.habits[idx].done=ck.checked;};
+      const del=document.createElement('button');del.type='button';del.className='btn btn-ghost';del.textContent='✕';del.onclick=()=>{d.habits.splice(idx,1);renderLists();};
+      row.appendChild(inp);row.appendChild(ck);row.appendChild(del);hb.appendChild(row);
+    });
+  }
+  function fillForm(){
+    const d=getDay();
+    document.getElementById('enAct').value=d.enAct||5;
+    document.getElementById('enRest').value=d.enRest||5;
+    document.getElementById('sleepH').value=d.sleepH||'';
+    document.getElementById('sleepQ').value=d.sleepQ||5;
+    document.getElementById('steps').value=d.steps||'';
+    document.getElementById('water').value=d.water||'';
+    document.getElementById('creatina').value=d.creatina||'No';
+    document.getElementById('magnesio').value=d.magnesio||'No';
+    document.getElementById('dulce').value=d.dulce||'No';
+    document.getElementById('bible').value=d.bible||'';
+    document.getElementById('grat').value=d.grat||'';
+    document.getElementById('best').value=d.best||'';
+    document.getElementById('improve').value=d.improve||'';
+    document.getElementById('notes').value=d.notes||'';
+    renderPills();renderLists();
+  }
+  function collect(){
+    const d=getDay();
+    d.enAct=+document.getElementById('enAct').value;
+    d.enRest=+document.getElementById('enRest').value;
+    d.sleepH=document.getElementById('sleepH').value;
+    d.sleepQ=+document.getElementById('sleepQ').value;
+    d.steps=document.getElementById('steps').value;
+    d.water=document.getElementById('water').value;
+    d.creatina=document.getElementById('creatina').value;
+    d.magnesio=document.getElementById('magnesio').value;
+    d.dulce=document.getElementById('dulce').value;
+    d.bible=document.getElementById('bible').value;
+    d.grat=document.getElementById('grat').value;
+    d.best=document.getElementById('best').value;
+    d.improve=document.getElementById('improve').value;
+    d.notes=document.getElementById('notes').value;
+  }
+  window.saveDay=function(){collect();try{localStorage.setItem(LS,JSON.stringify(store));}catch(e){}toast('💾 Día guardado');};
+  window.addTodo=function(){const v=document.getElementById('newTodo').value.trim();if(!v)return;getDay().todos.push({text:v,done:false});document.getElementById('newTodo').value='';renderLists();};
+  window.addHabit=function(){const v=document.getElementById('newHabit').value.trim();if(!v)return;getDay().habits.push({name:v,done:false});document.getElementById('newHabit').value='';renderLists();};
+  window.copySum=function(){
+    collect();const day=document.getElementById('day').value;const d=getDay();
+    let t='📅 *Daily Planner · '+day+'*\n';
+    if(d.moods.length)t+='Ánimo: '+d.moods.join(', ')+'\n';
+    if(d.symptoms.length)t+='Síntomas: '+d.symptoms.join(', ')+'\n';
+    t+='Energía act/reposo: '+d.enAct+'/'+d.enRest+'\n';
+    t+='Sueño: '+(d.sleepH||'—')+' h · calidad '+d.sleepQ+'\n';
+    if(d.water)t+='Agua: '+d.water+' vasos\n';
+    if(d.bible)t+='Biblia: '+d.bible+'\n';
+    if(d.grat)t+='Gratitud: '+d.grat+'\n';
+    if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('📋 Copiado'));else prompt('Copia',t);
+  };
+  document.getElementById('day').value=today();
+  document.getElementById('day').addEventListener('change',function(){fillForm();});
+  fillForm();
+})();
+</script>
+</body>
+</html>
