@@ -5,99 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>MARY · Metas · That Girl Challenge</title>
 <link rel="stylesheet" href="mary-theme.css">
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-:root{--bg:#0f0a14;--card:rgba(28,20,40,0.92);--card2:#241b32;--border:rgba(244,114,182,0.22);--pink:#f472b6;--pink2:#ec4899;--purple:#a78bfa;--text:#f5eef8;--muted:#c4b5d4}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:radial-gradient(circle at 15% 10%,rgba(244,114,182,0.12),transparent 42%),radial-gradient(circle at 90% 90%,rgba(167,139,250,0.1),transparent 42%),var(--bg);color:var(--text);min-height:100vh;padding:max(0.75rem,env(safe-area-inset-top)) 0.85rem 2.5rem}
-.wrap{max-width:720px;margin:0 auto}
-.glass{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:1rem;margin-bottom:0.85rem}
-h1{margin:0;font-size:1.15rem;font-weight:800;background:linear-gradient(90deg,#f9a8d4,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
-.muted{color:var(--muted);font-size:0.78rem}
-.btn{border:none;border-radius:12px;padding:0.55rem 0.95rem;font-weight:700;font-size:0.78rem;cursor:pointer}
-.btn-main{background:linear-gradient(135deg,#ec4899,#a78bfa);color:#fff}
-.btn-ghost{background:rgba(255,255,255,0.06);color:var(--text);border:1px solid var(--border)}
-.sec{font-size:0.82rem;font-weight:800;color:#f9a8d4;margin:0.85rem 0 0.5rem;padding-bottom:0.3rem;border-bottom:1px solid var(--border)}
-.goal{display:flex;align-items:flex-start;gap:0.55rem;padding:0.65rem;border:1px solid var(--border);border-radius:14px;margin-bottom:0.45rem;background:rgba(15,10,20,0.35)}
-.chk{width:18px;height:18px;accent-color:#ec4899;margin-top:2px}
-input,textarea{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:0.55rem 0.7rem;font-size:0.85rem}
-.row{display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center}
-.kpi{text-align:center;padding:0.75rem;border-radius:14px;border:1px solid var(--border);background:rgba(15,10,20,0.4)}
-.kpi .v{font-size:1.35rem;font-weight:800;color:var(--pink)}
-.kpi .l{font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem}
-@media(max-width:560px){.grid3{grid-template-columns:1fr}}
+<style id="mary-dark-force">
+html,body{background:#0f0a14!important;color:#f5eef8!important;color-scheme:dark!important}
 </style>
 </head>
-<body>
-<div class="wrap">
-  <div class="glass">
-    <h1>🎯 Metas · That Girl Challenge</h1>
-    <p class="muted" style="margin:0.25rem 0 0">Noviembre · seguimiento diario y resúmenes</p>
-    <div class="row" style="margin-top:0.75rem">
-      <input type="date" id="day" style="width:auto;min-width:140px">
-      <button type="button" class="btn btn-main" onclick="save()">💾 Guardar</button>
-      <button type="button" class="btn btn-ghost" onclick="copySum()">📋 Resumen</button>
-    </div>
-  </div>
-  <div class="grid3" id="kpis"></div>
-  <div class="glass">
-    <div class="sec" style="margin-top:0">Checklist del día</div>
-    <div id="goals"></div>
-    <div class="row" style="margin-top:0.65rem">
-      <input id="newG" placeholder="Nueva meta / hábito…" style="flex:1">
-      <button type="button" class="btn btn-main" onclick="addG()">+</button>
-    </div>
-  </div>
-  <div class="glass">
-    <div class="sec" style="margin-top:0">Nota del día</div>
-    <textarea id="note" placeholder="Cómo me fue hoy…"></textarea>
-  </div>
-</div>
+<body style="margin:0;background:#0f0a14;color:#f5eef8;font-family:system-ui;min-height:100vh">
+<div id="boot" style="padding:1.5rem;text-align:center;color:#c4b5d4">Cargando That Girl Challenge…</div>
 <script>
 (function(){
-  const LS='MARY_METAS_V1';
-  const DEFAULTS=['Agua 2L','Movimiento / entreno','Lectura Biblia','Sin dulce innecesario','Cama temprano','Gratitud 3 cosas','Skin care','Orden 10 min'];
-  let store={goals:[],days:{},challengeSeeded:false};
-  try{const r=localStorage.getItem(LS)||localStorage.getItem('mary_metas_v1');if(r){const p=JSON.parse(r);store=Object.assign(store,p);}}catch(e){}
-  if(!store.goals||!store.goals.length){store.goals=DEFAULTS.map(n=>({id:'g'+Math.random().toString(36).slice(2,7),name:n}));store.challengeSeeded=true;}
-  if(!store.days)store.days={};
-  function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-  function dayData(){const day=document.getElementById('day').value||today();if(!store.days[day])store.days[day]={done:{},note:''};return store.days[day];}
-  function persist(){try{localStorage.setItem(LS,JSON.stringify(store));localStorage.setItem('mary_metas_v1',JSON.stringify(store));}catch(e){}}
-  function render(){
-    const d=dayData();
-    const box=document.getElementById('goals');box.innerHTML='';
-    let done=0;
-    store.goals.forEach(function(g){
-      const on=!!d.done[g.id];if(on)done++;
-      const row=document.createElement('div');row.className='goal';
-      const ck=document.createElement('input');ck.type='checkbox';ck.className='chk';ck.checked=on;
-      ck.onchange=function(){d.done[g.id]=ck.checked;persist();render();};
-      const lab=document.createElement('div');lab.style.flex='1';lab.innerHTML='<b>'+g.name+'</b>';
-      const del=document.createElement('button');del.type='button';del.className='btn btn-ghost';del.textContent='✕';
-      del.onclick=function(){store.goals=store.goals.filter(x=>x.id!==g.id);persist();render();};
-      row.appendChild(ck);row.appendChild(lab);row.appendChild(del);box.appendChild(row);
+  // Restaura el challenge completo original (metas + objetivos + frecuencia)
+  // Tus datos siguen en localStorage KEY MARY_METAS_V2
+  fetch('https://cdn.jsdelivr.net/gh/marpk07/mary-life@0cf6fb1173f6f5a901f35db7d4b352b24f2e0311/metas.html')
+    .then(function(r){ return r.text(); })
+    .then(function(html){
+      if(html.indexOf('mary-theme.css')<0){
+        html = html.replace('</title>','</title><link rel="stylesheet" href="mary-theme.css">');
+      }
+      if(html.indexOf('mary-dark-force')<0){
+        html = html.replace('</head>','<style id="mary-dark-force">html,body{background:#0f0a14!important;color:#f5eef8!important;color-scheme:dark!important}.bg-white,.bg-slate-50,.bg-gray-50,.bg-pink-50{background:rgba(28,20,40,.95)!important;color:#f5eef8!important}input,textarea,select{background:#241b32!important;color:#f5eef8!important;border-color:rgba(244,114,182,.28)!important}.text-pink-800,.text-gray-600,.muted{color:#c4b5d4!important}</style></head>');
+      }
+      document.open();
+      document.write(html);
+      document.close();
+    })
+    .catch(function(e){
+      document.getElementById('boot').innerHTML = 'No se pudo cargar el challenge. <button onclick="location.reload()">Reintentar</button>';
+      console.error(e);
     });
-    const pct=store.goals.length?Math.round(done/store.goals.length*100):0;
-    document.getElementById('kpis').innerHTML=
-      '<div class="kpi"><div class="v">'+done+'/'+store.goals.length+'</div><div class="l">Hoy</div></div>'+
-      '<div class="kpi"><div class="v">'+pct+'%</div><div class="l">Progreso</div></div>'+
-      '<div class="kpi"><div class="v">'+Object.keys(store.days).length+'</div><div class="l">Días reg.</div></div>';
-    document.getElementById('note').value=d.note||'';
-  }
-  window.save=function(){const d=dayData();d.note=document.getElementById('note').value;persist();render();alert('Guardado ✓');};
-  window.addG=function(){const v=document.getElementById('newG').value.trim();if(!v)return;store.goals.push({id:'g'+Date.now(),name:v});document.getElementById('newG').value='';persist();render();};
-  window.copySum=function(){
-    const day=document.getElementById('day').value;const d=dayData();
-    let t='🎯 *That Girl · '+day+'*\n';
-    store.goals.forEach(g=>{t+=(d.done[g.id]?'✅':'⬜')+' '+g.name+'\n';});
-    if(d.note)t+='\nNota: '+d.note+'\n';
-    if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>alert('Copiado ✓'));else prompt('Copia',t);
-  };
-  document.getElementById('day').value=today();
-  document.getElementById('day').addEventListener('change',render);
-  render();
 })();
 </script>
 </body>
