@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>MARY · Life Suite</title>
+  <link rel="stylesheet" href="mary-theme.css">
+  <link rel="stylesheet" href="layout-fix.css">
+  <style>
+    :root {
+      --bg: #0f0a14; --card: #1c1428; --border: rgba(244,114,182,0.18);
+      --pink: #f472b6; --purple: #a78bfa; --text: #f5eef8; --muted: #a89bb5;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: radial-gradient(circle at 15% 10%, rgba(244,114,182,0.12), transparent 42%),
+                  radial-gradient(circle at 90% 90%, rgba(167,139,250,0.1), transparent 42%), var(--bg);
+      color: var(--text); min-height: 100vh;
+    }
+    #app { display: flex; min-height: 100vh; }
+    #sidebar {
+      width: 240px; background: rgba(28,20,40,0.95); border-right: 1px solid var(--border);
+      padding: 1rem 0.75rem; display: flex; flex-direction: column; gap: 0.25rem;
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 40; transition: transform .2s;
+    }
+    #sidebar .brand { padding: 0.5rem 0.75rem 1rem; font-weight: 800; font-size: 1rem;
+      background: linear-gradient(90deg,#f9a8d4,#c4b5fd); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .nav-item {
+      display: flex; align-items: center; gap: 0.55rem; padding: 0.55rem 0.75rem;
+      border-radius: 12px; border: none; background: transparent; color: var(--muted);
+      font-weight: 700; font-size: 0.82rem; cursor: pointer; text-align: left; width: 100%;
+    }
+    .nav-item:hover, .nav-item.active { background: rgba(236,72,153,0.2); color: #fff; }
+    #main { flex: 1; margin-left: 240px; display: flex; flex-direction: column; min-height: 100vh; }
+    #topbar {
+      height: 56px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1rem; border-bottom: 1px solid var(--border); background: rgba(15,10,20,0.85);
+      position: sticky; top: 0; z-index: 30;
+    }
+    #content-area { flex: 1; position: relative; }
+    .view { display: none; height: 100%; min-height: calc(100vh - 56px); }
+    .view.active { display: block; }
+    .module-frame { width: 100%; height: 100%; border: none; display: block; background: #0f0a14; min-height: calc(100vh - 56px); }
+    .area-card {
+      background: rgba(28,20,40,0.9); border: 1px solid var(--border); border-radius: 18px;
+      padding: 1.1rem; cursor: pointer;
+    }
+    .area-card h3 { margin: 0.5rem 0 0.25rem; font-size: 1rem; }
+    .area-card p { margin: 0; font-size: 0.78rem; color: var(--muted); }
+    .card-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    .enter-btn {
+      margin-top: 0.75rem; border: none; border-radius: 10px; padding: 0.4rem 0.8rem;
+      background: linear-gradient(135deg,#ec4899,#a78bfa); color: #fff; font-weight: 700; font-size: 0.75rem; cursor: pointer;
+    }
+    .dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.85rem; padding: 1rem; }
+    #menu-btn { display: none; border: none; background: rgba(255,255,255,0.08); color: #fff; border-radius: 10px; padding: 0.4rem 0.7rem; font-weight: 700; }
+    #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 35; }
+    #overlay.show { display: block; }
+    @media (max-width: 900px) {
+      #sidebar { transform: translateX(-100%); }
+      #sidebar.open { transform: translateX(0); }
+      #main { margin-left: 0; }
+      #menu-btn { display: inline-flex; }
+    }
+    #lock-screen {
+      position: fixed; inset: 0; background: #0f0a14; z-index: 100; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 1rem;
+    }
+    #lock-screen.hidden { display: none; }
+    .pin-key { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--border); background: rgba(28,20,40,0.9); color: #fff; font-size: 1.2rem; font-weight: 700; }
+    #pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+    #pin-dots { display: flex; gap: 0.5rem; }
+    .pin-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--pink); }
+    .pin-dot.filled { background: var(--pink); }
+  </style>
+</head>
+<body>
+<div id="lock-screen">
+  <div style="font-weight:800;font-size:1.2rem;background:linear-gradient(90deg,#f9a8d4,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent;">MARY · Life Suite</div>
+  <div id="pin-dots"><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span></div>
+  <div id="pin-error" style="color:#fb7185;font-size:0.8rem;min-height:1.2em;"></div>
+  <div id="pin-pad"></div>
+</div>
+<div id="overlay" onclick="closeSidebar()"></div>
+<div id="app">
+  <aside id="sidebar">
+    <div class="brand">MARY · Life Suite</div>
+    <button type="button" class="nav-item active" data-view="dashboard" onclick="navigateTo('dashboard')"><span class="emoji">🏠</span> Dashboard</button>
+    <button type="button" class="nav-item" data-view="poker" onclick="navigateTo('poker')"><span class="emoji">♠️</span> Póker</button>
+    <button type="button" class="nav-item" data-view="fitness" onclick="navigateTo('fitness')"><span class="emoji">💪</span> Fitness</button>
+    <button type="button" class="nav-item" data-view="espiritual" onclick="navigateTo('espiritual')"><span class="emoji">🕊️</span> Espiritual</button>
+    <button type="button" class="nav-item" data-view="planner" onclick="navigateTo('planner')"><span class="emoji">📅</span> Daily Planner</button>
+    <button type="button" class="nav-item" data-view="pendientes" onclick="navigateTo('pendientes')"><span class="emoji">✅</span> Pendientes</button>
+    <button type="button" class="nav-item" data-view="calificaciones" onclick="navigateTo('calificaciones')"><span class="emoji">📝</span> Calificaciones</button>
+    <button type="button" class="nav-item" data-view="gastos" onclick="navigateTo('gastos')"><span class="emoji">💸</span> Gastos</button>
+    <button type="button" class="nav-item" data-view="metas" onclick="navigateTo('metas')"><span class="emoji">🎯</span> Metas</button>
+    <button type="button" class="nav-item" data-view="guia" onclick="navigateTo('guia')"><span class="emoji">🪞</span> Guía</button>
+    <button type="button" class="nav-item" data-view="convicciones" onclick="navigateTo('convicciones')"><span class="emoji">✝️</span> Convicciones</button>
+    <button type="button" class="nav-item" data-view="cierre" onclick="navigateTo('cierre')"><span class="emoji">📊</span> Cierres</button>
+    <button type="button" class="nav-item" data-view="resumenes" onclick="navigateTo('resumenes')"><span class="emoji">📋</span> Resúmenes</button>
+  </aside>
+  <div id="main">
+    <div id="topbar">
+      <button type="button" id="menu-btn" onclick="toggleSidebar()">☰</button>
+      <div style="font-weight:800;font-size:0.9rem;">MARY · Life Suite</div>
+      <div style="display:flex;gap:0.4rem;align-items:center;">
+        <span id="kpi-date" style="font-size:0.75rem;color:var(--muted);"></span>
+        <button type="button" onclick="lockApp()" style="border:none;background:rgba(255,255,255,0.06);color:#fff;border-radius:10px;padding:0.35rem 0.6rem;font-size:0.75rem;">🔒</button>
+      </div>
+    </div>
+    <div id="content-area">
+      <div id="view-dashboard" class="view active">
+        <div style="padding:1.25rem 1rem 0.5rem;">
+          <h2 style="margin:0;font-size:1.25rem;">Hola, <span id="greet-name">Mary</span> ✨</h2>
+          <p style="margin:0.35rem 0 0;color:var(--muted);font-size:0.85rem;">Tu suite personal · un solo lugar</p>
+        </div>
+        <div class="dash-grid">
+          <div class="area-card" onclick="navigateTo('poker')"><div class="card-icon" style="background:linear-gradient(135deg,#4c1d95,#a78bfa);">♠️</div><h3>Póker</h3><p>Sesiones, EV, mindset</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('fitness')"><div class="card-icon" style="background:linear-gradient(135deg,#ec4899,#a78bfa);">💪</div><h3>Fitness</h3><p>Entreno, comida, cardio</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('espiritual')"><div class="card-icon" style="background:linear-gradient(135deg,#ec4899,#c4b5fd);">🕊️</div><h3>Espiritual</h3><p>Devocional y lectura</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('planner')"><div class="card-icon" style="background:linear-gradient(135deg,#f472b6,#a78bfa);">📅</div><h3>Daily Planner</h3><p>Métricas y reflexión</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('calificaciones')"><div class="card-icon" style="background:linear-gradient(135deg,#ec4899,#a78bfa);">📝</div><h3>Calificaciones</h3><p>Cierre diario · bonos</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('gastos')"><div class="card-icon" style="background:linear-gradient(135deg,#f472b6,#c4b5fd);">💸</div><h3>Gastos</h3><p>Movimientos y plan</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('metas')"><div class="card-icon" style="background:linear-gradient(135deg,#ec4899,#a78bfa);">🎯</div><h3>Metas</h3><p>That Girl Challenge</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('convicciones')"><div class="card-icon" style="background:linear-gradient(135deg,#a78bfa,#f472b6);">✝️</div><h3>Convicciones</h3><p>21 pilares</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('guia')"><div class="card-icon" style="background:linear-gradient(135deg,#c4b5fd,#ec4899);">🪞</div><h3>Guía</h3><p>Autoconocimiento</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('pendientes')"><div class="card-icon" style="background:linear-gradient(135deg,#f472b6,#a78bfa);">✅</div><h3>Pendientes</h3><p>Tareas</p><button type="button" class="enter-btn">Abrir</button></div>
+        </div>
+      </div>
+      <div id="view-poker" class="view"><iframe class="module-frame" src="poker.html" title="Póker"></iframe></div>
+      <div id="view-fitness" class="view"><iframe class="module-frame" src="fitness.html" title="Fitness"></iframe></div>
+      <div id="view-espiritual" class="view"><iframe class="module-frame" src="espiritual.html" title="Espiritual"></iframe></div>
+      <div id="view-planner" class="view"><iframe class="module-frame" src="planner.html" title="Planner"></iframe></div>
+      <div id="view-pendientes" class="view"><iframe class="module-frame" src="pendientes.html" title="Pendientes"></iframe></div>
+      <div id="view-calificaciones" class="view"><iframe class="module-frame" src="calificaciones.html" title="Calificaciones"></iframe></div>
+      <div id="view-gastos" class="view"><iframe class="module-frame" src="gastos.html" title="Gastos"></iframe></div>
+      <div id="view-metas" class="view"><iframe class="module-frame" src="metas.html" title="Metas"></iframe></div>
+      <div id="view-guia" class="view"><iframe class="module-frame" src="guia.html" title="Guía"></iframe></div>
+      <div id="view-convicciones" class="view"><iframe class="module-frame" src="convicciones.html" title="Convicciones"></iframe></div>
+      <div id="view-cierre" class="view"><iframe class="module-frame" src="cierre.html" title="Cierres"></iframe></div>
+      <div id="view-resumenes" class="view"><iframe class="module-frame" src="resumenes.html" title="Resúmenes"></iframe></div>
+    </div>
+  </div>
+</div>
+<script>
+function injectThemeIntoFrames(){
+  var critical = 'html,body{background:#0f0a14!important;color:#f5eef8!important;color-scheme:dark!important}'
+    + '.bg-white,.bg-slate-50,.bg-gray-50,.bg-pink-50,.bg-green-50{background:rgba(28,20,40,.95)!important;color:#f5eef8!important}'
+    + 'input:not([type=checkbox]):not([type=radio]):not([type=range]),textarea,select{background:#241b32!important;color:#f5eef8!important;border-color:rgba(244,114,182,.28)!important}'
+    + '.text-gray-500,.text-gray-600,.text-slate-500,.muted{color:#c4b5d4!important}'
+    + '.text-black,.text-gray-900{color:#f5eef8!important}'
+    + '.bg-green-500,.bg-emerald-500,.btn-primary,.enter-btn{background:linear-gradient(135deg,#ec4899,#a78bfa)!important;color:#fff!important}'
+    + 'a{color:#f9a8d4!important}';
+  document.querySelectorAll('iframe.module-frame').forEach(function(frame){
+    function apply(){
+      try{
+        var doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+        if(!doc || !doc.head) return;
+        if(!doc.getElementById('mary-theme-link')){
+          var link = doc.createElement('link');
+          link.id = 'mary-theme-link'; link.rel = 'stylesheet';
+          link.href = (location.origin || '') + '/mary-theme.css?v=2';
+          doc.head.appendChild(link);
+        }
+        if(!doc.getElementById('mary-theme-inline')){
+          var st = doc.createElement('style'); st.id = 'mary-theme-inline'; st.textContent = critical;
+          doc.head.appendChild(st);
+        }
+        if(doc.body) doc.body.classList.add('mary-themed');
+      }catch(e){}
+    }
+    frame.addEventListener('load', apply);
+    try{ if(frame.contentDocument && frame.contentDocument.readyState==='complete') apply(); }catch(e){}
+  });
+}
+document.addEventListener('DOMContentLoaded', injectThemeIntoFrames);
+window.addEventListener('load', injectThemeIntoFrames);
+setTimeout(injectThemeIntoFrames, 500);
+setTimeout(injectThemeIntoFrames, 1500);
+setTimeout(injectThemeIntoFrames, 3000);
+
+function navigateTo(view){
+  setTimeout(injectThemeIntoFrames, 300);
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
+  document.querySelectorAll('.nav-item').forEach(function(b){b.classList.toggle('active', b.getAttribute('data-view')===view);});
+  var el = document.getElementById('view-'+view);
+  if(el) el.classList.add('active');
+  closeSidebar();
+  try{ history.replaceState(null,'','#'+view); }catch(e){}
+}
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
+function closeSidebar(){ var s=document.getElementById('sidebar'); if(s) s.classList.remove('open'); var o=document.getElementById('overlay'); if(o) o.classList.remove('show'); }
+function lockApp(){ document.getElementById('lock-screen').classList.remove('hidden'); }
+(function setupPin(){
+  var pin='', stored=null; try{stored=localStorage.getItem('mary_pin');}catch(e){}
+  var dots=document.querySelectorAll('#pin-dots .pin-dot');
+  var err=document.getElementById('pin-error');
+  var pad=document.getElementById('pin-pad');
+  var keys=['1','2','3','4','5','6','7','8','9','','0','⌫'];
+  keys.forEach(function(k){
+    var b=document.createElement('button'); b.type='button'; b.className='pin-key'; b.textContent=k||'';
+    if(!k){b.disabled=true;b.style.visibility='hidden';}
+    b.onclick=function(){
+      if(k==='⌫'){pin=pin.slice(0,-1);}
+      else if(k&&pin.length<4){pin+=k;}
+      dots.forEach(function(d,i){d.classList.toggle('filled',i<pin.length);});
+      err.textContent='';
+      if(pin.length===4){
+        if(!stored){ try{localStorage.setItem('mary_pin',pin);stored=pin;}catch(e){} document.getElementById('lock-screen').classList.add('hidden'); pin=''; }
+        else if(pin===stored){ document.getElementById('lock-screen').classList.add('hidden'); pin=''; }
+        else { err.textContent='PIN incorrecto'; pin=''; }
+        dots.forEach(function(d){d.classList.remove('filled');});
+      }
+    };
+    pad.appendChild(b);
+  });
+  try{ var n=localStorage.getItem('mary_name'); if(n){ var g=document.getElementById('greet-name'); if(g) g.textContent=n; } }catch(e){}
+  var d=new Date(); var kd=document.getElementById('kpi-date'); if(kd) kd.textContent=d.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
+  var hash=(location.hash||'').replace('#','');
+  if(hash) navigateTo(hash);
+})();
+</script>
+</body>
+</html>
