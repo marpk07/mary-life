@@ -40,9 +40,11 @@ label{display:block;font-size:.68rem;font-weight:700;color:var(--muted);margin-b
 .food-btn{width:100%;text-align:left;background:rgba(15,10,20,.4);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:.55rem .7rem;margin-bottom:.35rem;cursor:pointer}
 .hidden{display:none!important}
 .toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);background:#1c1428;border:1px solid var(--border);padding:.65rem 1rem;border-radius:12px;font-size:.8rem;z-index:50;display:none}
-.salsa-row{display:grid;grid-template-columns:1.2fr .8fr auto;gap:.4rem;align-items:end;margin-bottom:.5rem}
+.salsa-card{border:1px solid var(--border);border-radius:14px;padding:.65rem;margin-bottom:.5rem;background:rgba(15,10,20,.35)}
+.salsa-head{display:flex;gap:.4rem;align-items:center;margin-bottom:.45rem}
+.salsa-weights{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
+@media(max-width:560px){.salsa-weights{grid-template-columns:1fr}.grid2,.grid3{grid-template-columns:1fr}}
 #sync{font-size:.68rem;color:var(--muted);margin-top:.25rem}
-@media(max-width:560px){.grid2,.grid3,.salsa-row{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -79,7 +81,7 @@ label{display:block;font-size:.68rem;font-weight:700;color:var(--muted);margin-b
   <div id="tab-salsas" class="hidden">
     <div class="glass">
       <div class="sec" style="margin-top:0">Pesaje de salsas (g)</div>
-      <p class="muted">Actualiza varias veces en la noche. Pulsa <b>Guardar salsas</b>. Puedes tener dos leches abiertas.</p>
+      <p class="muted"><b>Intermedio</b> (~11pm, cuando llegan y pesan) · <b>Cierre final</b> (~1am, fin de noche). El consumo del día siguiente se calcula con el cierre. Puedes tener dos leches abiertas. Pulsa <b>Guardar salsas</b>.</p>
       <div id="salsa-list"></div>
       <div class="row" style="margin-top:.45rem">
         <select id="salsa-add-name" style="flex:1">
@@ -91,7 +93,7 @@ label{display:block;font-size:.68rem;font-weight:700;color:var(--muted);margin-b
         <button type="button" class="btn btn-ghost" onclick="addSalsaPot()">+ Otra</button>
         <button type="button" class="btn btn-main" onclick="saveSalsas()">💾 Guardar salsas</button>
       </div>
-      <div class="sec">Consumo vs. día anterior</div>
+      <div class="sec">Consumo vs. cierre de ayer</div>
       <div id="salsa-consumo"></div>
     </div>
   </div>
