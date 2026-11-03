@@ -25,7 +25,15 @@
         }
         function cleanNote(s){
           if(!s) return '';
-          return String(s).replace(/\s+/g,' ').replace(/[|｜]/g,'').replace(/\u00a0/g,' ').trim();
+          s = String(s).replace(/[|｜]/g,'').replace(/\u00a0/g,' ').replace(/[\u200b\u200c\u200d\ufeff]/g,'');
+          s = s.replace(/\s+/g,' ').trim();
+          var words = s.split(' ');
+          var short = 0;
+          for(var i=0;i<words.length;i++){ if(words[i].length<=1) short++; }
+          if(words.length>6 && short/words.length>0.55){
+            s = words.join('');
+          }
+          return s;
         }
         doc.setFillColor(...lilac); doc.rect(0,0,W,70,'F');
         doc.setFillColor(...purple); doc.roundedRect(40,20,210,18,9,9,'F');
@@ -67,12 +75,13 @@
 
         if(d.hoursPending!==''&&d.hoursPending!=null && String(d.hoursPending).trim()!==''){
           y+=42;
-          doc.setFillColor(...pink); doc.roundedRect(40,y,W-80,22,11,11,'F');
-          doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(255,255,255);
+          doc.setFillColor(252,231,243); doc.setDrawColor(244,114,182);
+          doc.roundedRect(40,y,W-80,22,11,11,'FD');
+          doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(80,40,70);
           doc.text('Horas pendientes por recuperar:  '+d.hoursPending+' h',55,y+14);
-          y+=30;
+          y+=38;
         } else {
-          y+=42;
+          y+=46;
         }
 
         y=section('Actividades del equipo',y);
@@ -141,19 +150,21 @@
           if(y>755){ doc.addPage(); pageHeader(); y=40; }
           var st=p.status||'pendiente';
           var stColor = st==='en_espera'?purple:(st==='en_proceso'?pink:(st==='sin_novedades'?muted:[140,100,180]));
-          doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...text);
           var title = cleanNote(p.title||'');
+          var stLab = C.openStatusLabel(st);
+          doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...text);
           doc.text('• '+title,50,y);
-          var tw=doc.getTextWidth('• '+title)+8;
+          var tw=Math.min(doc.getTextWidth('• '+title)+6, W-160);
           doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...stColor);
-          doc.text(C.openStatusLabel(st),50+tw,y);
-          y+=12;
+          doc.text(stLab, 50+tw, y);
+          y+=13;
           var note = cleanNote(p.note);
           if(note){
             doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...muted);
-            var lines=doc.splitTextToSize(note, W-100);
-            doc.text(lines,58,y); y+=lines.length*11+3;
-          } else { y+=3; }
+            var lines=doc.splitTextToSize(note, W-110);
+            for(var li=0; li<lines.length; li++){ doc.text(String(lines[li]), 58, y); y+=11; }
+            y+=4;
+          } else { y+=4; }
         });
 
         y+=6; y=section('Pendientes de mañana · equipo',y);
