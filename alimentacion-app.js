@@ -70,12 +70,12 @@
     if(!store.days[day]) store.days[day]={meals:[],pots:[],note:''};
     const d=store.days[day]; if(!d.meals) d.meals=[]; if(!d.pots) d.pots=[];
     if(d.salsaWeights && typeof d.salsaWeights==='object' && !d._migrated){
-      Object.keys(d.salsaWeights).forEach(function(name){ const w=d.salsaWeights[name]; if(w!==''&&w!=null) d.pots.push({id:'m'+Math.random().toString(36).slice(2,7),name:name,weight:num(w)}); });
+      Object.keys(d.salsaWeights).forEach(function(name){ const w=d.salsaWeights[name]; if(w!==''&&w!=null) d.pots.push({id:'m'+Math.random().toString(36).slice(2,7),name:name,weight:num(w),mid:''}); });
       d._migrated=true;
     }
     if(!d.pots.length){
       ['Hershey','Miel','Leche condensada tradicional','Mayonesa','Nutella','Cocada'].forEach(function(name){
-        d.pots.push({id:'s'+Math.random().toString(36).slice(2,7),name:name,weight:''});
+        d.pots.push({id:'s'+Math.random().toString(36).slice(2,7),name:name,weight:'',mid:''});
       });
     }
     return d;
@@ -89,7 +89,19 @@
     let mult=num(m.qty)||1; if(f.pct) mult=mult/100;
     return {kcal:f.kcal*mult,p:f.p*mult,c:f.c*mult,g:f.g*mult};
   }
-  function salsaConsumo(day){
+  function potWeight(p, prefer){
+    if(!p) return null;
+    if(prefer==='mid'){
+      if(p.mid!==''&&p.mid!=null) return num(p.mid);
+      if(p.weight!==''&&p.weight!=null) return num(p.weight);
+      return null;
+    }
+    if(p.weight!==''&&p.weight!=null) return num(p.weight);
+    if(p.mid!==''&&p.mid!=null) return num(p.mid);
+    return null;
+  }
+  function salsaConsumo(day, mode){
+    mode = mode || 'final';
     const todayP=ensure(day).pots||[], prevP=ensure(prevDay(day)).pots||[];
     function byName(list){ const map={}; list.forEach(function(p){ if(!map[p.name]) map[p.name]=[]; map[p.name].push(p); }); return map; }
     const tMap=byName(todayP), pMap=byName(prevP);
@@ -97,10 +109,10 @@
     names.forEach(function(name){
       const ta=tMap[name]||[], pa=pMap[name]||[]; const n=Math.max(ta.length,pa.length);
       for(var i=0;i<n;i++){
-        const tw=ta[i]&&ta[i].weight!==''&&ta[i].weight!=null?num(ta[i].weight):null;
-        const pw=pa[i]&&pa[i].weight!==''&&pa[i].weight!=null?num(pa[i].weight):null;
-        if(tw==null||pw==null) out.push({name:name,idx:i,grams:null,missing:true,prev:pw,cur:tw});
-        else out.push({name:name,idx:i,grams:Math.max(0,pw-tw),missing:false,prev:pw,cur:tw});
+        const pw = potWeight(pa[i], 'final');
+        const tw = potWeight(ta[i], mode==='mid' ? 'mid' : 'final');
+        if(tw==null||pw==null) out.push({name:name,idx:i,grams:null,missing:true,prev:pw,cur:tw,mode:mode});
+        else out.push({name:name,idx:i,grams:Math.max(0,pw-tw),missing:false,prev:pw,cur:tw,mode:mode});
       }
     });
     return out;
@@ -108,7 +120,7 @@
   function dayTotals(day){
     const d=ensure(day); let kcal=0,p=0,c=0,g=0; const lines=[];
     (d.meals||[]).forEach(function(m){ const mac=mealMacros(m); kcal+=mac.kcal;p+=mac.p;c+=mac.c;g+=mac.g; lines.push({m:m,mac:mac,auto:false}); });
-    salsaConsumo(day).forEach(function(s){ if(s.missing||!s.grams) return; const mac=per100Macros(s.name,s.grams); kcal+=mac.kcal;p+=mac.p;c+=mac.c;g+=mac.g; lines.push({m:{name:s.name+(s.idx?(' #'+(s.idx+1)):''),grams:s.grams,salsa:true},mac:mac,auto:true}); });
+    salsaConsumo(day,'final').forEach(function(s){ if(s.missing||!s.grams) return; const mac=per100Macros(s.name,s.grams); kcal+=mac.kcal;p+=mac.p;c+=mac.c;g+=mac.g; lines.push({m:{name:s.name+(s.idx?(' #'+(s.idx+1)):''),grams:s.grams,salsa:true},mac:mac,auto:true}); });
     return {kcal:r0(kcal),p:r0(p),c:r0(c),g:r0(g),lines:lines};
   }
   function periodDetail(days){
@@ -116,7 +128,7 @@
     days.forEach(function(day){
       const d=ensure(day);
       (d.meals||[]).forEach(function(m){ const key=m.name||m.id||'otro'; if(!counts[key]) counts[key]={qty:0,times:0}; counts[key].qty += num(m.qty)||1; counts[key].times += 1; });
-      salsaConsumo(day).forEach(function(s){ if(s.missing||!s.grams) return; if(!salsaGrams[s.name]) salsaGrams[s.name]=0; salsaGrams[s.name]+=s.grams; });
+      salsaConsumo(day,'final').forEach(function(s){ if(s.missing||!s.grams) return; if(!salsaGrams[s.name]) salsaGrams[s.name]=0; salsaGrams[s.name]+=s.grams; });
     });
     return {counts:counts,salsaGrams:salsaGrams};
   }
@@ -161,24 +173,37 @@
   function renderSalsas(){
     const day=document.getElementById('day').value||today(); const d=ensure(day);
     document.getElementById('salsa-list').innerHTML=(d.pots||[]).map(function(p,i){
-      return '<div class="salsa-row"><div><label>Salsa</label><input value="'+String(p.name).replace(/"/g,'&quot;')+'" onchange="updPot('+i+',\'name\',this.value)"></div><div><label>Peso (g)</label><input type="number" step="1" value="'+(p.weight===''||p.weight==null?'':p.weight)+'" onchange="updPot('+i+',\'weight\',this.value)"></div><button type="button" class="btn btn-ghost" onclick="delPot('+i+')">✕</button></div>';
+      const mid=(p.mid===''||p.mid==null)?'':p.mid;
+      const w=(p.weight===''||p.weight==null)?'':p.weight;
+      return '<div class="salsa-card">'+
+        '<div class="salsa-head"><input value="'+String(p.name).replace(/"/g,'&quot;')+'" onchange="updPot('+i+',\'name\',this.value)" style="flex:1"><button type="button" class="btn btn-ghost" onclick="delPot('+i+')">✕</button></div>'+
+        '<div class="salsa-weights">'+
+          '<div><label>Intermedio (noche ~11pm)</label><input type="number" step="1" value="'+mid+'" onchange="updPot('+i+',\'mid\',this.value)" placeholder="g"></div>'+
+          '<div><label>Cierre final (~1am)</label><input type="number" step="1" value="'+w+'" onchange="updPot('+i+',\'weight\',this.value)" placeholder="g"></div>'+
+        '</div></div>';
     }).join('')||'<p class="muted">Sin salsas.</p>';
-    const sc=salsaConsumo(day);
-    document.getElementById('salsa-consumo').innerHTML=sc.map(function(s){
-      const label=s.name+(s.idx?(' #'+(s.idx+1)):'');
-      if(s.missing) return '<div class="item"><div><b>'+label+'</b><div class="muted">Falta peso hoy o ayer</div></div></div>';
-      if(!s.grams) return '<div class="item"><div><b>'+label+'</b><div class="muted">sin consumo ('+r0(s.prev)+'g → '+r0(s.cur)+'g)</div></div></div>';
-      const mac=per100Macros(s.name,s.grams);
-      return '<div class="item"><div><b>'+label+': '+r0(s.grams)+' g</b><div class="muted">'+r0(s.prev)+'g → '+r0(s.cur)+'g · '+r0(mac.kcal)+' kcal</div></div></div>';
-    }).join('')||'<p class="muted">Sin datos.</p>';
+    function block(title, sc){
+      let h='<div class="sec">'+title+'</div>';
+      h+=sc.map(function(s){
+        const label=s.name+(s.idx?(' #'+(s.idx+1)):'');
+        if(s.missing) return '<div class="item"><div><b>'+label+'</b><div class="muted">Falta peso (hoy o cierre de ayer)</div></div></div>';
+        if(!s.grams) return '<div class="item"><div><b>'+label+'</b><div class="muted">sin consumo · '+r0(s.prev)+'g-'+r0(s.cur)+'g: 0g</div></div></div>';
+        const mac=per100Macros(s.name,s.grams);
+        return '<div class="item"><div><b>'+label+'</b><div class="muted">'+r0(s.prev)+'g-'+r0(s.cur)+'g: <b>'+r0(s.grams)+'g</b> · '+r0(mac.kcal)+' kcal</div></div></div>';
+      }).join('')||'<p class="muted">Sin datos.</p>';
+      return h;
+    }
+    document.getElementById('salsa-consumo').innerHTML=
+      block('Consumo provisional (usa intermedio si hay)', salsaConsumo(day,'mid'))+
+      block('Consumo final (usa cierre)', salsaConsumo(day,'final'));
     renderKPIs();
   }
-  window.updPot=function(i,field,val){ const d=ensure(document.getElementById('day').value||today()); if(!d.pots[i]) return; if(field==='weight') d.pots[i].weight=(val===''?'':num(val)); else d.pots[i][field]=val; persist(); };
+  window.updPot=function(i,field,val){ const d=ensure(document.getElementById('day').value||today()); if(!d.pots[i]) return; if(field==='weight'||field==='mid') d.pots[i][field]=(val===''?'':num(val)); else d.pots[i][field]=val; persist(); };
   window.delPot=function(i){ ensure(document.getElementById('day').value||today()).pots.splice(i,1); persist(); renderSalsas(); };
-  window.addSalsaPot=function(){ const name=document.getElementById('salsa-add-name').value; ensure(document.getElementById('day').value||today()).pots.push({id:'s'+Date.now(),name:name,weight:''}); persist(); renderSalsas(); };
+  window.addSalsaPot=function(){ const name=document.getElementById('salsa-add-name').value; ensure(document.getElementById('day').value||today()).pots.push({id:'s'+Date.now(),name:name,weight:'',mid:''}); persist(); renderSalsas(); };
   window.saveSalsas=function(){
     const day=document.getElementById('day').value||today(); const d=ensure(day);
-    document.querySelectorAll('#salsa-list .salsa-row').forEach(function(row,i){ if(!d.pots[i]) return; const inputs=row.querySelectorAll('input'); if(inputs[0]) d.pots[i].name=inputs[0].value; if(inputs[1]) d.pots[i].weight=inputs[1].value===''?'':num(inputs[1].value); });
+    document.querySelectorAll('#salsa-list .salsa-card').forEach(function(row,i){ if(!d.pots[i]) return; const inputs=row.querySelectorAll('input'); if(inputs[0]) d.pots[i].name=inputs[0].value; if(inputs[1]) d.pots[i].mid=inputs[1].value===''?'':num(inputs[1].value); if(inputs[2]) d.pots[i].weight=inputs[2].value===''?'':num(inputs[2].value); });
     persist(); renderSalsas(); renderMeals(); toast('Salsas guardadas ✓');
   };
   window.saveDay=async function(){ try{saveSalsas();}catch(e){} await saveCloud(); toast('Día guardado ✓'); };
@@ -189,12 +214,15 @@
     msg+='\n------------------------------\n'+fmtDM(day)+'\nCalorías: '+t.kcal+' kcal\nProteínas: '+t.p+' g\nCarbohidratos: '+t.c+' g\nGrasas: '+t.g+' g'; copyText(msg);
   };
   window.copyConsumoSalsas=function(){
-    persist(); const day=document.getElementById('day').value||today(); const sc=salsaConsumo(day); let msg='Consumo salsas '+fmtShort(day)+'\n';
-    sc.forEach(function(s){ const label=s.name+(s.idx?(' #'+(s.idx+1)):''); if(s.missing) msg+=label+': (sin datos)\n'; else if(!s.grams) msg+=label+': sin consumo\n'; else msg+=label+' '+r0(s.prev)+'g -'+r0(s.grams)+'g: '+r0(s.grams)+'g\n'; }); copyText(msg.trim());
+    persist(); const day=document.getElementById('day').value||today();
+    const scMid=salsaConsumo(day,'mid'); const scFin=salsaConsumo(day,'final');
+    const sc = scMid.some(s=>!s.missing && s.cur!=null) ? scMid : scFin;
+    let msg='Consumo salsas '+fmtShort(day)+'\n';
+    sc.forEach(function(s){ const label=s.name+(s.idx?(' #'+(s.idx+1)):''); if(s.missing) msg+=label+': (sin datos)\n'; else if(!s.grams) msg+=label+': sin consumo\n'; else msg+=label+' '+r0(s.prev)+'g-'+r0(s.cur)+'g: '+r0(s.grams)+'g\n'; }); copyText(msg.trim());
   };
   window.copyCierreSalsas=function(){
     persist(); const day=document.getElementById('day').value||today(); const d=ensure(day); let msg='Cierre salsas '+fmtShort(day)+'\n';
-    (d.pots||[]).forEach(function(p){ msg+=p.name+' '+(p.weight===''||p.weight==null?'—':(r0(num(p.weight))+'g'))+'\n'; }); copyText(msg.trim());
+    (d.pots||[]).forEach(function(p){ const w=(p.weight===''||p.weight==null)?'—':(r0(num(p.weight))+'g'); msg+=p.name+' '+w+'\n'; }); copyText(msg.trim());
   };
   function copyText(t){ if(navigator.clipboard) navigator.clipboard.writeText(t).then(()=>toast('Copiado ✓')).catch(()=>prompt('Copia',t)); else prompt('Copia',t); }
   window.setRange=function(n){ const to=today(); const d=new Date(to+'T12:00:00'); d.setDate(d.getDate()-(n-1)); document.getElementById('r-from').value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); document.getElementById('r-to').value=to; };
