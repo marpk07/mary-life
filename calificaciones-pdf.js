@@ -28,7 +28,6 @@
         doc.text(C.fmtDateLong(day).toUpperCase(),50,34);
         doc.setFontSize(18); doc.setTextColor(...text); doc.text('Cierre diario',40,58);
         let y=90;
-
         y=section('Mis actividades del día · autoevaluación',y);
         const maryN=C.consolidatedNote(day,'Mary');
         const maryActs=C.linesToBullets(d.activities.Mary);
@@ -52,7 +51,6 @@
         doc.setFont('helvetica','bold'); doc.setFontSize(12);
         doc.text(d.hoursMary!==''&&d.hoursMary!=null?('≈ '+d.hoursMary+' h'):'—',W-140,y+82);
         y+=cardH+12;
-
         y=section('Actividades del equipo',y);
         ['Laura','Valery'].forEach(function(p){
           const cn=C.consolidatedNote(day,p); const acts=C.linesToBullets(d.activities[p]);
@@ -73,77 +71,33 @@
           }
           y+=h+10; if(y>700){ doc.addPage(); pageHeader(); y=40; }
         });
-
         if(y>480){ doc.addPage(); pageHeader(); y=40; }
-
         y=section('Notas del equipo · día (matriz)',y);
         const matrixBody=C.PEOPLE.map(function(person){
           const sc=C.dayScores(day, person);
-          function fWho(who){
-            if(sc[who]!=null) return sc[who].toFixed(1).replace('.',',
-');
-            const st=sc._status&&sc._status[who];
-            if(st&&st!=='ok') return C.statusLabel(st);
-            return '—';
-          }
+          function fWho(who){ if(sc[who]!=null) return sc[who].toFixed(1).replace('.',','); const st=sc._status&&sc._status[who]; if(st&&st!=='ok') return C.statusLabel(st); return '—'; }
           return [person, fWho('Mary'), fWho('Laura'), fWho('Valery'), sc.avg==null?'—':sc.avg.toFixed(1).replace('.',',')];
         });
-        doc.autoTable({
-          startY:y,
-          head:[['Evaluada','Mary','Laura','Valery','Prom. día']],
-          body:matrixBody,
-          theme:'grid',
-          styles:{fontSize:9,cellPadding:6,textColor:text},
-          headStyles:{fillColor:lilac,textColor:purple,fontStyle:'bold',fontSize:9},
-          alternateRowStyles:{fillColor:[252,250,255]},
-          columnStyles:{0:{fontStyle:'bold'},4:{fontStyle:'bold',fontSize:10,textColor:purple}},
-          margin:{left:40,right:40}
-        });
+        doc.autoTable({ startY:y, head:[['Evaluada','Mary','Laura','Valery','Prom. día']], body:matrixBody, theme:'grid', styles:{fontSize:9,cellPadding:6,textColor:text}, headStyles:{fillColor:lilac,textColor:purple,fontStyle:'bold',fontSize:9}, alternateRowStyles:{fillColor:[252,250,255]}, columnStyles:{0:{fontStyle:'bold'},4:{fontStyle:'bold',fontSize:10,textColor:purple}}, margin:{left:40,right:40} });
         y=doc.lastAutoTable.finalY+8;
         doc.setFontSize(7); doc.setTextColor(...muted);
         doc.text('Cada celda = nota que dio esa persona (columnas) a la evaluada (filas). Prom. = promedio del día.',40,y);
         y+=16;
-
         y=section('Notas que doy yo (Mary) · desglose',y);
         const body=C.PEOPLE.map(function(p){
           const cn=C.consolidatedNote(day,p);
           if(cn.absent) return [p,'—','—','—',C.statusLabel(cn.status)];
-          return [
-            p,
-            cn.prod!=null?cn.prod.toFixed(1).replace('.',','):'—',
-            cn.proact!=null?cn.proact.toFixed(1).replace('.',','):'0,0',
-            cn.disc!=null&&cn.disc>0?('-'+cn.disc.toFixed(1).replace('.',',')):'0,0',
-            cn.total!=null?cn.total.toFixed(1).replace('.',','):'—'
-          ];
+          return [p, cn.prod!=null?cn.prod.toFixed(1).replace('.',','):'—', cn.proact!=null?cn.proact.toFixed(1).replace('.',','):'0,0', cn.disc!=null&&cn.disc>0?('-'+cn.disc.toFixed(1).replace('.',',')):'0,0', cn.total!=null?cn.total.toFixed(1).replace('.',','):'—'];
         });
-        doc.autoTable({
-          startY:y,
-          head:[['Colaboradora','Productividad','Proactividad','Descuentos','Nota final']],
-          body:body,
-          theme:'grid',
-          styles:{fontSize:9,cellPadding:6,textColor:text},
-          headStyles:{fillColor:lilac,textColor:purple,fontStyle:'bold',fontSize:9},
-          alternateRowStyles:{fillColor:[252,250,255]},
-          columnStyles:{4:{fontStyle:'bold',fontSize:11,textColor:purple}},
-          margin:{left:40,right:40}
-        });
+        doc.autoTable({ startY:y, head:[['Colaboradora','Productividad','Proactividad','Descuentos','Nota final']], body:body, theme:'grid', styles:{fontSize:9,cellPadding:6,textColor:text}, headStyles:{fillColor:lilac,textColor:purple,fontStyle:'bold',fontSize:9}, alternateRowStyles:{fillColor:[252,250,255]}, columnStyles:{4:{fontStyle:'bold',fontSize:11,textColor:purple}}, margin:{left:40,right:40} });
         y=doc.lastAutoTable.finalY+16;
-
         y=section('Descuentos del día',y);
         C.PEOPLE.forEach(function(p){
           const cn=C.consolidatedNote(day,p);
           if(cn.absent){ doc.setFontSize(9); doc.setTextColor(...muted); doc.text(p+': '+C.statusLabel(cn.status),50,y); y+=14; return; }
-          if(cn.discounts&&cn.discounts.length){
-            cn.discounts.forEach(function(x){
-              var amt=Math.abs(C.num(x.amount));
-              doc.setFontSize(9); doc.setTextColor(...purple); doc.setFont('helvetica','bold');
-              doc.text('-'+amt.toFixed(1).replace('.',','),50,y);
-              doc.setFont('helvetica','normal'); doc.setTextColor(...text);
-              doc.text(p+' · '+(x.reason||''),78,y); y+=13;
-            });
-          } else { doc.setFontSize(9); doc.setTextColor(...muted); doc.text(p+': sin descuentos',50,y); y+=13; }
+          if(cn.discounts&&cn.discounts.length){ cn.discounts.forEach(function(x){ var amt=Math.abs(C.num(x.amount)); doc.setFontSize(9); doc.setTextColor(...purple); doc.setFont('helvetica','bold'); doc.text('-'+amt.toFixed(1).replace('.',','),50,y); doc.setFont('helvetica','normal'); doc.setTextColor(...text); doc.text(p+' · '+(x.reason||''),78,y); y+=13; }); }
+          else { doc.setFontSize(9); doc.setTextColor(...muted); doc.text(p+': sin descuentos',50,y); y+=13; }
         });
-
         y+=10; if(y>680){ doc.addPage(); pageHeader(); y=40; }
         y=section('Estado de pendientes abiertos',y);
         (store.openPendientesMaster||[]).filter(p=>p.status!=='cerrado'&&(p.title||'').trim()).forEach(function(p){
@@ -162,7 +116,6 @@
             doc.text(lines,58,y); y+=lines.length*11+2;
           } else { y+=2; }
         });
-
         y+=12; y=section('Pendientes de mañana · equipo',y);
         C.PEOPLE.forEach(function(p){
           const pend=C.linesToBullets(d.pendientesManana[p]); if(!pend.length) return;
