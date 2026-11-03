@@ -5,31 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>MARY · Metas · That Girl Challenge</title>
 <link rel="stylesheet" href="mary-theme.css">
-<style id="mary-dark-force">
-html,body{background:#0f0a14!important;color:#f5eef8!important;color-scheme:dark!important}
-</style>
 </head>
 <body style="margin:0;background:#0f0a14;color:#f5eef8;font-family:system-ui;min-height:100vh">
 <div id="boot" style="padding:1.5rem;text-align:center;color:#c4b5d4">Cargando That Girl Challenge…</div>
 <script>
 (function(){
-  // Restaura el challenge completo original (metas + objetivos + frecuencia)
-  // Tus datos siguen en localStorage KEY MARY_METAS_V2
+  var DARK = '<link rel="stylesheet" href="mary-theme.css">'
+    + '<style id="mary-metas-dark">'
+    + 'html,body{background:#0f0a14!important;color:#f5eef8!important;color-scheme:dark!important}'
+    + 'body{background:radial-gradient(circle at 15% 10%,rgba(244,114,182,.12),transparent 42%),radial-gradient(circle at 90% 90%,rgba(167,139,250,.1),transparent 42%),#0f0a14!important;color:#f5eef8!important}'
+    + '.glass,.card,.goal-card,[class*="rounded-xl"],[class*="rounded-2xl"]{background:rgba(28,20,40,.95)!important;color:#f5eef8!important;border:1px solid rgba(244,114,182,.18)!important;box-shadow:0 8px 28px rgba(0,0,0,.35)!important}'
+    + '.bg-white,.bg-pink-50,.bg-amber-50,.bg-emerald-50,.bg-slate-50,.bg-gray-50,.bg-fuchsia-50{background:rgba(36,27,50,.95)!important;color:#f5eef8!important}'
+    + '.text-pink-800,.text-pink-900,.text-stone-500,.text-stone-600,.text-gray-500,.text-gray-600,.muted{color:#c4b5d4!important}'
+    + '.text-pink-700{color:#f9a8d4!important}.text-amber-700{color:#fbbf24!important}.text-emerald-700{color:#6ee7b7!important}'
+    + 'input,textarea,select{background:#241b32!important;color:#f5eef8!important;border:1px solid rgba(244,114,182,.28)!important}'
+    + 'input::placeholder,textarea::placeholder{color:#a89bb5!important}'
+    + '.bar{background:rgba(255,255,255,.08)!important}.bar-obj i,.bar>i{background:linear-gradient(90deg,#ec4899,#a78bfa)!important}'
+    + '.tab{background:rgba(255,255,255,.06)!important;color:#c4b5d4!important;border:1px solid transparent!important}'
+    + '.tab.on{background:rgba(236,72,153,.28)!important;color:#fff!important;border-color:rgba(244,114,182,.4)!important}'
+    + '.btn,.btn-main{background:linear-gradient(135deg,#ec4899,#a78bfa)!important;color:#fff!important;border:none!important}'
+    + '.btn-ghost{background:rgba(255,255,255,.06)!important;color:#f5eef8!important;border:1px solid rgba(244,114,182,.22)!important}'
+    + 'label,.lbl{color:#c4b5d4!important}h1,h2,h3,h4,.num{color:#f5eef8!important}'
+    + '.modal{background:rgba(28,20,40,.98)!important;color:#f5eef8!important;border:1px solid rgba(244,114,182,.25)!important}'
+    + '.goal-card .font-black,.goal-card b,.font-black{color:#f5eef8!important}'
+    + '</style>';
   fetch('https://cdn.jsdelivr.net/gh/marpk07/mary-life@0cf6fb1173f6f5a901f35db7d4b352b24f2e0311/metas.html')
     .then(function(r){ return r.text(); })
     .then(function(html){
-      if(html.indexOf('mary-theme.css')<0){
-        html = html.replace('</title>','</title><link rel="stylesheet" href="mary-theme.css">');
-      }
-      if(html.indexOf('mary-dark-force')<0){
-        html = html.replace('</head>','<style id="mary-dark-force">html,body{background:#0f0a14!important;color:#f5eef8!important;color-scheme:dark!important}.bg-white,.bg-slate-50,.bg-gray-50,.bg-pink-50{background:rgba(28,20,40,.95)!important;color:#f5eef8!important}input,textarea,select{background:#241b32!important;color:#f5eef8!important;border-color:rgba(244,114,182,.28)!important}.text-pink-800,.text-gray-600,.muted{color:#c4b5d4!important}</style></head>');
+      html = html.replace(/body\{[^}]+\}/,'body{font-family:Plus Jakarta Sans,system-ui,sans-serif;margin:0;min-height:100vh;color:#f5eef8;background:#0f0a14}');
+      if(html.indexOf('mary-metas-dark')<0){
+        html = html.replace('</title>','</title>'+DARK);
       }
       document.open();
       document.write(html);
       document.close();
     })
     .catch(function(e){
-      document.getElementById('boot').innerHTML = 'No se pudo cargar el challenge. <button onclick="location.reload()">Reintentar</button>';
+      document.getElementById('boot').innerHTML='Error al cargar. <button onclick="location.reload()">Reintentar</button>';
       console.error(e);
     });
 })();
