@@ -57,28 +57,39 @@
           doc.text(cn.total!=null?cn.total.toFixed(1).replace('.',','):'—',W-132,y+36);
           y+=h+10; if(y>700){ doc.addPage(); y=40; }
         });
-        if(y>500){ doc.addPage(); y=40; }
+        if(y>500){ doc.addPage(); y=40; doc.setFillColor(...soft); doc.rect(0,0,W,28,'F'); doc.setFillColor(...purple); doc.roundedRect(40,8,120,14,7,7,'F'); doc.setFontSize(7); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.text('CIERRE DIARIO',50,18); y=40; }
         y=section('Notas del día · Calificaciones',y);
         const body=C.PEOPLE.map(function(p){
           const cn=C.consolidatedNote(day,p);
           if(cn.absent) return [p,'—','—','—',C.statusLabel(cn.status)];
           return [p, cn.prod!=null?cn.prod.toFixed(1).replace('.',','):'—', cn.proact!=null?cn.proact.toFixed(1).replace('.',','):'0,0', cn.disc!=null&&cn.disc>0?('-'+cn.disc.toFixed(1).replace('.',',')):'0,0', cn.total!=null?cn.total.toFixed(1).replace('.',','):'—'];
         });
-        doc.autoTable({ startY:y, head:[['Colaboradora','Productividad','Proactividad','Descuentos','Nota final']], body:body, theme:'grid', styles:{fontSize:9,cellPadding:6,textColor:text}, headStyles:{fillColor:[255,241,247],textColor:pink,fontStyle:'bold'}, alternateRowStyles:{fillColor:[255,250,252]}, margin:{left:40,right:40} });
+        doc.autoTable({ startY:y, head:[['Colaboradora','Productividad','Proactividad','Descuentos','Nota final']], body:body, theme:'grid', styles:{fontSize:9,cellPadding:6,textColor:text}, headStyles:{fillColor:[245,240,255],textColor:purple,fontStyle:'bold',fontSize:9}, alternateRowStyles:{fillColor:[255,250,252]}, columnStyles:{4:{fontStyle:'bold',fontSize:11,textColor:pink}}, margin:{left:40,right:40} });
         y=doc.lastAutoTable.finalY+18;
         y=section('Descuentos del día',y);
         C.PEOPLE.forEach(function(p){
           const cn=C.consolidatedNote(day,p);
           if(cn.absent){ doc.setFontSize(9); doc.setTextColor(...muted); doc.text(p+': '+C.statusLabel(cn.status),50,y); y+=14; return; }
-          if(cn.discounts&&cn.discounts.length){ cn.discounts.forEach(function(x){ doc.setFontSize(9); doc.setTextColor(...pink); doc.text('−'+Math.abs(C.num(x.amount)).toFixed(1),50,y); doc.setTextColor(...text); doc.text(p+' · '+(x.reason||''),80,y); y+=13; }); }
+          if(cn.discounts&&cn.discounts.length){ cn.discounts.forEach(function(x){ var amt=Math.abs(C.num(x.amount)); doc.setFontSize(9); doc.setTextColor(...pink); doc.setFont('helvetica','bold'); doc.text('-'+amt.toFixed(1).replace('.',','),50,y); doc.setFont('helvetica','normal'); doc.setTextColor(...text); doc.text(p+' · '+(x.reason||''),78,y); y+=13; }); }
           else { doc.setFontSize(9); doc.setTextColor(...muted); doc.text(p+': sin descuentos',50,y); y+=13; }
         });
-        y+=10; if(y>680){ doc.addPage(); y=40; }
+        y+=10; if(y>680){ doc.addPage(); y=40; doc.setFillColor(...soft); doc.rect(0,0,W,28,'F'); doc.setFillColor(...purple); doc.roundedRect(40,8,120,14,7,7,'F'); doc.setFontSize(7); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.text('CIERRE DIARIO',50,18); y=40; }
         y=section('Estado de pendientes abiertos',y);
         (store.openPendientesMaster||[]).filter(p=>p.status!=='cerrado'&&(p.title||'').trim()).forEach(function(p){
-          doc.setFontSize(9); doc.setTextColor(...text);
-          const lines=doc.splitTextToSize('• '+p.title+' — '+C.openStatusLabel(p.status)+(p.note?(' · '+p.note):''),W-90);
-          doc.text(lines,50,y); y+=lines.length*12; if(y>750){ doc.addPage(); y=40; }
+          if(y>750){ doc.addPage(); y=40; }
+          var st=p.status||'pendiente';
+          var stColor = st==='en_espera'?[167,139,250]:(st==='en_proceso'?[236,72,153]:(st==='sin_novedades'?[120,100,130]:[244,114,182]));
+          doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...text);
+          doc.text('• '+(p.title||''),50,y);
+          var tw=doc.getTextWidth('• '+(p.title||''))+6;
+          doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...stColor);
+          doc.text(C.openStatusLabel(st),50+tw,y);
+          y+=12;
+          if(p.note&&String(p.note).trim()){
+            doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...muted);
+            var lines=doc.splitTextToSize(String(p.note).trim(),W-100);
+            doc.text(lines,58,y); y+=lines.length*11+2;
+          } else { y+=2; }
         });
         y+=12; y=section('Pendientes de mañana · equipo',y);
         C.PEOPLE.forEach(function(p){
