@@ -1,0 +1,12 @@
+ if(realIdx>=0) del='<button type="button" class="btn btn-ghost" onclick="delMeal('+realIdx+')">✕</button>'; }
+      return '<div class="item"><div><b>'+label+'</b><div class="muted">'+r0(mac.kcal)+' kcal | '+r0(mac.p)+' g P | '+r0(mac.c)+' g C | '+r0(mac.g)+' g G</div></div>'+del+'</div>';
+    }).join('');
+    document.getElementById('food-quick').innerHTML=FOODS.map(function(f){ const hint=f.byGram?'por gramos':(f.pct?'por %':'cantidad'); return '<button type="button" class="food-btn" onclick="addFood(\''+f.id+'\')"><b>'+f.name+'</b><div class="muted">'+f.cat+' · '+hint+'</div></button>'; }).join('');
+    renderKPIs();
+  }
+  window.addFood=function(id){
+    const f=FOODS.find(x=>x.id===id); if(!f) return;
+    const day=document.getElementById('day').value||today(); const d=ensure(day); let qty=1;
+    if(f.byGram){ const v=prompt('Gramos de '+f.name+' (ej. 100)','100'); if(v==null||v==='') return; qty=num(v); d.meals.push({id:f.id,name:f.name,qty:qty,grams:qty,byGram:true}); }
+    else if(f.pct){ const v=prompt('Porcentaje de panqueca (ej. 70 o 100)','100'); if(v==null||v==='') return; qty=num(v)||100; d.meals.push({id:f.id,name:f.name,qty:qty}); }
+    else { const v=prompt('Canti
