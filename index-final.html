@@ -34,13 +34,15 @@
       padding-top: calc(0.65rem + env(safe-area-inset-top, 0px));
       border-bottom: 1px solid var(--border); background: rgba(15,10,20,0.9); position: sticky; top: 0; z-index: 20;
     }
-    .view { display: none; flex: 1; }
-    .view.active { display: block; }
+    #views { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+    .view { display: none; flex: 1; min-height: 0; }
+    .view.active { display: flex; flex-direction: column; min-height: 0; }
     .module-frame {
-      width: 100%; border: none; display: block;
+      width: 100%; border: none; display: block; flex: 1;
       height: calc(100dvh - 52px - env(safe-area-inset-top, 0px));
       min-height: calc(100vh - 52px - env(safe-area-inset-top, 0px));
       background: transparent;
+      overflow: auto; -webkit-overflow-scrolling: touch;
     }
     .area-card {
       background: rgba(28,20,40,0.9); border: 1px solid var(--border); border-radius: 18px;
@@ -65,6 +67,7 @@
       .module-frame {
         height: calc(100dvh - 52px - env(safe-area-inset-top, 0px));
         min-height: calc(100vh - 52px - env(safe-area-inset-top, 0px));
+        overflow: auto; -webkit-overflow-scrolling: touch;
       }
     }
     #lock-screen {
@@ -167,7 +170,6 @@
     });
   });
 })();
-
 function toggleSidebar(){
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('overlay').classList.toggle('show');
@@ -186,8 +188,6 @@ function navigateTo(view){
   closeSidebar();
   try { history.replaceState(null,'','#'+view); } catch(e){}
 }
-
-// PIN lock
 (function(){
   var PIN = localStorage.getItem('MARY_PIN') || '0711';
   var entered = '';
@@ -218,7 +218,6 @@ function navigateTo(view){
     });
   }
 })();
-
 var hash = (location.hash||'').replace('#','');
 if(hash) navigateTo(hash);
 </script>
