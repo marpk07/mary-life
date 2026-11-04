@@ -1,0 +1,16 @@
+(m); kcal+=mac.kcal;p+=mac.p;c+=mac.c;g+=mac.g; lines.push({m:m,mac:mac,auto:false}); });
+    salsaConsumo(day,'final').forEach(function(s){ if(s.missing||!s.grams) return; const mac=per100Macros(s.name,s.grams); kcal+=mac.kcal;p+=mac.p;c+=mac.c;g+=mac.g; lines.push({m:{name:s.name+(s.idx?(' #'+(s.idx+1)):''),grams:s.grams,salsa:true},mac:mac,auto:true}); });
+    return {kcal:r0(kcal),p:r0(p),c:r0(c),g:r0(g),lines:lines};
+  }
+  function periodDetail(days){
+    const counts={}, salsaGrams={};
+    days.forEach(function(day){
+      const d=ensure(day);
+      (d.meals||[]).forEach(function(m){ const key=m.name||m.id||'otro'; if(!counts[key]) counts[key]={qty:0,times:0}; counts[key].qty += num(m.qty)||1; counts[key].times += 1; });
+      salsaConsumo(day,'final').forEach(function(s){ if(s.missing||!s.grams) return; if(!salsaGrams[s.name]) salsaGrams[s.name]=0; salsaGrams[s.name]+=s.grams; });
+    });
+    return {counts:counts,salsaGrams:salsaGrams};
+  }
+  window.showTab=function(id){
+    ['dia','salsas','reportes'].forEach(function(t){ document.getElementById('tab-'+t).classList.toggle('hidden',t!==id); document.querySelector('.tab[data-t="'+t+'"]').classList.toggle('on',t===id); });
+  

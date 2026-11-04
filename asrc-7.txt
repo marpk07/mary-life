@@ -1,0 +1,16 @@
+  if(id==='salsas') renderSalsas(); if(id==='dia') renderMeals();
+  };
+  function renderKPIs(){
+    const day=document.getElementById('day').value||today(); const t=dayTotals(day);
+    document.getElementById('kpis').innerHTML='<div class="kpi"><div class="v">'+t.kcal+'</div><div class="l">kcal</div></div><div class="kpi"><div class="v">'+t.p+' g</div><div class="l">Proteína</div></div><div class="kpi"><div class="v">'+t.c+' g</div><div class="l">Carbos</div></div>';
+  }
+  function renderMeals(){
+    const day=document.getElementById('day').value||today(); const d=ensure(day); const box=document.getElementById('meals-list'); const t=dayTotals(day);
+    if(!t.lines.length) box.innerHTML='<p class="muted">Sin comidas registradas.</p>';
+    else box.innerHTML=t.lines.map(function(L){
+      const m=L.m, mac=L.mac; let label=m.name;
+      if(m.salsa||m.byGram) label+=' ('+r0(m.grams||m.qty)+' g)';
+      else if(m.id&&FOODS.find(f=>f.id===m.id&&f.pct)) label+=' ('+(m.qty||100)+'%)';
+      else if(m.qty&&m.qty!=1) label+=' × '+m.qty;
+      if(L.auto) label+=' · salsas';
+      let del=''; if(!L.auto){ const realIdx=d.meals.findIndex(x=>x===m||(x.id===m.id&&x.qty===m.qty&&x.name===m.name));

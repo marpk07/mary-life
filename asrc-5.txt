@@ -1,0 +1,24 @@
+   if(p.weight!==''&&p.weight!=null) return num(p.weight);
+    if(p.mid!==''&&p.mid!=null) return num(p.mid);
+    return null;
+  }
+  function salsaConsumo(day, mode){
+    mode = mode || 'final';
+    const todayP=ensure(day).pots||[], prevP=ensure(prevDay(day)).pots||[];
+    function byName(list){ const map={}; list.forEach(function(p){ if(!map[p.name]) map[p.name]=[]; map[p.name].push(p); }); return map; }
+    const tMap=byName(todayP), pMap=byName(prevP);
+    const names=Object.keys(Object.assign({},tMap,pMap)); const out=[];
+    names.forEach(function(name){
+      const ta=tMap[name]||[], pa=pMap[name]||[]; const n=Math.max(ta.length,pa.length);
+      for(var i=0;i<n;i++){
+        const pw = potWeight(pa[i], 'final');
+        const tw = potWeight(ta[i], mode==='mid' ? 'mid' : 'final');
+        if(tw==null||pw==null) out.push({name:name,idx:i,grams:null,missing:true,prev:pw,cur:tw,mode:mode});
+        else out.push({name:name,idx:i,grams:Math.max(0,pw-tw),missing:false,prev:pw,cur:tw,mode:mode});
+      }
+    });
+    return out;
+  }
+  function dayTotals(day){
+    const d=ensure(day); let kcal=0,p=0,c=0,g=0; const lines=[];
+    (d.meals||[]).forEach(function(m){ const mac=mealMacros

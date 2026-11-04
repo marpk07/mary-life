@@ -1,0 +1,27 @@
+d:'m'+Math.random().toString(36).slice(2,7),name:name,weight:num(w),mid:''}); });
+      d._migrated=true;
+    }
+    if(!d.pots.length){
+      ['Hershey','Miel','Leche condensada tradicional','Mayonesa','Nutella','Cocada'].forEach(function(name){
+        d.pots.push({id:'s'+Math.random().toString(36).slice(2,7),name:name,weight:'',mid:''});
+      });
+    }
+    return d;
+  }
+  function per100Macros(name, grams){ const m=PER100[name]; if(!m||!grams) return {kcal:0,p:0,c:0,g:0}; const f=num(grams)/100; return {kcal:m.kcal*f,p:m.p*f,c:m.c*f,g:m.g*f}; }
+  function mealMacros(m){
+    if(m.custom) return {kcal:num(m.kcal),p:num(m.p),c:num(m.c),g:num(m.g)};
+    if(m.byGram||m.salsa) return per100Macros(m.name, m.grams||m.qty);
+    const f=FOODS.find(x=>x.id===m.id); if(!f) return {kcal:0,p:0,c:0,g:0};
+    if(f.byGram) return per100Macros(f.name, m.qty);
+    let mult=num(m.qty)||1; if(f.pct) mult=mult/100;
+    return {kcal:f.kcal*mult,p:f.p*mult,c:f.c*mult,g:f.g*mult};
+  }
+  function potWeight(p, prefer){
+    if(!p) return null;
+    if(prefer==='mid'){
+      if(p.mid!==''&&p.mid!=null) return num(p.mid);
+      if(p.weight!==''&&p.weight!=null) return num(p.weight);
+      return null;
+    }
+ 
