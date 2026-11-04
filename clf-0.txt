@@ -1,0 +1,200 @@
+(function(){
+  const LS='MARY_CHECKLIST_V1';
+  const COL='mary_checklist';
+  const DOC='ops_data';
+  const firebaseConfig={
+    apiKey:"AIzaSyCnhvfyXpwJdYOQFCvsyHDhgW9F3X7ARR4",
+    authDomain:"marpk-816dd.firebaseapp.com",
+    projectId:"marpk-816dd",
+    storageBucket:"marpk-816dd.firebasestorage.app",
+    messagingSenderId:"189644122232",
+    appId:"1:189644122232:web:ed7894f1510a373d44658d"
+  };
+  let db=null;
+  try{ if(window.firebase){ if(!firebase.apps.length) firebase.initializeApp(firebaseConfig); db=firebase.firestore(); } }catch(e){ console.warn(e); }
+
+  const PEOPLE=['Valery','Laura','Mary'];
+  const STATUS_CYCLE=['','ok','partial','martin','post'];
+  const STATUS_ICON={ok:'✅',partial:'☑️',martin:'👱',post:'*️⃣'};
+
+  const SUBS={
+    'Oficina':[
+      'Limpiar PC','Limpiar escritorio','Limpiar entorno',
+      'Colocar canasta blanca','Repisa de nootrópicos organizada','Desinfectar repisas',
+      'Sin objetos sobre el escritorio','Verificar Ritalin en polvo',
+      'Dejar Ritalin molido','Preparar 5 dosis de Ritalin 0.28-0.29',
+      'Preparar 10 dosis de K 0.35','Stack oficina organizado',
+      'Pañito para lentes','Líquido para lentes','Servilletas disponibles',
+      'Alcohol spray','Gotas de ojos','Humectante de labios',
+      'Cable USB-C blanco','Cinturón','Casaca',
+      'Power Bank negro','Power Bank blanco','AirPods Max','AirPods blancos'
+    ],
+    'Cocina':[
+      'Barrer','Trapear','Platos limpios y guardados','Encimera limpia',
+      'Nada fuera de lugar','Airfryer limpia','Microondas limpio','Limpiar hornillas','Sacar basura',
+      'Hacer panquecas','Dejar vasos de jugo','Dejar vaso de agua','Contar YoPro',
+      'Verificar stock mínimo','Verificar Red Bull','Verificar Gatorade',
+      'Dejar marmita descongelada o descongelándose','Pesar salsas','Dejar 10 bananos',
+      'Cocina limpia','Mesada con nootrópicos y balanza','Nutella de stock','Pasar macros'
+    ],
+    'Habitación principal':[
+      'Barrer','Trapear','Cama tendida','Entorno organizado',
+      'Mesa de noche organizada con protocolo nocturno','Verificar tapones','Verificar parches',
+      'Verificar stack nocturno completo','AirPods cargados','iPhone 12 cargado',
+      'Gatorade sin azúcar + stack nocturno preparado + taponcitos','Servilletas',
+      'Antialérgico','Diclofenaco','Verificar SORINE en baño','Verificar stock de SORINE en baño'
+    ],
+    'Baño · Hab. principal':[
+      'Barrer','Trapear','Todo organizado','Nada fuera de lugar','Superficies limpias',
+      'Basura retirada','Revisar baño','Limpiar inodoro (si es necesario)',
+      'Limpiar lavamanos (si es necesario)','Verificar toallas','Verificar pañitos','Verificar SORINE'
+    ],
+    'Maleta Gym':[
+      'Ropa de gym','Zapatillas','Toalla','Shaker','Cinturón de gym','Power Bank','AirPods',
+      'Botella de agua','Suplementos pre','Toallitas','Desodorante'
+    ],
+    'Cuidados Nalito':[
+      'Paseo','Cepillado de dientes','Peinado','Zanahorias','Plan running'
+    ],
+    'Para cargar':[
+      'Power Bank blanco','Power Bank negro','AirPods Max negros',
+      'AirPods blancos','Apple Watch','iPhone 17','iPhone 12','iPhone Dúo',
+      'Cubo de luz 1','Cubo de luz 2','Luz tubo','Luz cuadrada potente','Micrófonos'
+    ],
+    'Nevera':[
+      'Vaso de agua','Vasos de jugo','Jarra de jugo','Jarra de agua','Plátanos (10)',
+      'Marmita disponible','Red Bull Zero','Gaseosa Zero','YoPro','Zanahorias Nalito',
+      'Gatorade','Hielo','Leche condensada','Dulce de leche','Nevera limpia (interior y exterior)'
+    ],
+    'Despensa':['Nutella (frasco envasado)','Miel','Sobres de jugo','Plátanos'],
+    'Habitación Closet':[
+      'Barrer','Trapear','Todo organizado','Ropa doblada/colgada','Nada en el piso',
+      'Zapatos organizados','Basura retirada','Superficies despejadas','Revisar baño',
+      'Limpiar inodoro (si es necesario)','Limpiar lavamanos (si es necesario)',
+      'Verificar toallas','Verificar pañitos'
+    ],
+    'Sala':[
+      'Barrer','Trapear','Todo organizado','Controles en su lugar','Cojines ordenados',
+      'Mesas despejadas','TV / equipos en orden'
+    ],
+    'Sala de Billar':[
+      'Barrer','Trapear','Mesa de billar ordenada','Tacos en soporte','Bolas guardadas',
+      'Entorno limpio'
+    ],
+    'Baño segundo piso / cocina':[
+      'Barrer','Trapear','Todo organizado','Superficies limpias','Basura retirada',
+      'Verificar toallas','Verificar papel'
+    ],
+    'Baño · H. Closet':[
+      'Barrer','Trapear','Todo organizado','Superficies limpias','Basura retirada',
+      'Verificar toallas','Verificar papel','Verificar SORINE'
+    ],
+    'Baño · Oficina':[
+      'Barrer','Trapear','Todo organizado','Superficies limpias','Basura retirada',
+      'Verificar toallas','Verificar papel'
+    ]
+  };
+
+  const TEMPLATES={
+    clm:{
+      name:'CLM completa',
+      desc:'Checklist larga de monitoreo',
+      groups:[
+        {title:'Oficina', items:['Oficina']},
+        {title:'Cocina', items:[
+          'Cocina limpia','Mesada con nootrópicos y balanza','Nutella de stock','Pasar macros'
+        ]},
+        {title:'Habitación principal', items:['Habitación principal']},
+        {title:'Baños', items:['Baño · Hab. principal','Baño · H. Closet','Baño · Oficina']},
+        {title:'Maleta Gym', items:['Maleta Gym']},
+        {title:'Nalito', items:['Paseo','Cepillado de dientes','Peinado','Zanahorias','Plan running']},
+        {title:'Para cargar', items:['Para cargar']},
+        {title:'Nevera / Despensa', items:['Nevera','Despensa']},
+        {title:'Otras áreas', items:['Habitación Closet','Sala','Sala de Billar','Baño segundo piso / cocina']},
+        {title:'Verificación', items:[
+          'Verificar Baño - H. Principal',
+          'Verificar Baño - H. Closet',
+          'Verificar Baño - Oficina',
+          'Verificar Habitación Closet',
+          'Verificar Sala en orden',
+          'Verificar Lavandería en orden',
+          'Verificar Terraza en orden',
+          'Verificar cuarto de contenido + cosas cargadas'
+        ]},
+        {title:'Checklist cerrada', items:[
+          'Enviar la checklist de cuidados de Nalito',
+          'Checklist verificada'
+        ]}
+      ]
+    },
+    rapida:{
+      name:'Rápida',
+      desc:'Monitoreo corto',
+      groups:[
+        {title:'Oficina', items:['Oficina']},
+        {title:'Cocina básica', items:['Barrer','Trapear','Platos limpios y guardados','Encimera limpia']},
+        {title:'Habitación', items:['Cama tendida','Entorno organizado']},
+        {title:'Nalito', items:['Paseo','Zanahorias','Plan running']},
+        {title:'Checklist cerrada', items:['Checklist verificada']}
+      ]
+    },
+    noche:{
+      name:'Cierre nocturno',
+      desc:'Protocolo de noche',
+      groups:[
+        {title:'Habitación principal', items:['Habitación principal']},
+        {title:'Oficina (si aplica)', items:['Oficina']},
+        {title:'Nalito', items:['Paseo','Cepillado de dientes','Peinado','Zanahorias','Plan running']},
+        {title:'Checklist cerrada', items:['Enviar la checklist de cuidados de Nalito','Checklist verificada']}
+      ]
+    },
+    gym:{
+      name:'Pre Gym',
+      desc:'Antes de entrenar',
+      groups:[
+        {title:'Maleta Gym', items:['Maleta Gym']},
+        {title:'Para cargar', items:['Para cargar']},
+        {title:'Oficina', items:['Oficina']}
+      ]
+    }
+  };
+
+  const AREA_ALIASES={
+    'Oficina':'Oficina','Cocina':'Cocina','Habitación de Martín':'Habitación principal',
+    'Habitación principal':'Habitación principal','Habitación':'Habitación principal',
+    'Maleta Gym':'Maleta Gym','Maleta gym':'Maleta Gym','Maleta de Gym':'Maleta Gym',
+    'Cuidados Nalito':'Cuidados Nalito','Nalito':'Cuidados Nalito','Nailito':'Cuidados Nalito',
+    'Para cargar':'Para cargar',
+    'Nevera':'Nevera','Despensa':'Despensa',
+    'Habitación Closet':'Habitación Closet','Sala':'Sala','Sala de Billar':'Sala de Billar',
+    'Baño segundo piso / cocina':'Baño segundo piso / cocina',
+    'Baño · Hab. principal':'Baño · Hab. principal',
+    'Habitación Baño / productos':'Baño · Hab. principal',
+    'Baño · H. Closet':'Baño · H. Closet','Baño · Oficina':'Baño · Oficina'
+  };
+
+  const GROUP_PRESETS = {
+    'Verificación': [
+      'Verificar Baño - H. Principal',
+      'Verificar Baño - H. Closet',
+      'Verificar Baño - Oficina',
+      'Verificar Habitación Closet',
+      'Verificar Sala en orden',
+      'Verificar Lavandería en orden',
+      'Verificar Terraza en orden',
+      'Verificar cuarto de contenido + cosas cargadas'
+    ],
+    'Checklist cerrada': [
+      'Enviar la checklist de cuidados de Nalito',
+      'Checklist verificada'
+    ],
+    'Nalito': ['Paseo','Cepillado de dientes','Peinado','Zanahorias','Plan running']
+  };
+
+  const ADDABLE_AREAS = [
+    'Oficina','Cocina','Habitación principal','Baño · Hab. principal','Maleta Gym',
+    'Cuidados Nalito','Para cargar','Nevera','Despensa','Habitación Closet',
+    'Sala','Sala de Billar','Baño segundo piso / cocina','Verificación','Checklist cerrada'
+  ];
+
+  // CHUNK_BREAK
