@@ -74,7 +74,7 @@ textarea.notes{min-height:90px;resize:vertical}
       <button type="button" class="btn btn-main" style="flex:1" onclick="saveDay()">💾 Guardar</button>
       <button type="button" class="btn btn-pink" style="flex:1" onclick="copyWhatsApp('full')">📋 WhatsApp</button>
     </div>
-    <div class="tabs" style="position:relative;top:auto;z-index:1">
+    <div class="tabs">
       <button type="button" class="tab on" data-t="hoy" onclick="showTab('hoy')">Hoy</button>
       <button type="button" class="tab" data-t="plantillas" onclick="showTab('plantillas')">Plantillas</button>
       <button type="button" class="tab" data-t="sugerencias" onclick="showTab('sugerencias')">Sugerencias</button>
@@ -88,11 +88,11 @@ textarea.notes{min-height:90px;resize:vertical}
       <div class="legend" style="margin-top:.55rem">
         <span>✅ Hecho</span>
         <span>☑️ Parcial</span>
-        <span>blond Martín</span>
-        <span>* Pospuesto</span>
+        <span>👱 Martín</span>
+        <span>*️⃣ Pospuesto</span>
         <span>□ Sin marcar</span>
       </div>
-      <p class="muted" style="margin:.4rem 0 0">Toca V / L / M para ciclar: hecho → parcial → Martín → pospuesto.</p>
+      <p class="muted" style="margin:.4rem 0 0">Toca V / L / M: hecho → parcial → 👱 Martín → *️⃣ pospuesto.</p>
     </div>
     <div class="glass">
       <div class="sec" style="margin-top:0">Sugerencias del día</div>
@@ -122,7 +122,7 @@ textarea.notes{min-height:90px;resize:vertical}
         <button type="button" class="btn btn-ghost" style="flex:1" onclick="copyWhatsApp('nosubs')">📋 Sin subchecks</button>
       </div>
       <div class="row" style="margin-top:.35rem">
-        <button type="button" class="btn btn-ghost" style="flex:1" onclick="copyWhatsApp('empty')">📋 Vacía (plantilla)</button>
+        <button type="button" class="btn btn-ghost" style="flex:1" onclick="copyWhatsApp('empty')">📋 Vacía (plantilla elegida)</button>
       </div>
       <div class="sec">Copiar solo un área</div>
       <div id="copy-areas" class="row"></div>
