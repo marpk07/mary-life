@@ -15,7 +15,7 @@ tatus('Sin nube · solo local'); return; }
       store.updatedAt=Date.now();
       await db.collection(COL).doc(DOC).set({...store, updatedAt:store.updatedAt},{merge:true});
       setStatus('☁ Guardado · '+new Date().toLocaleTimeString());
-    }catch(e){ console.warn(e); setStatus('Error al guardar en nube');
+    }catch(e){ console.warn(e); setStatus('Error al guardar en nube'); }
   }
   function persist(){ saveLocal(); saveCloud(); }
   function ensure(day){
