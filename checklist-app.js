@@ -1,18 +1,10 @@
-(async function(){
-  try {
-    window.__CL='';
-    for (var i=0;i<20;i++) {
-      await new Promise(function(res,rej){
-        var s=document.createElement('script');
-        s.src='cl-chunk-'+i+'.js?v=20261104f';
-        s.onload=res; s.onerror=function(){rej(new Error('chunk '+i));};
-        document.head.appendChild(s);
-      });
-    }
-    (0,eval)(window.__CL);
-    delete window.__CL;
-  } catch(e) {
-    console.error(e);
-    var el=document.getElementById('sync'); if(el) el.textContent='Error cargando checklist';
-  }
+(function(){
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/gh/marpk07/mary-life@8dc46b61fed8d6222cd0ce8485c43d2626cd2137/checklist-app.js';
+  s.onload=function(){ console.log('checklist core loaded'); };
+  s.onerror=function(){
+    var el=document.getElementById('sync');
+    if(el) el.textContent='Error cargando checklist';
+  };
+  document.head.appendChild(s);
 })();
