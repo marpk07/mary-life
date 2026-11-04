@@ -15,7 +15,7 @@
 
   const PEOPLE=['Valery','Laura','Mary'];
   const STATUS_CYCLE=['','ok','partial','martin','post'];
-  const STATUS_ICON={ok:'✅',partial:'☑️',martin:'blond',post:'*'};
+  const STATUS_ICON={ok:'✅',partial:'☑️',martin:'👱',post:'*️⃣'};
 
   const SUBS={
     'Oficina':[
@@ -61,7 +61,7 @@
       'Cepillado de dientes','Peinado'
     ],
     'Para cargar':[
-      'iPad','Power Bank blanco','Power Bank negro','AirPods Max negros',
+      'Power Bank blanco','Power Bank negro','AirPods Max negros',
       'AirPods blancos','Apple Watch','iPhone 17','iPhone 12','iPhone Dúo',
       'Cubo de luz 1','Cubo de luz 2','Luz tubo','Luz cuadrada potente','Micrófonos'
     ],
@@ -114,7 +114,7 @@
         {title:'Maleta del gym', items:['Hacer la checklist completa de maleta del gym']},
         {title:'Cuidados Nailito', items:['Paseo','Cepillado de dientes','Peinado']},
         {title:'Checklist para cargar', items:[
-          'iPad','Power Bank blanco con batería','Power Bank negro con batería','AirPods Max negros',
+          'Power Bank blanco con batería','Power Bank negro con batería','AirPods Max negros',
           'AirPods blancos','Apple Watch','iPhone 17 con batería','iPhone 12 con batería','iPhone Dúo'
         ]},
         {title:'Triple verificación', items:[
@@ -145,7 +145,7 @@
         {title:'Oficina', items:['Oficina']},
         {title:'Para cargar · Contenido', items:['Cubo de luz 1','Cubo de luz 2','Luz tubo','Luz cuadrada potente','Micrófonos']},
         {title:'Para cargar · General', items:[
-          'iPad','Power Bank blanco','Power Bank negro','AirPods Max negros',
+          'Power Bank blanco','Power Bank negro','AirPods Max negros',
           'AirPods blancos','Apple Watch','iPhone 17','iPhone 12'
         ]},
         {title:'Sala', items:['Sala']},
@@ -478,89 +478,119 @@
   }
 
   function dumpItem(item, opts){
-    opts=opts||{};
-    const empty=!!opts.empty;
-    const nosubs=!!opts.nosubs;
-    const st=empty?'':statusLine(item.marks);
-    let line=(st?st+' ':'□ ')+item.name+'\n';
-    if(!nosubs && !empty && item.subs){
-      Object.keys(item.subs).forEach(function(sn){
-        const sst=statusLine(item.subs[sn]);
-        if(sst) line+='  · '+sst+' '+sn+'\n';
-        else if(opts.includeEmptySubs) line+='  · □ '+sn+'\n';
+    opts = opts || {};
+    const empty = !!opts.empty;
+    const nosubs = !!opts.nosubs;
+    const areaKey = AREA_ALIASES[item.name];
+    const hasAreaSubs = !!(areaKey && SUBS[areaKey]);
+
+    if (hasAreaSubs && !nosubs) {
+      let out = '';
+      if (opts.showParentHeader) {
+        const st = empty ? '' : statusLine(item.marks);
+        out += (st ? st + ' ' : '□ ') + item.name + '\n';
+      }
+      SUBS[areaKey].forEach(function(sn){
+        const sm = (item.subs && item.subs[sn]) || null;
+        if (empty) {
+          out += '□ ' + sn + '\n';
+        } else {
+          const sst = statusLine(sm);
+          if (sst) out += sst + ' ' + sn + '\n';
+          else if (opts.expandAll) out += '□ ' + sn + '\n';
+        }
       });
+      return out;
     }
-    if(empty && !nosubs){
-      const areaKey=AREA_ALIASES[item.name];
-      if(areaKey && SUBS[areaKey]){
-        SUBS[areaKey].forEach(function(sn){ line+='□ '+sn+'\n'; });
-      }
-    }
-    if(!empty && !nosubs && opts.expandSubs){
-      const areaKey=AREA_ALIASES[item.name];
-      if(areaKey && SUBS[areaKey]){
-        SUBS[areaKey].forEach(function(sn){
-          const sm=(item.subs&&item.subs[sn])||null;
-          const sst=statusLine(sm);
-          line+=(sst?sst+' ':'□ ')+sn+'\n';
-        });
-      }
+
+    const st = empty ? '' : statusLine(item.marks);
+    let line = (st ? st + ' ' : '□ ') + item.name + '\n';
+    if (!nosubs && !empty && item.subs) {
+      Object.keys(item.subs).forEach(function(sn){
+        const sst = statusLine(item.subs[sn]);
+        if (sst) line += '  · ' + sst + ' ' + sn + '\n';
+      });
     }
     return line;
   }
 
   function buildMsg(opts){
-    opts=opts||{};
-    const day=document.getElementById('day').value||today();
-    const d=ensure(day);
-    d.notes=document.getElementById('notes').value||'';
-    const tpl=d.templateId&&TEMPLATES[d.templateId]?TEMPLATES[d.templateId].name:'Checklist';
-    let msg='';
-    if(opts.areaOnly){
-      msg='*'+(opts.areaTitle||'Área')+'* · '+fmtDM(day)+'\n\n';
-      (opts.items||[]).forEach(function(it){
-        msg+=dumpItem(it,{empty:!!opts.empty, nosubs:false, expandSubs:true, includeEmptySubs:!!opts.empty});
+    opts = opts || {};
+    const day = document.getElementById('day').value || today();
+    const d = ensure(day);
+    d.notes = document.getElementById('notes').value || '';
+    const tpl = d.templateId && TEMPLATES[d.templateId] ? TEMPLATES[d.templateId].name : 'Checklist';
+    let msg = '';
+
+    if (opts.areaOnly) {
+      msg = '*' + (opts.areaTitle || 'Área') + '* · ' + fmtDM(day) + '\n\n';
+      (opts.items || []).forEach(function(it){
+        msg += dumpItem(it, {
+          empty: !!opts.empty,
+          nosubs: false,
+          expandAll: !!opts.empty || !!opts.expandAll,
+          showParentHeader: false
+        });
       });
     } else {
-      msg='✅ *'+(opts.empty?'Plantilla ':'')+tpl+'* · '+fmtDM(day)+'\n\n';
-      if(d.extra&&d.extra.length && !opts.empty){
-        msg+='*Añadido hoy*\n';
-        d.extra.forEach(function(it){ msg+=dumpItem(it,{empty:false,nosubs:!!opts.nosubs}); });
-        msg+='\n';
+      msg = '✅ *' + (opts.empty ? 'Plantilla ' : '') + tpl + '* · ' + fmtDM(day) + '\n\n';
+
+      if (d.extra && d.extra.length) {
+        msg += '*Añadido hoy*\n';
+        d.extra.forEach(function(it){
+          msg += dumpItem(it, { empty: !!opts.empty, nosubs: !!opts.nosubs, expandAll: false });
+        });
+        msg += '\n';
       }
-      (d.groups||[]).forEach(function(g){
-        msg+='*'+g.title+'*\n';
-        (g.items||[]).forEach(function(it){ msg+=dumpItem(it,{empty:!!opts.empty, nosubs:!!opts.nosubs, expandSubs:!opts.nosubs && !!opts.empty}); });
-        msg+='\n';
+
+      (d.groups || []).forEach(function(g){
+        msg += '*' + g.title + '*\n';
+        (g.items || []).forEach(function(it){
+          msg += dumpItem(it, {
+            empty: !!opts.empty,
+            nosubs: !!opts.nosubs,
+            expandAll: !!opts.empty && !opts.nosubs,
+            showParentHeader: false
+          });
+        });
+        msg += '\n';
       });
-      if(!opts.empty && d.notes&&d.notes.trim()){
-        msg+='*Notas*\n'+d.notes.trim()+'\n';
+
+      if (!opts.empty && d.notes && d.notes.trim()) {
+        msg += '*Notas*\n' + d.notes.trim() + '\n';
       }
     }
-    msg+='\nLeyenda: ✅ hecho · ☑️ parcial · blond Martín · * pospuesto';
+
+    msg += '\nLeyenda: ✅ hecho · ☑️ parcial · 👱 Martín · *️⃣ pospuesto';
     return msg;
   }
 
   function doCopy(msg){
-    if(navigator.clipboard) navigator.clipboard.writeText(msg).then(function(){ toast('Copiado a WhatsApp ✓'); }).catch(function(){ prompt('Copia',msg); });
-    else prompt('Copia',msg);
+    if (navigator.clipboard) navigator.clipboard.writeText(msg).then(function(){ toast('Copiado a WhatsApp ✓'); }).catch(function(){ prompt('Copia', msg); });
+    else prompt('Copia', msg);
   }
 
-  window.copyWhatsApp=function(mode){
-    const day=document.getElementById('day').value||today();
-    ensure(day).notes=document.getElementById('notes').value||'';
+  window.copyWhatsApp = function(mode){
+    const day = document.getElementById('day').value || today();
+    ensure(day).notes = document.getElementById('notes').value || '';
     persist();
-    mode=mode||'full';
-    if(mode==='empty') doCopy(buildMsg({empty:true, nosubs:false}));
-    else if(mode==='nosubs') doCopy(buildMsg({empty:false, nosubs:true}));
-    else doCopy(buildMsg({empty:false, nosubs:false}));
+    mode = mode || 'full';
+    if (mode === 'empty') doCopy(buildMsg({ empty: true, nosubs: false }));
+    else if (mode === 'nosubs') doCopy(buildMsg({ empty: false, nosubs: true }));
+    else doCopy(buildMsg({ empty: false, nosubs: false }));
   };
 
-  window.copyArea=function(gi, empty){
-    const day=document.getElementById('day').value||today();
-    const d=ensure(day);
-    const g=d.groups[gi]; if(!g) return;
-    doCopy(buildMsg({areaOnly:true, areaTitle:g.title, items:g.items||[], empty:!!empty}));
+  window.copyArea = function(gi, empty){
+    const day = document.getElementById('day').value || today();
+    const d = ensure(day);
+    const g = d.groups[gi]; if (!g) return;
+    doCopy(buildMsg({
+      areaOnly: true,
+      areaTitle: g.title,
+      items: g.items || [],
+      empty: !!empty,
+      expandAll: true
+    }));
   };
 
   document.getElementById('notes').addEventListener('change',function(){
