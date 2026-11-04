@@ -1,1 +1,124 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>MARY · Alimentación Martín</title>
+<link rel="stylesheet" href="mary-theme.css">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+:root{--bg:#0f0a14;--card:rgba(28,20,40,.95);--card2:#241b32;--border:rgba(244,114,182,.22);--pink:#f472b6;--purple:#a78bfa;--text:#f5eef8;--muted:#c4b5d4}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;min-height:100%;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:radial-gradient(circle at 15% 10%,rgba(244,114,182,.12),transparent 42%),radial-gradient(circle at 90% 90%,rgba(167,139,250,.1),transparent 42%),var(--bg);color:var(--text);padding:0.55rem 0.7rem 5rem;padding-bottom:calc(5rem + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:760px;margin:0 auto}
+.glass{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:0.85rem;margin-bottom:0.75rem}
+h1{margin:0;font-size:1.05rem;font-weight:800;background:linear-gradient(90deg,#f9a8d4,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
+.muted{color:var(--muted);font-size:.75rem}
+.sec{font-size:.8rem;font-weight:800;color:#f9a8d4;margin:.75rem 0 .45rem;padding-bottom:.25rem;border-bottom:1px solid var(--border)}
+.btn{border:none;border-radius:12px;padding:.5rem .8rem;font-weight:700;font-size:.75rem;cursor:pointer}
+.btn-main{background:linear-gradient(135deg,#ec4899,#a78bfa);color:#fff}
+.btn-ghost{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border)}
+.btn-pink{background:rgba(236,72,153,.25);color:#fbcfe8;border:1px solid rgba(244,114,182,.35)}
+.row{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center}
+.tabs{display:flex;gap:.35rem;flex-wrap:wrap;margin:.55rem 0 0}
+.tab{background:rgba(255,255,255,.06);color:var(--muted);border:1px solid transparent;border-radius:999px;padding:.4rem .75rem;font-weight:700;font-size:.72rem;cursor:pointer}
+.tab.on{background:rgba(236,72,153,.28);color:#fff;border-color:rgba(244,114,182,.4)}
+input,select,textarea{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:.5rem .65rem;font-size:.85rem}
+label{display:block;font-size:.68rem;font-weight:700;color:var(--muted);margin-bottom:.2rem}
+.hidden{display:none!important}
+.toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);background:#1c1428;border:1px solid var(--border);padding:.65rem 1rem;border-radius:12px;font-size:.8rem;z-index:50;display:none}
+#sync{font-size:.68rem;color:var(--muted);margin-top:.25rem}
+.kpi{background:rgba(15,10,20,.4);border:1px solid var(--border);border-radius:12px;padding:.55rem;text-align:center}
+.kpi .v{font-size:1.1rem;font-weight:800}
+.kpi .l{font-size:.65rem;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.45rem}
+.item{display:flex;justify-content:space-between;align-items:center;gap:.4rem;padding:.5rem 0;border-bottom:1px solid rgba(244,114,182,.12)}
+.item:last-child{border-bottom:none}
+.food-btn{width:100%;text-align:left;background:rgba(15,10,20,.4);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:.55rem .7rem;margin-bottom:.35rem;cursor:pointer}
+.salsa-card{border:1px solid var(--border);border-radius:14px;padding:.65rem;margin-bottom:.5rem;background:rgba(15,10,20,.35)}
+.salsa-head{display:flex;gap:.4rem;align-items:center;margin-bottom:.45rem}
+.salsa-weights{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.45rem}
+@media(max-width:560px){.salsa-weights{grid-template-columns:1fr}.grid2,.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="glass">
+    <h1>🍽️ Alimentación · Martín</h1>
+    <p class="muted" style="margin:.2rem 0 0">Macros · salsas · reportes</p>
+    <div id="sync">Cargando…</div>
+    <div class="row" style="margin-top:.55rem">
+      <div style="flex:1;min-width:120px"><label>Día</label><input type="date" id="day"></div>
+      <button type="button" class="btn btn-main" onclick="saveDay()">💾 Guardar</button>
+    </div>
+    <div class="tabs">
+      <button type="button" class="tab on" data-t="dia" onclick="showTab('dia')">Día</button>
+      <button type="button" class="tab" data-t="salsas" onclick="showTab('salsas')">Salsas</button>
+      <button type="button" class="tab" data-t="reportes" onclick="showTab('reportes')">Reportes</button>
+    </div>
+  </div>
+  <div id="tab-dia">
+    <div class="glass"><div id="kpis" class="grid3"></div></div>
+    <div class="glass">
+      <div class="sec" style="margin-top:0">Comidas del día</div>
+      <div id="meals-list"></div>
+    </div>
+    <div class="glass">
+      <div class="sec" style="margin-top:0">Agregar alimento</div>
+      <div id="food-quick"></div>
+      <div class="row" style="margin-top:.4rem">
+        <button type="button" class="btn btn-ghost" onclick="openCustom()">+ Alimento libre</button>
+        <button type="button" class="btn btn-pink" onclick="copyAlimentos()">📋 Alimentos</button>
+        <button type="button" class="btn btn-pink" onclick="copyConsumoSalsas()">📋 Consumo salsas</button>
+        <button type="button" class="btn btn-pink" onclick="copyCierreSalsas()">📋 Cierre salsas</button>
+      </div>
+    </div>
+  </div>
+  <div id="tab-salsas" class="hidden">
+    <div class="glass">
+      <div class="sec" style="margin-top:0">Pesaje de salsas (g)</div>
+      <p class="muted"><b>Base</b> = cierre de ayer o peso al abrir un pote nuevo (ej. 408). <b>Intermedio</b> (~11pm) · <b>Cierre</b> (~1am). Consumo = Base − peso. Puedes tener 2 leches. Pulsa <b>Guardar salsas</b>.</p>
+      <div id="salsa-list"></div>
+      <div class="row" style="margin-top:.5rem">
+        <select id="salsa-add-name" style="flex:1">
+          <option>Hershey</option><option>Miel</option><option>Leche condensada tradicional</option>
+          <option>Leche condensada La Lechera</option><option>Mayonesa</option><option>Nutella</option>
+          <option>Cocada</option><option>Mantequilla</option><option>Queso parmesano</option>
+        </select>
+        <button type="button" class="btn btn-ghost" onclick="addSalsaPot()">+ Otra</button>
+        <button type="button" class="btn btn-main" onclick="saveSalsas()">💾 Guardar salsas</button>
+      </div>
+    </div>
+    <div class="glass">
+      <div id="salsa-consumo"></div>
+    </div>
+  </div>
+  <div id="tab-reportes" class="hidden">
+    <div class="glass">
+      <div class="sec" style="margin-top:0">Período</div>
+      <div class="row">
+        <div style="flex:1"><label>Desde</label><input type="date" id="r-from"></div>
+        <div style="flex:1"><label>Hasta</label><input type="date" id="r-to"></div>
+      </div>
+      <div class="row" style="margin-top:.4rem">
+        <button type="button" class="btn btn-ghost" onclick="setRange(7)">7 días</button>
+        <button type="button" class="btn btn-ghost" onclick="setRange(15)">15 días</button>
+        <button type="button" class="btn btn-ghost" onclick="setRange(30)">30 días</button>
+        <button type="button" class="btn btn-main" onclick="renderReport()">Ver reporte</button>
+        <button type="button" class="btn btn-pink" onclick="exportPDF()">📄 PDF</button>
+      </div>
+      <div id="report-box" style="margin-top:.75rem"></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="alimentacion-app.js?v=fix6"></script>
+</body>
+</html>
