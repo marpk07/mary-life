@@ -58,7 +58,7 @@
     'Cuidados Nalito':[
       'Desayuno','Refuerzo disciplinario','Paseo 1','Correa 1','Confinamiento',
       'Peinado 1','Cena','Paseo 2','Correa 2','Omega 3 semanal (si aplica)',
-      'Cepillado de dientes','Peinado'
+      'Cepillado de dientes','Peinado','Zanahorias'
     ],
     'Para cargar':[
       'Power Bank blanco','Power Bank negro','AirPods Max negros',
@@ -112,13 +112,29 @@
         ]},
         {title:'Baño · Hab. principal', items:['Verificar SORINE','Verificar pañitos']},
         {title:'Maleta del gym', items:['Hacer la checklist completa de maleta del gym']},
-        {title:'Cuidados Nailito', items:['Paseo','Cepillado de dientes','Peinado']},
+        {title:'Nalito', items:['Paseo','Cepillado de dientes','Peinado','Zanahorias']},
         {title:'Checklist para cargar', items:[
           'Power Bank blanco con batería','Power Bank negro con batería','AirPods Max negros',
           'AirPods blancos','Apple Watch','iPhone 17 con batería','iPhone 12 con batería','iPhone Dúo'
         ]},
+        {title:'Verificación', items:[
+          'Verificar Baño - H. Principal',
+          'Verificar Baño - H. Closet',
+          'Verificar Baño - Oficina',
+          'Verificar Habitación Closet',
+          'Verificar Sala en orden',
+          'Verificar Lavandería en orden',
+          'Verificar Terraza en orden',
+          'Verificar cuarto de contenido + cosas cargadas'
+        ]},
         {title:'Triple verificación', items:[
           'Oficina','Maleta de Gym','Sorines','Macros'
+        ]},
+        {title:'Checklist cerrada', items:[
+          'Enviar la checklist de cuidados de Nalito',
+          'Checklist verificada · Valery',
+          'Checklist verificada · Laura',
+          'Checklist verificada · Mary'
         ]}
       ]
     },
@@ -190,10 +206,30 @@
     'Habitación Baño / productos':'Baño · Hab. principal'
   };
 
+  const GROUP_PRESETS = {
+    'Verificación': [
+      'Verificar Baño - H. Principal',
+      'Verificar Baño - H. Closet',
+      'Verificar Baño - Oficina',
+      'Verificar Habitación Closet',
+      'Verificar Sala en orden',
+      'Verificar Lavandería en orden',
+      'Verificar Terraza en orden',
+      'Verificar cuarto de contenido + cosas cargadas'
+    ],
+    'Checklist cerrada': [
+      'Enviar la checklist de cuidados de Nalito',
+      'Checklist verificada · Valery',
+      'Checklist verificada · Laura',
+      'Checklist verificada · Mary'
+    ],
+    'Nalito': ['Paseo','Cepillado de dientes','Peinado','Zanahorias']
+  };
+
   const ADDABLE_AREAS = [
     'Oficina','Cocina','Habitación principal','Baño · Hab. principal','Maleta Gym',
     'Cuidados Nalito','Para cargar','Nevera','Despensa','Habitación Closet',
-    'Sala','Sala de Billar','Baño segundo piso / cocina'
+    'Sala','Sala de Billar','Baño segundo piso / cocina','Verificación','Checklist cerrada'
   ];
 
   window.addAreaToToday = function(areaName){
@@ -208,9 +244,12 @@
       if(!confirm('"'+d.groups[hit].title+'" ya está. ¿Reemplazarla por la versión completa con subchecks?')) return;
       d.groups.splice(hit,1);
     }
+    var names = GROUP_PRESETS[areaName] || [areaName];
     d.groups.push({
       title: areaName,
-      items: [{ id:'i'+Date.now(), name: areaName, marks: blankMarks(), subs:{} }]
+      items: names.map(function(n, idx){
+        return { id:'i'+Date.now()+idx, name: n, marks: blankMarks(), subs:{} };
+      })
     });
     persist();
     renderHoy();
