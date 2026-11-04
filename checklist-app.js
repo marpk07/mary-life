@@ -182,7 +182,8 @@
     'Oficina':'Oficina','Cocina':'Cocina','Habitación de Martín':'Habitación principal',
     'Habitación principal':'Habitación principal','Maleta Gym':'Maleta Gym',
     'Hacer la checklist completa de maleta del gym':'Maleta Gym',
-    'Cuidados Nalito':'Cuidados Nalito','Nevera':'Nevera','Despensa':'Despensa',
+    'Cuidados Nalito':'Cuidados Nalito','Cuidados Nailito':'Cuidados Nalito',
+    'Nevera':'Nevera','Despensa':'Despensa',
     'Habitación Closet':'Habitación Closet','Sala':'Sala','Sala de Billar':'Sala de Billar',
     'Baño segundo piso / cocina':'Baño segundo piso / cocina',
     'Baño · Hab. principal':'Baño · Hab. principal',
@@ -198,8 +199,14 @@
   window.addAreaToToday = function(areaName){
     const day = document.getElementById('day').value || today();
     const d = ensure(day);
+    var norm=function(s){ return (s||'').toLowerCase().replace(/nailito/g,'nalito').trim(); };
+    var hit=-1;
     for (var i=0;i<d.groups.length;i++){
-      if (d.groups[i].title === areaName) { toast('Ya está en el día: '+areaName); return; }
+      if (norm(d.groups[i].title) === norm(areaName)) { hit=i; break; }
+    }
+    if (hit>=0) {
+      if(!confirm('"'+d.groups[hit].title+'" ya está. ¿Reemplazarla por la versión completa con subchecks?')) return;
+      d.groups.splice(hit,1);
     }
     d.groups.push({
       title: areaName,
@@ -207,7 +214,7 @@
     });
     persist();
     renderHoy();
-    toast('Área añadida: '+areaName);
+    toast(hit>=0 ? ('Reemplazada: '+areaName) : ('Área añadida: '+areaName));
   };
 
   function weekdaySuggestions(iso){
@@ -431,8 +438,10 @@
     if(!d.groups.length){
       document.getElementById('day-list').innerHTML='<p class="muted">Elige una plantilla en la pestaña Plantillas.</p>';
     } else {
-      document.getElementById('day-list').innerHTML=d.groups.map(function(g){
-        let h='<div class="group"><div class="group-h"><b>'+g.title+'</b></div><div class="group-body">';
+      document.getElementById('day-list').innerHTML=d.groups.map(function(g,gi){
+        let h='<div class="group"><div class="group-h"><b>'+g.title+'</b>'+
+          '<button type="button" class="btn btn-ghost" style="padding:.25rem .55rem;font-size:.68rem" onclick="event.stopPropagation();removeGroup('+gi+')">✕ Quitar</button>'+
+          '</div><div class="group-body">';
         (g.items||[]).forEach(function(item){ h+=renderItem(item,d); });
         h+='</div></div>';
         return h;
@@ -481,6 +490,18 @@
     const d=ensure(day);
     d.extra=(d.extra||[]).filter(function(x){return x.id!==id;});
     persist(); renderHoy();
+  };
+
+  window.removeGroup=function(gi){
+    const day=document.getElementById('day').value||today();
+    const d=ensure(day);
+    if(!d.groups[gi]) return;
+    var title=d.groups[gi].title||'este bloque';
+    if(!confirm('¿Quitar "'+title+'" de la checklist de hoy?')) return;
+    d.groups.splice(gi,1);
+    persist();
+    renderHoy();
+    toast('Quitado: '+title);
   };
 
   window.saveDay=async function(){
