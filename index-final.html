@@ -8,44 +8,39 @@
   <link rel="stylesheet" href="layout-fix.css">
   <style>
     :root {
-      --bg: #0f0a14; --card: #1c1428; --border: rgba(244,114,182,0.18);
-      --pink: #f472b6; --purple: #a78bfa; --text: #f5eef8; --muted: #a89bb5;
+      --bg: #0f0a14; --card: rgba(28,20,40,0.95); --border: rgba(244,114,182,0.22);
+      --pink: #f472b6; --purple: #a78bfa; --text: #f5eef8; --muted: #c4b5d4;
     }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body {
-      margin: 0; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
-      background: radial-gradient(circle at 15% 10%, rgba(244,114,182,0.12), transparent 42%),
-                  radial-gradient(circle at 90% 90%, rgba(167,139,250,0.1), transparent 42%), var(--bg);
-      color: var(--text); min-height: 100vh; min-height: 100dvh;
-    }
-    #app { display: flex; min-height: 100vh; min-height: 100dvh; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; }
+    #app { display: flex; min-height: 100dvh; }
     #sidebar {
-      width: 240px; background: rgba(28,20,40,0.95); border-right: 1px solid var(--border);
-      padding: 1rem 0.75rem; display: flex; flex-direction: column; gap: 0.25rem;
-      position: fixed; top: 0; left: 0; bottom: 0; z-index: 40; transition: transform .2s;
+      width: 220px; background: rgba(15,10,20,0.98); border-right: 1px solid var(--border);
+      padding: 1rem 0.75rem; position: fixed; inset: 0 auto 0 0; z-index: 40;
+      overflow-y: auto; transition: transform 0.2s ease;
     }
-    #sidebar .brand { padding: 0.5rem 0.75rem 1rem; font-weight: 800; font-size: 1rem;
+    .brand { font-weight: 800; font-size: 0.95rem; margin-bottom: 1rem; padding: 0 0.5rem;
       background: linear-gradient(90deg,#f9a8d4,#c4b5fd); -webkit-background-clip: text; background-clip: text; color: transparent; }
     .nav-item {
-      display: flex; align-items: center; gap: 0.55rem; padding: 0.55rem 0.75rem;
-      border-radius: 12px; border: none; background: transparent; color: var(--muted);
-      font-weight: 700; font-size: 0.82rem; cursor: pointer; text-align: left; width: 100%;
+      display: flex; align-items: center; gap: 0.5rem; width: 100%; text-align: left;
+      background: transparent; border: none; color: var(--muted); padding: 0.55rem 0.65rem;
+      border-radius: 10px; font-weight: 600; font-size: 0.82rem; cursor: pointer; margin-bottom: 0.2rem;
     }
     .nav-item:hover, .nav-item.active { background: rgba(236,72,153,0.2); color: #fff; }
-    #main { flex: 1; margin-left: 240px; display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+    .nav-item .emoji { font-size: 1rem; }
+    #main { margin-left: 220px; flex: 1; min-height: 100dvh; display: flex; flex-direction: column; }
     #topbar {
-      height: auto; min-height: 52px; display: flex; align-items: center; justify-content: space-between;
-      padding: max(0.35rem, env(safe-area-inset-top)) 0.85rem 0.35rem;
-      border-bottom: 1px solid var(--border); background: rgba(15,10,20,0.96);
-      position: sticky; top: 0; z-index: 30;
+      display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 1rem;
+      padding-top: calc(0.65rem + env(safe-area-inset-top, 0px));
+      border-bottom: 1px solid var(--border); background: rgba(15,10,20,0.9); position: sticky; top: 0; z-index: 20;
     }
-    #content-area { flex: 1; position: relative; overflow: hidden; }
-    .view { display: none; height: 100%; }
-    .view.active { display: block; height: 100%; }
+    .view { display: none; flex: 1; }
+    .view.active { display: block; }
     .module-frame {
-      width: 100%; border: none; display: block; background: #0f0a14;
+      width: 100%; border: none; display: block;
       height: calc(100dvh - 52px - env(safe-area-inset-top, 0px));
       min-height: calc(100vh - 52px - env(safe-area-inset-top, 0px));
+      background: transparent;
     }
     .area-card {
       background: rgba(28,20,40,0.9); border: 1px solid var(--border); border-radius: 18px;
@@ -103,6 +98,7 @@
     <button type="button" class="nav-item" data-view="pendientes" onclick="navigateTo('pendientes')"><span class="emoji">✅</span> Pendientes</button>
     <button type="button" class="nav-item" data-view="calificaciones" onclick="navigateTo('calificaciones')"><span class="emoji">📝</span> Calificaciones</button>
     <button type="button" class="nav-item" data-view="alimentacion" onclick="navigateTo('alimentacion')"><span class="emoji">🍽️</span> Alimentación</button>
+    <button type="button" class="nav-item" data-view="checklist" onclick="navigateTo('checklist')"><span class="emoji">✅</span> Checklist</button>
     <button type="button" class="nav-item" data-view="gastos" onclick="navigateTo('gastos')"><span class="emoji">💸</span> Gastos</button>
     <button type="button" class="nav-item" data-view="metas" onclick="navigateTo('metas')"><span class="emoji">🎯</span> Metas</button>
     <button type="button" class="nav-item" data-view="guia" onclick="navigateTo('guia')"><span class="emoji">🪞</span> Guía</button>
@@ -113,13 +109,9 @@
   <div id="main">
     <div id="topbar">
       <button type="button" id="menu-btn" onclick="toggleSidebar()">☰</button>
-      <div style="font-weight:800;font-size:0.9rem;">MARY · Life Suite</div>
-      <div style="display:flex;gap:0.4rem;align-items:center;">
-        <span id="kpi-date" style="font-size:0.75rem;color:var(--muted);"></span>
-        <button type="button" onclick="lockApp()" style="border:none;background:rgba(255,255,255,0.06);color:#fff;border-radius:10px;padding:0.35rem 0.6rem;font-size:0.75rem;">🔒</button>
-      </div>
+      <div style="font-weight:700;font-size:0.9rem;" id="top-title">Dashboard</div>
     </div>
-    <div id="content-area">
+    <div id="views">
       <div id="view-dashboard" class="view active">
         <div style="padding:1.25rem 1rem 0.5rem;">
           <h2 style="margin:0;font-size:1.25rem;">Hola, <span id="greet-name">Mary</span> ✨</h2>
@@ -132,6 +124,7 @@
           <div class="area-card" onclick="navigateTo('planner')"><div class="card-icon" style="background:linear-gradient(135deg,#f472b6,#a78bfa);">📅</div><h3>Daily Planner</h3><p>Métricas y reflexión</p><button type="button" class="enter-btn">Abrir</button></div>
           <div class="area-card" onclick="navigateTo('calificaciones')"><div class="card-icon" style="background:linear-gradient(135deg,#ec4899,#a78bfa);">📝</div><h3>Calificaciones</h3><p>Cierre diario · bonos</p><button type="button" class="enter-btn">Abrir</button></div>
           <div class="area-card" onclick="navigateTo('alimentacion')"><div class="card-icon" style="background:linear-gradient(135deg,#ec4899,#a78bfa);">🍽️</div><h3>Alimentación</h3><p>Macros Martín · salsas</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('checklist')"><div class="card-icon" style="background:linear-gradient(135deg,#34d399,#a78bfa);">✅</div><h3>Checklist</h3><p>Monitoreo operativo</p><button type="button" class="enter-btn">Abrir</button></div>
           <div class="area-card" onclick="navigateTo('gastos')"><div class="card-icon" style="background:linear-gradient(135deg,#f472b6,#c4b5fd);">💸</div><h3>Gastos</h3><p>Movimientos y plan</p><button type="button" class="enter-btn">Abrir</button></div>
           <div class="area-card" onclick="navigateTo('metas')"><div class="card-icon" style="background:linear-gradient(135deg,#ec4899,#a78bfa);">🎯</div><h3>Metas</h3><p>That Girl Challenge</p><button type="button" class="enter-btn">Abrir</button></div>
           <div class="area-card" onclick="navigateTo('convicciones')"><div class="card-icon" style="background:linear-gradient(135deg,#a78bfa,#f472b6);">✝️</div><h3>Convicciones</h3><p>21 pilares</p><button type="button" class="enter-btn">Abrir</button></div>
@@ -146,6 +139,7 @@
       <div id="view-pendientes" class="view"><iframe class="module-frame" src="pendientes.html" title="Pendientes"></iframe></div>
       <div id="view-calificaciones" class="view"><iframe class="module-frame" src="calificaciones.html" title="Calificaciones"></iframe></div>
       <div id="view-alimentacion" class="view"><iframe class="module-frame" src="alimentacion.html" title="Alimentación"></iframe></div>
+      <div id="view-checklist" class="view"><iframe class="module-frame" src="checklist.html" title="Checklist"></iframe></div>
       <div id="view-gastos" class="view"><iframe class="module-frame" src="gastos.html" title="Gastos"></iframe></div>
       <div id="view-metas" class="view"><iframe class="module-frame" src="metas.html" title="Metas"></iframe></div>
       <div id="view-guia" class="view"><iframe class="module-frame" src="guia.html" title="Guía"></iframe></div>
@@ -156,82 +150,77 @@
   </div>
 </div>
 <script>
-function injectThemeIntoFrames(){
-  var critical = 'html,body{background:#0f0a14!important;color:#f5eef8!important;color-scheme:dark!important}'
-    + '.bg-white,.bg-slate-50,.bg-gray-50,.bg-pink-50,.bg-green-50{background:rgba(28,20,40,.95)!important;color:#f5eef8!important}'
-    + 'input:not([type=checkbox]):not([type=radio]):not([type=range]),textarea,select{background:#241b32!important;color:#f5eef8!important;border-color:rgba(244,114,182,.28)!important}'
-    + '.text-gray-500,.text-gray-600,.text-slate-500,.muted{color:#c4b5d4!important}'
-    + '.text-black,.text-gray-900{color:#f5eef8!important}'
-    + '.bg-green-500,.bg-emerald-500,.btn-primary,.enter-btn{background:linear-gradient(135deg,#ec4899,#a78bfa)!important;color:#fff!important}'
-    + 'a{color:#f9a8d4!important}';
+(function(){
   document.querySelectorAll('iframe.module-frame').forEach(function(frame){
-    function apply(){
-      try{
-        var doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
-        if(!doc || !doc.head) return;
-        if(!doc.getElementById('mary-theme-link')){
+    frame.addEventListener('load', function(){
+      try {
+        var doc = frame.contentDocument;
+        if(!doc) return;
+        if(!doc.querySelector('link[data-mary-theme]')){
           var link = doc.createElement('link');
-          link.id = 'mary-theme-link'; link.rel = 'stylesheet';
+          link.rel = 'stylesheet';
           link.href = (location.origin || '') + '/mary-theme.css?v=2';
+          link.setAttribute('data-mary-theme','1');
           doc.head.appendChild(link);
         }
-        if(!doc.getElementById('mary-theme-inline')){
-          var st = doc.createElement('style'); st.id = 'mary-theme-inline'; st.textContent = critical;
-          doc.head.appendChild(st);
-        }
-        if(doc.body) doc.body.classList.add('mary-themed');
-      }catch(e){}
-    }
-    frame.addEventListener('load', apply);
-    try{ if(frame.contentDocument && frame.contentDocument.readyState==='complete') apply(); }catch(e){}
+      } catch(e){}
+    });
   });
-}
-document.addEventListener('DOMContentLoaded', injectThemeIntoFrames);
-window.addEventListener('load', injectThemeIntoFrames);
-setTimeout(injectThemeIntoFrames, 500);
-setTimeout(injectThemeIntoFrames, 1500);
-setTimeout(injectThemeIntoFrames, 3000);
+})();
 
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
 function navigateTo(view){
-  setTimeout(injectThemeIntoFrames, 300);
   document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
-  document.querySelectorAll('.nav-item').forEach(function(b){b.classList.toggle('active', b.getAttribute('data-view')===view);});
   var el = document.getElementById('view-'+view);
   if(el) el.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(b){b.classList.toggle('active', b.getAttribute('data-view')===view);});
+  var titles = {dashboard:'Dashboard',poker:'Póker',fitness:'Fitness',espiritual:'Espiritual',planner:'Daily Planner',pendientes:'Pendientes',calificaciones:'Calificaciones',alimentacion:'Alimentación',checklist:'Checklist',gastos:'Gastos',metas:'Metas',guia:'Guía',convicciones:'Convicciones',cierre:'Cierres',resumenes:'Resúmenes'};
+  document.getElementById('top-title').textContent = titles[view] || view;
   closeSidebar();
-  try{ history.replaceState(null,'','#'+view); }catch(e){}
+  try { history.replaceState(null,'','#'+view); } catch(e){}
 }
-function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('show'); }
-function closeSidebar(){ var s=document.getElementById('sidebar'); if(s) s.classList.remove('open'); var o=document.getElementById('overlay'); if(o) o.classList.remove('show'); }
-function lockApp(){ document.getElementById('lock-screen').classList.remove('hidden'); }
-(function setupPin(){
-  var pin='', stored=null; try{stored=localStorage.getItem('mary_pin');}catch(e){}
-  var dots=document.querySelectorAll('#pin-dots .pin-dot');
-  var err=document.getElementById('pin-error');
-  var pad=document.getElementById('pin-pad');
-  var keys=['1','2','3','4','5','6','7','8','9','','0','⌫'];
+
+// PIN lock
+(function(){
+  var PIN = localStorage.getItem('MARY_PIN') || '0711';
+  var entered = '';
+  var pad = document.getElementById('pin-pad');
+  var keys = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
   keys.forEach(function(k){
-    var b=document.createElement('button'); b.type='button'; b.className='pin-key'; b.textContent=k||'';
-    if(!k){b.disabled=true;b.style.visibility='hidden';}
-    b.onclick=function(){
-      if(k==='⌫'){pin=pin.slice(0,-1);}
-      else if(k&&pin.length<4){pin+=k;}
-      dots.forEach(function(d,i){d.classList.toggle('filled',i<pin.length);});
-      err.textContent='';
-      if(pin.length===4){
-        if(!stored){ try{localStorage.setItem('mary_pin',pin);stored=pin;}catch(e){} document.getElementById('lock-screen').classList.add('hidden'); pin=''; }
-        else if(pin===stored){ document.getElementById('lock-screen').classList.add('hidden'); pin=''; }
-        else { err.textContent='PIN incorrecto'; pin=''; }
-        dots.forEach(function(d){d.classList.remove('filled');});
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'pin-key'; b.textContent = k || '';
+    if(!k){ b.style.visibility='hidden'; }
+    else b.onclick = function(){
+      if(k==='⌫'){ entered = entered.slice(0,-1); }
+      else if(entered.length < 4){ entered += k; }
+      updateDots();
+      if(entered.length===4){
+        if(entered===PIN){ document.getElementById('lock-screen').classList.add('hidden'); }
+        else {
+          document.getElementById('pin-error').textContent = 'PIN incorrecto';
+          entered = '';
+          updateDots();
+        }
       }
     };
     pad.appendChild(b);
   });
-  try{ var n=localStorage.getItem('mary_name'); if(n){ var g=document.getElementById('greet-name'); if(g) g.textContent=n; } }catch(e){}
-  var d=new Date(); var kd=document.getElementById('kpi-date'); if(kd) kd.textContent=d.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
-  var hash=(location.hash||'').replace('#','');
-  if(hash) navigateTo(hash);
+  function updateDots(){
+    document.querySelectorAll('#pin-dots .pin-dot').forEach(function(d,i){
+      d.classList.toggle('filled', i < entered.length);
+    });
+  }
 })();
+
+var hash = (location.hash||'').replace('#','');
+if(hash) navigateTo(hash);
 </script>
 </body>
 </html>
