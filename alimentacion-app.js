@@ -1,29 +1,10 @@
 (function(){
-  var n = 7;
-  var parts = new Array(n);
-  var done = 0;
-  function tryRun(){
-    if(done < n) return;
-    try {
-      var code = atob(parts.join(''));
-      (0, eval)(code);
-    } catch(e) {
-      console.error(e);
-      var el = document.getElementById('sync');
-      if(el) el.textContent = 'Error: ' + e.message;
-    }
-  }
-  for (var i = 0; i < n; i++) {
-    (function(i){
-      fetch('ab64-'+i+'.txt?v=fix6').then(function(r){
-        if(!r.ok) throw new Error('part '+i+' '+r.status);
-        return r.text();
-      }).then(function(t){ parts[i]=t.trim(); done++; tryRun(); })
-      .catch(function(e){
-        console.error(e);
-        var el = document.getElementById('sync');
-        if(el) el.textContent = 'Error: ' + e.message;
-      });
-    })(i);
-  }
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/gh/marpk07/mary-life@8dc46b61fed8d6222cd0ce8485c43d2626cd2137/alimentacion-app.js';
+  s.onload=function(){ console.log('alimentacion core loaded'); };
+  s.onerror=function(){
+    var el=document.getElementById('sync');
+    if(el) el.textContent='Error cargando alimentación';
+  };
+  document.head.appendChild(s);
 })();
