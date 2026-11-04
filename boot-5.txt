@@ -1,0 +1,11 @@
+gnZGF5JykudmFsdWU9dG9kYXkoKTsKICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdkYXknKS5hZGRFdmVudExpc3RlbmVyKCdjaGFuZ2UnLGZ1bmN0aW9uKCl7IHJl',
+    'bmRlckhveSgpOyByZW5kZXJSdWxlcygpOyB9KTsKICAgIHJlbmRlckhveSgpOwogICAgcmVuZGVyUGxhbnRpbGxhcygpOwogIH0pKCk7Cn0pKCk7Cg==',
+  ];
+  try {
+    var code = atob(parts.join(''));
+    (0, eval)(code);
+  } catch (e) {
+    console.error('checklist load failed', e);
+    document.getElementById('sync') && (document.getElementById('sync').textContent = 'Error cargando checklist');
+  }
+})();
