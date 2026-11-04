@@ -14,19 +14,20 @@
   try{ if(window.firebase){ if(!firebase.apps.length) firebase.initializeApp(firebaseConfig); db=firebase.firestore(); } }catch(e){ console.warn(e); }
 
   const PEOPLE=['Valery','Laura','Mary'];
-  const STATUS_CYCLE=['','ok','martin','post'];
-  const STATUS_ICON={ok:'✅',martin:'🧔',post:'*'};
+  const STATUS_CYCLE=['','ok','partial','martin','post'];
+  const STATUS_ICON={ok:'✅',partial:'☑️',martin:'blond',post:'*'};
 
   const SUBS={
     'Oficina':[
-      'Barrer','Trapear','Limpiar PC','Limpiar escritorio','Limpiar entorno',
-      'Repisa de nootrópicos organizada','Verificar Ritalin en polvo',
-      'Preparar 5 dosis de Ritalin 0.28-0.29','Preparar 10 dosis de K 0.35',
+      'Limpiar PC','Limpiar escritorio','Limpiar entorno',
+      'Repisa de nootrópicos organizada','Desinfectar repisas',
+      'Sin objetos sobre el escritorio','Verificar Ritalin en polvo',
+      'Dejar Ritalin molido','Preparar 5 dosis de Ritalin 0.28-0.29',
+      'Preparar 10 dosis de K 0.35','Stack oficina organizado',
       'Pañito para lentes','Líquido para lentes','Servilletas disponibles',
       'Alcohol spray','Gotas de ojos','Humectante de labios',
-      'Cable USB-C blanco','Cinturón','Casaca','Power Bank negro','Power Bank blanco',
-      'iPad','Sin objetos sobre el escritorio','Desinfectar repisas','AirPod Max',
-      'Dejar Ritalin molido'
+      'Cable USB-C blanco','Cinturón','Casaca',
+      'Power Bank negro','Power Bank blanco','AirPods Max','AirPods blancos'
     ],
     'Cocina':[
       'Barrer','Trapear','Platos limpios y guardados','Encimera limpia',
@@ -49,10 +50,10 @@
       'Limpiar lavamanos (si es necesario)','Verificar toallas','Verificar pañitos','Verificar SORINE'
     ],
     'Maleta Gym':[
-      'Toalla de repuesto','Camisillas de repuesto','Gatorade','Stanley preparada',
+      '2 Toallas (Nike y sin marca)','Camisillas de repuesto','Gatorade','Stanley preparada',
       'Red Bull Zero','Sal','Aceite','Perfume','Pre-workout','Straps','Muñequeras',
-      'Lentes','Estuche de lentes','Aceite fuera del bolso','Llaves junto al bolso',
-      'Antialérgico','Casco al lado del bolso'
+      'Lentes limpios','Estuche de lentes + Pañito','Aceite fuera del bolso','Llaves',
+      'Antialérgico','Casco al lado del bolso','Cinta POLAR','AirPod Max','AirPods blancos'
     ],
     'Cuidados Nalito':[
       'Desayuno','Refuerzo disciplinario','Paseo 1','Correa 1','Confinamiento',
@@ -89,7 +90,7 @@
       'Limpiar lavamanos (si es necesario)','Limpiar espejo'
     ],
     'Triple verificación':[
-      'Oficina (V·L·M)','Maleta Gym (V·L·M)','Sorines (V·L·M)','Macros (V·L·M)'
+      'Oficina','Maleta de Gym','Sorines','Macros'
     ]
   };
 
@@ -111,13 +112,13 @@
         ]},
         {title:'Baño · Hab. principal', items:['Verificar SORINE','Verificar pañitos']},
         {title:'Maleta del gym', items:['Hacer la checklist completa de maleta del gym']},
-        {title:'Cuidados Nalito', items:['Paseo','Cepillado de dientes','Peinado']},
+        {title:'Cuidados Nailito', items:['Paseo','Cepillado de dientes','Peinado']},
         {title:'Checklist para cargar', items:[
-          'iPad','Power Bank blanco','Power Bank negro','AirPods Max negros',
-          'AirPods Max blancas','Apple Watch','iPhone 17','iPhone 12','iPhone Dúo'
+          'iPad','Power Bank blanco con batería','Power Bank negro con batería','AirPods Max negros',
+          'AirPods blancos','Apple Watch','iPhone 17 con batería','iPhone 12 con batería','iPhone Dúo'
         ]},
         {title:'Triple verificación', items:[
-          'Oficina V·L·M','Maleta Gym V·L·M','Sorines V·L·M','Macros V·L·M'
+          'Oficina','Maleta de Gym','Sorines','Macros'
         ]}
       ]
     },
@@ -416,6 +417,15 @@
         return h;
       }).join('');
     }
+
+    var ca=document.getElementById('copy-areas');
+    if(ca){
+      if(!d.groups.length) ca.innerHTML='<span class="muted">Carga una plantilla primero</span>';
+      else ca.innerHTML=d.groups.map(function(g,gi){
+        return '<button type="button" class="btn btn-ghost" onclick="copyArea('+gi+',false)">📋 '+g.title+'</button>'+
+               '<button type="button" class="btn btn-ghost" onclick="copyArea('+gi+',true)">□ '+g.title+' vacía</button>';
+      }).join('');
+    }
   }
 
   window.addTodayItem=function(){
@@ -467,46 +477,90 @@
     return parts.join(' ');
   }
 
-  window.copyWhatsApp=function(){
+  function dumpItem(item, opts){
+    opts=opts||{};
+    const empty=!!opts.empty;
+    const nosubs=!!opts.nosubs;
+    const st=empty?'':statusLine(item.marks);
+    let line=(st?st+' ':'□ ')+item.name+'\n';
+    if(!nosubs && !empty && item.subs){
+      Object.keys(item.subs).forEach(function(sn){
+        const sst=statusLine(item.subs[sn]);
+        if(sst) line+='  · '+sst+' '+sn+'\n';
+        else if(opts.includeEmptySubs) line+='  · □ '+sn+'\n';
+      });
+    }
+    if(empty && !nosubs){
+      const areaKey=AREA_ALIASES[item.name];
+      if(areaKey && SUBS[areaKey]){
+        SUBS[areaKey].forEach(function(sn){ line+='□ '+sn+'\n'; });
+      }
+    }
+    if(!empty && !nosubs && opts.expandSubs){
+      const areaKey=AREA_ALIASES[item.name];
+      if(areaKey && SUBS[areaKey]){
+        SUBS[areaKey].forEach(function(sn){
+          const sm=(item.subs&&item.subs[sn])||null;
+          const sst=statusLine(sm);
+          line+=(sst?sst+' ':'□ ')+sn+'\n';
+        });
+      }
+    }
+    return line;
+  }
+
+  function buildMsg(opts){
+    opts=opts||{};
     const day=document.getElementById('day').value||today();
     const d=ensure(day);
     d.notes=document.getElementById('notes').value||'';
-    persist();
     const tpl=d.templateId&&TEMPLATES[d.templateId]?TEMPLATES[d.templateId].name:'Checklist';
-    let msg='✅ *Checklist · '+fmtDM(day)+'*\n';
-    msg+='_'+tpl+'_\n\n';
-
-    function dumpItem(item, indent){
-      const st=statusLine(item.marks);
-      let line=(indent||'')+(st?st+' ':'□ ')+item.name+'\n';
-      if(item.subs){
-        Object.keys(item.subs).forEach(function(sn){
-          const sst=statusLine(item.subs[sn]);
-          if(sst) line+=(indent||'')+'  · '+sst+' '+sn+'\n';
-        });
+    let msg='';
+    if(opts.areaOnly){
+      msg='*'+(opts.areaTitle||'Área')+'* · '+fmtDM(day)+'\n\n';
+      (opts.items||[]).forEach(function(it){
+        msg+=dumpItem(it,{empty:!!opts.empty, nosubs:false, expandSubs:true, includeEmptySubs:!!opts.empty});
+      });
+    } else {
+      msg='✅ *'+(opts.empty?'Plantilla ':'')+tpl+'* · '+fmtDM(day)+'\n\n';
+      if(d.extra&&d.extra.length && !opts.empty){
+        msg+='*Añadido hoy*\n';
+        d.extra.forEach(function(it){ msg+=dumpItem(it,{empty:false,nosubs:!!opts.nosubs}); });
+        msg+='\n';
       }
-      return line;
+      (d.groups||[]).forEach(function(g){
+        msg+='*'+g.title+'*\n';
+        (g.items||[]).forEach(function(it){ msg+=dumpItem(it,{empty:!!opts.empty, nosubs:!!opts.nosubs, expandSubs:!opts.nosubs && !!opts.empty}); });
+        msg+='\n';
+      });
+      if(!opts.empty && d.notes&&d.notes.trim()){
+        msg+='*Notas*\n'+d.notes.trim()+'\n';
+      }
     }
+    msg+='\nLeyenda: ✅ hecho · ☑️ parcial · blond Martín · * pospuesto';
+    return msg;
+  }
 
-    if(d.extra&&d.extra.length){
-      msg+='*Añadido hoy*\n';
-      d.extra.forEach(function(it){ msg+=dumpItem(it); });
-      msg+='\n';
-    }
-
-    (d.groups||[]).forEach(function(g){
-      msg+='*'+g.title+'*\n';
-      (g.items||[]).forEach(function(it){ msg+=dumpItem(it); });
-      msg+='\n';
-    });
-
-    if(d.notes&&d.notes.trim()){
-      msg+='*Notas*\n'+d.notes.trim()+'\n';
-    }
-
-    msg+='\nLeyenda: ✅ hecho · 🧔 Martín · * pospuesto';
+  function doCopy(msg){
     if(navigator.clipboard) navigator.clipboard.writeText(msg).then(function(){ toast('Copiado a WhatsApp ✓'); }).catch(function(){ prompt('Copia',msg); });
     else prompt('Copia',msg);
+  }
+
+  window.copyWhatsApp=function(mode){
+    const day=document.getElementById('day').value||today();
+    ensure(day).notes=document.getElementById('notes').value||'';
+    persist();
+    mode=mode||'full';
+    if(mode==='empty') doCopy(buildMsg({empty:true, nosubs:false}));
+    else if(mode==='nosubs') doCopy(buildMsg({empty:false, nosubs:true}));
+    else doCopy(buildMsg({empty:false, nosubs:false}));
+  };
+
+  window.copyArea=function(gi, empty){
+    const day=document.getElementById('day').value||today();
+    const d=ensure(day);
+    const g=d.groups[gi]; if(!g) return;
+    doCopy(buildMsg({areaOnly:true, areaTitle:g.title, items:g.items||[], empty:!!empty}));
   };
 
   document.getElementById('notes').addEventListener('change',function(){
