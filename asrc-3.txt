@@ -1,0 +1,25 @@
+tatus('Sin nube · solo local'); return; }
+    try{
+      setStatus('Sincronizando…');
+      const snap=await db.collection(COL).doc(DOC).get();
+      if(snap.exists){
+        const d=snap.data();
+        if(d && (!store.updatedAt || (d.updatedAt||0)>=store.updatedAt)){ store=d; if(!store.days) store.days={}; saveLocal(); }
+      }
+      setStatus('☁ Firebase listo');
+    }catch(e){ console.warn(e); setStatus('Local (nube no disponible)'); }
+  }
+  async function saveCloud(){
+    if(!db) return;
+    try{
+      store.updatedAt=Date.now();
+      await db.collection(COL).doc(DOC).set({...store, updatedAt:store.updatedAt},{merge:true});
+      setStatus('☁ Guardado · '+new Date().toLocaleTimeString());
+    }catch(e){ console.warn(e); setStatus('Error al guardar en nube');
+  }
+  function persist(){ saveLocal(); saveCloud(); }
+  function ensure(day){
+    if(!store.days[day]) store.days[day]={meals:[],pots:[],note:''};
+    const d=store.days[day]; if(!d.meals) d.meals=[]; if(!d.pots) d.pots=[];
+    if(d.salsaWeights && typeof d.salsaWeights==='object' && !d._migrated){
+      Object.keys(d.salsaWeights).forEach(function(name){ const w=d.salsaWeights[name]; if(w!==''&&w!=null) d.pots.push({i

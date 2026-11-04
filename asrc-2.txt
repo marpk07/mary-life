@@ -1,0 +1,12 @@
+t.getElementById('sync'); if(el) el.textContent=m||''; }
+  function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  function prevDay(iso){const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()-1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  function fmtDM(iso){const p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+  function fmtShort(iso){const p=iso.split('-');return parseInt(p[2],10)+'.'+parseInt(p[1],10);}
+  function num(v){const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?0:n;}
+  function r0(n){return Math.round(Number(n)||0);}
+  function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',1800);}
+  function loadLocal(){ try{const r=localStorage.getItem(LS);if(r){const p=JSON.parse(r);if(p&&typeof p==='object'){store=Object.assign({days:{},updatedAt:null},p);}}}catch(e){} if(!store.days) store.days={}; }
+  function saveLocal(){ try{localStorage.setItem(LS,JSON.stringify(store));}catch(e){} }
+  async function loadCloud(){
+    if(!db){ setS

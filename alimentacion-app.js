@@ -1,18 +1,15 @@
-(function(){
-  window.__ALIM=[];
-  var i=0, n=16;
-  function loadNext(){
-    if(i>=n){
-      var f=document.createElement('script');
-      f.src='alims-final.js?v=fix3';
-      document.head.appendChild(f);
-      return;
+(async function(){
+  try {
+    var code = '';
+    for (var i = 0; i < 20; i++) {
+      var r = await fetch('asrc-'+i+'.txt?v=fix5');
+      if (!r.ok) throw new Error('part '+i+' '+r.status);
+      code += await r.text();
     }
-    var sc=document.createElement('script');
-    sc.src='alims-'+i+'.js?v=fix3';
-    sc.onload=function(){ i++; loadNext(); };
-    sc.onerror=function(){ var el=document.getElementById('sync'); if(el) el.textContent='Error part '+i; };
-    document.head.appendChild(sc);
+    (0, eval)(code);
+  } catch (e) {
+    console.error(e);
+    var el = document.getElementById('sync');
+    if (el) el.textContent = 'Error: ' + e.message;
   }
-  loadNext();
 })();

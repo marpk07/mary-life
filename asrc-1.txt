@@ -1,0 +1,16 @@
+[
+    {id:'arroz_g',name:'Arroz cocido',cat:'Base',byGram:true,unit:'g'},
+    {id:'papa_g',name:'Papa cruda',cat:'Base',byGram:true,unit:'g'},
+    {id:'tilapia_cruda',name:'Tilapia cruda',cat:'Base',byGram:true,unit:'g'},
+    {id:'tilapia_cocida',name:'Tilapia cocida',cat:'Base',byGram:true,unit:'g'},
+    {id:'arroz_mantequilla',name:'Arroz con mantequilla',cat:'Marmita',kcal:308,p:5.4,c:56.4,g:6,unit:'porción'},
+    {id:'sudado',name:'Sudado de pescado / salsa roja',cat:'Marmita',kcal:313,p:43.8,c:0.2,g:15.4,unit:'porción'},
+    {id:'napolitana',name:'Tilapia a la napolitana',cat:'Marmita',kcal:560,p:62,c:14,g:29,unit:'porción'},
+    {id:'yopro15',name:'YoPro 15g proteína',cat:'Bebida',kcal:159,p:15,c:20,g:2,unit:'botella'},
+    {id:'yopro23',name:'YoPro 23g proteína',cat:'Bebida',kcal:171,p:23,c:13,g:3,unit:'botella'},
+    {id:'gatorade',name:'Gatorade 500ml',cat:'Bebida',kcal:120,p:0,c:30,g:0,unit:'botella'},
+    {id:'panqueca100',name:'Panquecas',cat:'Panqueca',kcal:432,p:48,c:34,g:9,unit:'%',pct:true},
+    {id:'banano',name:'Banano (1 un. / 60g)',cat:'Fruta',kcal:53,p:1,c:14,g:0,unit:'unidad'}
+  ];
+  let store={days:{},updatedAt:null};
+  function setStatus(m){ const el=documen
