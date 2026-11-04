@@ -1,1 +1,49 @@
-PLACEHOLDER_WILL_FAIL
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>MARY · Póker</title>
+<link rel="stylesheet" href="mary-theme.css">
+<link rel="stylesheet" href="poker-theme.css">
+<style>
+  html,body{margin:0;padding:0;height:100%;background:#0f0a14;overflow:hidden}
+  iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#0f0a14}
+</style>
+</head>
+<body>
+<iframe id="poker-frame" src="poker-fixed%20(9).html" title="Póker"></iframe>
+<script>
+(function(){
+  var f=document.getElementById('poker-frame');
+  function inject(){
+    try{
+      var d=f.contentDocument; if(!d) return;
+      ['mary-theme.css','poker-theme.css'].forEach(function(href){
+        if(d.querySelector('link[href="'+href+'"]')) return;
+        var l=d.createElement('link');
+        l.rel='stylesheet';
+        l.href=href;
+        d.head.appendChild(l);
+      });
+      var s=d.createElement('style');
+      s.textContent=[
+        'html,body{background:#0f0a14!important;color:#f5eef8!important;}',
+        '.glass-card,.glass-card-solid{background:rgba(28,20,40,.92)!important;border:1px solid rgba(244,114,182,.22)!important;color:#f5eef8!important;}',
+        'header,header.sticky{background:linear-gradient(135deg,#1c1428,#2a1840)!important;border-bottom:1px solid rgba(244,114,182,.25)!important;color:#f5eef8!important;}',
+        '.nav-btn{background:rgba(255,255,255,.06)!important;color:#c4b5d4!important;}',
+        '.nav-btn.active{background:linear-gradient(135deg,#ec4899,#a78bfa)!important;color:#fff!important;}',
+        'input,select,textarea{background:#241b32!important;border:1px solid rgba(244,114,182,.22)!important;color:#f5eef8!important;color-scheme:dark;}',
+        '.text-stone-700,.text-stone-800,.text-stone-900,.text-gray-800,.text-black{color:#f5eef8!important;}',
+        '.text-stone-500,.text-stone-600,.text-gray-500{color:#c4b5d4!important;}',
+        '.bg-white,.bg-white\\/20,.bg-pink-50,.bg-stone-50{background:rgba(28,20,40,.88)!important;color:#f5eef8!important;}'
+      ].join('');
+      d.head.appendChild(s);
+    }catch(e){ console.warn(e); }
+  }
+  f.addEventListener('load', inject);
+  setTimeout(inject, 500);
+})();
+</script>
+</body>
+</html>
