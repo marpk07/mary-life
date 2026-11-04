@@ -132,9 +132,7 @@
         ]},
         {title:'Checklist cerrada', items:[
           'Enviar la checklist de cuidados de Nalito',
-          'Checklist verificada · Valery',
-          'Checklist verificada · Laura',
-          'Checklist verificada · Mary'
+          'Checklist verificada'
         ]}
       ]
     },
@@ -219,9 +217,7 @@
     ],
     'Checklist cerrada': [
       'Enviar la checklist de cuidados de Nalito',
-      'Checklist verificada · Valery',
-      'Checklist verificada · Laura',
-      'Checklist verificada · Mary'
+      'Checklist verificada'
     ],
     'Nalito': ['Paseo','Cepillado de dientes','Peinado','Zanahorias']
   };
