@@ -50,10 +50,8 @@ label{display:block;font-size:.68rem;font-weight:700;color:var(--muted);margin-b
 .mk.on-post{background:rgba(251,191,36,.2);border-color:rgba(251,191,36,.45)}
 .person-lbl{font-size:.58rem;font-weight:800;color:var(--muted);text-align:center;margin-bottom:.15rem}
 .chip{display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .55rem;border-radius:999px;font-size:.7rem;font-weight:700;border:1px solid var(--border);background:rgba(255,255,255,.05);margin:.15rem;cursor:pointer}
-.chip.on{background:rgba(236,72,153,.28);border-color:rgba(244,114,182,.45);color:#fff}
 .sug{border:1px dashed rgba(244,114,182,.35);border-radius:12px;padding:.55rem .7rem;margin-bottom:.35rem;font-size:.8rem}
 .legend{display:flex;flex-wrap:wrap;gap:.5rem;font-size:.7rem;color:var(--muted)}
-.legend span{display:inline-flex;align-items:center;gap:.25rem}
 .sub-toggle{font-size:.7rem;color:#f9a8d4;cursor:pointer;margin-left:.35rem}
 .sub-list{margin:.25rem 0 .25rem .6rem;padding-left:.5rem;border-left:2px solid rgba(244,114,182,.25)}
 .sub-item{font-size:.78rem;padding:.3rem 0;display:flex;justify-content:space-between;align-items:center;gap:.3rem}
@@ -109,14 +107,19 @@ textarea.notes{min-height:90px;resize:vertical}
     <div class="glass">
       <div class="sec" style="margin-top:0">Checklist del día</div>
       <div class="row" style="margin-bottom:.45rem">
-        <input id="add-item-txt" placeholder="Añadir ítem a la checklist…" style="flex:1">
-        <button type="button" class="btn btn-ghost" onclick="addCustomItem()">+ Ítem</button>
+        <input id="add-item-txt" placeholder="Ítem suelto → va a Añadido hoy…" style="flex:1">
+        <button type="button" class="btn btn-ghost" onclick="addCustomItem()">+ Añadido hoy</button>
       </div>
       <div id="day-list"></div>
     </div>
     <div class="glass">
+      <div class="sec" style="margin-top:0">Sumar área de la CLM (con subchecks)</div>
+      <p class="muted">Baño, sala, nevera, etc. Se agrega como bloque propio, no en Triple verificación.</p>
+      <div id="add-areas" class="row"></div>
+    </div>
+    <div class="glass">
       <div class="sec" style="margin-top:0">Copiar a WhatsApp</div>
-      <p class="muted">Elige qué quieres pasar al chat.</p>
+      <p class="muted">Elige qué quieres pasar al chat (sin leyenda).</p>
       <div class="row" style="margin-top:.35rem">
         <button type="button" class="btn btn-pink" style="flex:1" onclick="copyWhatsApp('full')">📋 Completa (con marcas)</button>
         <button type="button" class="btn btn-ghost" style="flex:1" onclick="copyWhatsApp('nosubs')">📋 Sin subchecks</button>
