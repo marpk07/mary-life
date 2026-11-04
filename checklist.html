@@ -11,9 +11,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
 :root{--bg:#0f0a14;--card:rgba(28,20,40,.95);--card2:#241b32;--border:rgba(244,114,182,.22);--pink:#f472b6;--purple:#a78bfa;--text:#f5eef8;--muted:#c4b5d4}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0}
-body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:radial-gradient(circle at 15% 10%,rgba(244,114,182,.12),transparent 42%),radial-gradient(circle at 90% 90%,rgba(167,139,250,.1),transparent 42%),var(--bg);color:var(--text);min-height:100%;padding:0.65rem 0.75rem 3.5rem}
-.wrap{max-width:760px;margin:0 auto}
+html,body{margin:0;padding:0;height:auto;min-height:100%;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+html{height:auto}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:radial-gradient(circle at 15% 10%,rgba(244,114,182,.12),transparent 42%),radial-gradient(circle at 90% 90%,rgba(167,139,250,.1),transparent 42%),var(--bg);color:var(--text);min-height:100%;padding:0.55rem 0.7rem 5rem;padding-bottom:calc(5rem + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:760px;margin:0 auto;padding-bottom:2rem}
 .glass{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:0.85rem;margin-bottom:0.75rem}
 h1{margin:0;font-size:1.05rem;font-weight:800;background:linear-gradient(90deg,#f9a8d4,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
 .muted{color:var(--muted);font-size:.75rem}
@@ -23,7 +24,7 @@ h1{margin:0;font-size:1.05rem;font-weight:800;background:linear-gradient(90deg,#
 .btn-ghost{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border)}
 .btn-pink{background:rgba(236,72,153,.25);color:#fbcfe8;border:1px solid rgba(244,114,182,.35)}
 .row{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center}
-.tabs{display:flex;gap:.35rem;flex-wrap:wrap;margin:.55rem 0 0;position:sticky;top:0;z-index:5;background:rgba(15,10,20,.92);padding:.35rem 0;backdrop-filter:blur(8px)}
+.tabs{display:flex;gap:.35rem;flex-wrap:wrap;margin:.55rem 0 0;position:relative;z-index:1;background:transparent;padding:.35rem 0}
 .tab{background:rgba(255,255,255,.06);color:var(--muted);border:1px solid transparent;border-radius:999px;padding:.4rem .75rem;font-weight:700;font-size:.72rem;cursor:pointer}
 .tab.on{background:rgba(236,72,153,.28);color:#fff;border-color:rgba(244,114,182,.4)}
 input,select,textarea{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:.5rem .65rem;font-size:.85rem}
@@ -66,11 +67,13 @@ textarea.notes{min-height:90px;resize:vertical}
     <p class="muted" style="margin:.2rem 0 0">Monitoreo diario · CLM / Rápida · subchecks · WhatsApp</p>
     <div id="sync">Cargando…</div>
     <div class="row" style="margin-top:.55rem">
-      <div style="flex:1;min-width:130px"><label>Día</label><input type="date" id="day"></div>
-      <button type="button" class="btn btn-main" onclick="saveDay()">💾 Guardar</button>
-      <button type="button" class="btn btn-pink" onclick="copyWhatsApp()">📋 Copiar a WhatsApp</button>
+      <div style="flex:1;min-width:120px"><label>Día</label><input type="date" id="day"></div>
     </div>
-    <div class="tabs">
+    <div class="row" style="margin-top:.4rem">
+      <button type="button" class="btn btn-main" style="flex:1" onclick="saveDay()">💾 Guardar</button>
+      <button type="button" class="btn btn-pink" style="flex:1" onclick="copyWhatsApp()">📋 WhatsApp</button>
+    </div>
+    <div class="tabs" style="position:relative;top:auto;z-index:1">
       <button type="button" class="tab on" data-t="hoy" onclick="showTab('hoy')">Hoy</button>
       <button type="button" class="tab" data-t="plantillas" onclick="showTab('plantillas')">Plantillas</button>
       <button type="button" class="tab" data-t="sugerencias" onclick="showTab('sugerencias')">Sugerencias</button>
@@ -87,7 +90,7 @@ textarea.notes{min-height:90px;resize:vertical}
         <span>* Pospuesto</span>
         <span>□ Sin marcar</span>
       </div>
-      <p class="muted" style="margin:.4rem 0 0">Toca el círculo de Valery / Laura / Mary para ciclar el estado.</p>
+      <p class="muted" style="margin:.4rem 0 0">Toca V / L / M para ciclar el estado.</p>
     </div>
     <div class="glass">
       <div class="sec" style="margin-top:0">Sugerencias del día</div>
@@ -118,7 +121,7 @@ textarea.notes{min-height:90px;resize:vertical}
   <div id="tab-plantillas" class="hidden">
     <div class="glass">
       <div class="sec" style="margin-top:0">Elegir checklist base</div>
-      <p class="muted">Al elegir se carga en <b>Hoy</b> (no borra lo ya marcado del mismo día si es la misma plantilla).</p>
+      <p class="muted">Elige una plantilla para cargarla en Hoy. Puedes añadir ítems después.</p>
       <div id="tpl-list"></div>
     </div>
   </div>
@@ -126,7 +129,7 @@ textarea.notes{min-height:90px;resize:vertical}
   <div id="tab-sugerencias" class="hidden">
     <div class="glass">
       <div class="sec" style="margin-top:0">Reglas automáticas</div>
-      <p class="muted">Se proponen según el día de la semana. Puedes añadirlas a Hoy con un toque.</p>
+      <p class="muted">Se proponen según el día de la semana. Toca para añadirlas a Hoy.</p>
       <div id="rules-box"></div>
     </div>
   </div>
