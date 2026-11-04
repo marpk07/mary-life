@@ -189,10 +189,31 @@
     'Habitación Baño / productos':'Baño · Hab. principal'
   };
 
+  const ADDABLE_AREAS = [
+    'Oficina','Cocina','Habitación principal','Baño · Hab. principal','Maleta Gym',
+    'Cuidados Nalito','Para cargar','Nevera','Despensa','Habitación Closet',
+    'Sala','Sala de Billar','Baño segundo piso / cocina'
+  ];
+
+  window.addAreaToToday = function(areaName){
+    const day = document.getElementById('day').value || today();
+    const d = ensure(day);
+    for (var i=0;i<d.groups.length;i++){
+      if (d.groups[i].title === areaName) { toast('Ya está en el día: '+areaName); return; }
+    }
+    d.groups.push({
+      title: areaName,
+      items: [{ id:'i'+Date.now(), name: areaName, marks: blankMarks(), subs:{} }]
+    });
+    persist();
+    renderHoy();
+    toast('Área añadida: '+areaName);
+  };
+
   function weekdaySuggestions(iso){
     const d=new Date(iso+'T12:00:00');
     const wd=d.getDay();
-    const list=[{text:'Trapear',rule:'Todos los días'}];
+    const list=[{text:'Barrer',rule:'Todos los días'}];
     if(wd===2) list.push({text:'Revisión stock de alimentos',rule:'Martes'});
     if(wd===3){
       list.push({text:'Revisión de stock de nootrópicos',rule:'Miércoles'});
@@ -311,7 +332,7 @@
       return '<div class="sug"><b>'+s.text+'</b><div class="muted">'+s.rule+'</div><button type="button" class="btn btn-ghost" style="margin-top:.35rem" onclick="addSuggestion(\''+s.text.replace(/'/g,"\\'")+'\')">+ Añadir a Hoy</button></div>';
     }).join('');
     html+='<div class="sec">Calendario fijo</div>';
-    html+='<div class="item-row"><div class="item-name">Todos los días → <b>Trapear</b></div></div>';
+    html+='<div class="item-row"><div class="item-name">Todos los días → <b>Barrer</b></div></div>';
     html+='<div class="item-row"><div class="item-name">Martes → <b>Revisión stock de alimentos</b></div></div>';
     html+='<div class="item-row"><div class="item-name">Miércoles → <b>Revisión stock de nootrópicos</b> · <b>Revisión de zapatillas</b></div></div>';
     html+='<div class="item-row"><div class="item-name">Sábado → <b>Lavar bici/moto y cargar batería</b></div></div>';
@@ -426,6 +447,13 @@
                '<button type="button" class="btn btn-ghost" onclick="copyArea('+gi+',true)">□ '+g.title+' vacía</button>';
       }).join('');
     }
+
+    var ap = document.getElementById('add-areas');
+    if (ap) {
+      ap.innerHTML = ADDABLE_AREAS.map(function(a){
+        return '<button type="button" class="btn btn-ghost" onclick="addAreaToToday(\''+a.replace(/'/g,"\\'")+'\')">＋ '+a+'</button>';
+      }).join('');
+    }
   }
 
   window.addTodayItem=function(){
@@ -443,12 +471,9 @@
     if(!txt) return;
     const day=document.getElementById('day').value||today();
     const d=ensure(day);
-    if(!d.groups.length){
-      d.groups.push({title:'Añadidos',items:[]});
-    }
-    d.groups[d.groups.length-1].items.push({id:'i'+Date.now(),name:txt,marks:blankMarks(),subs:{}});
+    d.extra.push({id:'e'+Date.now(),name:txt,marks:blankMarks(),subs:{}});
     document.getElementById('add-item-txt').value='';
-    persist(); renderHoy(); toast('Ítem añadido');
+    persist(); renderHoy(); toast('Añadido hoy ✓');
   };
 
   window.delExtra=function(id){
@@ -481,7 +506,7 @@
     opts = opts || {};
     const empty = !!opts.empty;
     const nosubs = !!opts.nosubs;
-    const areaKey = AREA_ALIASES[item.name];
+    const areaKey = opts.forceLeaf ? null : (AREA_ALIASES[item.name] || null);
     const hasAreaSubs = !!(areaKey && SUBS[areaKey]);
 
     if (hasAreaSubs && !nosubs) {
@@ -524,12 +549,14 @@
 
     if (opts.areaOnly) {
       msg = '*' + (opts.areaTitle || 'Área') + '* · ' + fmtDM(day) + '\n\n';
+      var isTriple = /triple\s*verific/i.test(opts.areaTitle || '');
       (opts.items || []).forEach(function(it){
         msg += dumpItem(it, {
           empty: !!opts.empty,
           nosubs: false,
-          expandAll: !!opts.empty || !!opts.expandAll,
-          showParentHeader: false
+          expandAll: (!!opts.empty || !!opts.expandAll) && !isTriple,
+          showParentHeader: false,
+          forceLeaf: isTriple
         });
       });
     } else {
@@ -545,12 +572,14 @@
 
       (d.groups || []).forEach(function(g){
         msg += '*' + g.title + '*\n';
+        var isTriple = /triple\s*verific/i.test(g.title || '');
         (g.items || []).forEach(function(it){
           msg += dumpItem(it, {
             empty: !!opts.empty,
             nosubs: !!opts.nosubs,
-            expandAll: !!opts.empty && !opts.nosubs,
-            showParentHeader: false
+            expandAll: !!opts.empty && !opts.nosubs && !isTriple,
+            showParentHeader: false,
+            forceLeaf: isTriple
           });
         });
         msg += '\n';
@@ -561,7 +590,6 @@
       }
     }
 
-    msg += '\nLeyenda: ✅ hecho · ☑️ parcial · 👱 Martín · *️⃣ pospuesto';
     return msg;
   }
 
