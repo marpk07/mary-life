@@ -1,8 +1,8 @@
 (async function(){
   try {
     var code = '';
-    for (var i = 0; i < 20; i++) {
-      var r = await fetch('asrc-'+i+'.txt?v=fix5');
+    for (var i = 0; i < 4; i++) {
+      var r = await fetch('asrc-'+i+'.txt?v=fix6');
       if (!r.ok) throw new Error('part '+i+' '+r.status);
       code += await r.text();
     }
