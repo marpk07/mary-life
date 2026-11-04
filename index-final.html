@@ -1,138 +1,103 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>MARY · Life Suite</title>
-  <link rel="stylesheet" href="mary-theme.css">
-  <link rel="stylesheet" href="layout-fix.css">
-  <style>
-    :root {
-      --bg: #0f0a14; --card: rgba(28,20,40,0.95); --border: rgba(244,114,182,0.22);
-      --pink: #f472b6; --purple: #a78bfa; --text: #f5eef8; --muted: #c4b5d4;
-    }
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; }
-    #app { display: flex; min-height: 100dvh; }
-    #sidebar {
-      width: 220px; background: rgba(15,10,20,0.98); border-right: 1px solid var(--border);
-      padding: 1rem 0.75rem; position: fixed; inset: 0 auto 0 0; z-index: 40;
-      overflow-y: auto; transition: transform 0.2s ease;
-    }
-    .brand { font-weight: 800; font-size: 0.95rem; margin-bottom: 1rem; padding: 0 0.5rem;
-      background: linear-gradient(90deg,#f9a8d4,#c4b5fd); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .nav-item {
-      display: flex; align-items: center; gap: 0.5rem; width: 100%; text-align: left;
-      background: transparent; border: none; color: var(--muted); padding: 0.55rem 0.65rem;
-      border-radius: 10px; font-weight: 600; font-size: 0.82rem; cursor: pointer; margin-bottom: 0.2rem;
-    }
-    .nav-item:hover, .nav-item.active { background: rgba(236,72,153,0.2); color: #fff; }
-    .nav-item .emoji { font-size: 1rem; }
-    #main { margin-left: 220px; flex: 1; min-height: 100dvh; display: flex; flex-direction: column; }
-    #topbar {
-      display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 1rem;
-      padding-top: calc(0.65rem + env(safe-area-inset-top, 0px));
-      border-bottom: 1px solid var(--border); background: rgba(15,10,20,0.9); position: sticky; top: 0; z-index: 20;
-    }
-    #views { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-    .view { display: none; flex: 1; min-height: 0; }
-    .view.active { display: flex; flex-direction: column; min-height: 0; }
-    .module-frame {
-      width: 100%; border: none; display: block; flex: 1;
-      height: calc(100dvh - 52px - env(safe-area-inset-top, 0px));
-      min-height: calc(100vh - 52px - env(safe-area-inset-top, 0px));
-      background: transparent;
-      overflow: auto; -webkit-overflow-scrolling: touch;
-    }
-    .area-card {
-      background: rgba(28,20,40,0.9); border: 1px solid var(--border); border-radius: 18px;
-      padding: 1.1rem; cursor: pointer;
-    }
-    .area-card h3 { margin: 0.5rem 0 0.25rem; font-size: 1rem; }
-    .area-card p { margin: 0; font-size: 0.78rem; color: var(--muted); }
-    .card-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-    .enter-btn {
-      margin-top: 0.75rem; border: none; border-radius: 10px; padding: 0.4rem 0.8rem;
-      background: linear-gradient(135deg,#ec4899,#a78bfa); color: #fff; font-weight: 700; font-size: 0.75rem; cursor: pointer;
-    }
-    .dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.85rem; padding: 1rem; }
-    #menu-btn { display: none; border: none; background: rgba(255,255,255,0.08); color: #fff; border-radius: 10px; padding: 0.4rem 0.7rem; font-weight: 700; }
-    #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 35; }
-    #overlay.show { display: block; }
-    @media (max-width: 900px) {
-      #sidebar { transform: translateX(-100%); padding-top: env(safe-area-inset-top); }
-      #sidebar.open { transform: translateX(0); }
-      #main { margin-left: 0; }
-      #menu-btn { display: inline-flex; }
-      .module-frame {
-        height: calc(100dvh - 52px - env(safe-area-inset-top, 0px));
-        min-height: calc(100vh - 52px - env(safe-area-inset-top, 0px));
-        overflow: auto; -webkit-overflow-scrolling: touch;
-      }
-    }
-    #lock-screen {
-      position: fixed; inset: 0; background: #0f0a14; z-index: 100; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 1rem; padding-top: env(safe-area-inset-top);
-    }
-    #lock-screen.hidden { display: none; }
-    .pin-key { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--border); background: rgba(28,20,40,0.9); color: #fff; font-size: 1.2rem; font-weight: 700; }
-    #pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
-    #pin-dots { display: flex; gap: 0.5rem; }
-    .pin-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--pink); }
-    .pin-dot.filled { background: var(--pink); }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>MARY Life Suite</title>
+<link rel="stylesheet" href="mary-theme.css">
+<link rel="stylesheet" href="layout-fix.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+:root{--bg:#0f0a14;--card:#1c1428;--border:rgba(244,114,182,.22);--pink:#f472b6;--purple:#a78bfa;--text:#f5eef8;--muted:#c4b5d4}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--text)}
+#app{display:flex;height:100%;height:100dvh}
+.sidebar{width:260px;background:rgba(28,20,40,.98);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:0.75rem;z-index:40;transition:transform .25s ease}
+.sidebar .brand{font-weight:800;font-size:1.05rem;background:linear-gradient(90deg,#f9a8d4,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent;padding:0.5rem 0.4rem 0.85rem}
+.nav-item{display:flex;align-items:center;gap:0.55rem;padding:0.55rem 0.7rem;border-radius:12px;border:none;background:transparent;color:var(--muted);font-weight:700;font-size:0.82rem;cursor:pointer;width:100%;text-align:left}
+.nav-item .emoji{font-size:1.05rem}
+.nav-item:hover,.nav-item.active{background:rgba(236,72,153,.2);color:#fff}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;height:100%}
+.topbar{display:flex;align-items:center;gap:0.5rem;padding:0.55rem 0.75rem;border-bottom:1px solid var(--border);background:rgba(15,10,20,.9);min-height:48px}
+.topbar button{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:0.35rem 0.55rem;cursor:pointer}
+#top-title{font-weight:800;font-size:0.95rem}
+.content{flex:1;overflow:hidden;position:relative}
+.view{display:none;height:100%;overflow:auto;-webkit-overflow-scrolling:touch}
+.view.active{display:block}
+.module-frame{width:100%;height:100%;border:0;display:block;background:var(--bg)}
+.dashboard{padding:1rem;max-width:960px;margin:0 auto}
+.area-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0.75rem}
+.area-card{background:rgba(28,20,40,.9);border:1px solid var(--border);border-radius:16px;padding:0.9rem;cursor:pointer}
+.area-card h3{margin:0.4rem 0 0.2rem;font-size:0.9rem}
+.area-card p{margin:0;font-size:0.72rem;color:var(--muted)}
+.card-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.enter-btn{margin-top:0.55rem;background:linear-gradient(135deg,#ec4899,#a78bfa);border:none;color:#fff;border-radius:10px;padding:0.35rem 0.65rem;font-size:0.72rem;font-weight:700;cursor:pointer}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:35}
+.overlay.show{display:block}
+@media(max-width:860px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-105%)}
+  .sidebar.open{transform:translateX(0)}
+}
+#lock-screen{position:fixed;inset:0;background:#0f0a14;z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem}
+#lock-screen.hidden{display:none}
+.pin-dots{display:flex;gap:0.5rem}
+.pin-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--border)}
+.pin-dot.filled{background:#f472b6;border-color:#f472b6}
+#pin-pad{display:grid;grid-template-columns:repeat(3,72px);gap:0.5rem}
+.pin-key{height:52px;border-radius:14px;border:1px solid var(--border);background:rgba(28,20,40,.9);color:var(--text);font-size:1.2rem;font-weight:700;cursor:pointer}
+#pin-error{color:#f9a8d4;font-size:0.8rem;min-height:1.2em}
+</style>
 </head>
 <body>
 <div id="lock-screen">
-  <div style="font-weight:800;font-size:1.2rem;background:linear-gradient(90deg,#f9a8d4,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent;">MARY · Life Suite</div>
-  <div id="pin-dots"><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span></div>
-  <div id="pin-error" style="color:#fb7185;font-size:0.8rem;min-height:1.2em;"></div>
+  <div class="brand" style="font-size:1.4rem;font-weight:800;background:linear-gradient(90deg,#f9a8d4,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent">MARY</div>
+  <div class="pin-dots" id="pin-dots"><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div></div>
+  <div id="pin-error"></div>
   <div id="pin-pad"></div>
 </div>
-<div id="overlay" onclick="closeSidebar()"></div>
 <div id="app">
-  <aside id="sidebar">
-    <div class="brand">MARY · Life Suite</div>
-    <button type="button" class="nav-item active" data-view="dashboard" onclick="navigateTo('dashboard')"><span class="emoji">🏠</span> Dashboard</button>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">MARY Life Suite</div>
+    <button type="button" class="nav-item" data-view="dashboard" onclick="navigateTo('dashboard')"><span class="emoji">🏠</span> Dashboard</button>
     <button type="button" class="nav-item" data-view="poker" onclick="navigateTo('poker')"><span class="emoji">♠️</span> Póker</button>
     <button type="button" class="nav-item" data-view="fitness" onclick="navigateTo('fitness')"><span class="emoji">💪</span> Fitness</button>
-    <button type="button" class="nav-item" data-view="espiritual" onclick="navigateTo('espiritual')"><span class="emoji">🕊️</span> Espiritual</button>
+    <button type="button" class="nav-item" data-view="espiritual" onclick="navigateTo('espiritual')"><span class="emoji">✝️</span> Espiritual</button>
     <button type="button" class="nav-item" data-view="planner" onclick="navigateTo('planner')"><span class="emoji">📅</span> Daily Planner</button>
     <button type="button" class="nav-item" data-view="pendientes" onclick="navigateTo('pendientes')"><span class="emoji">✅</span> Pendientes</button>
-    <button type="button" class="nav-item" data-view="calificaciones" onclick="navigateTo('calificaciones')"><span class="emoji">📝</span> Calificaciones</button>
+    <button type="button" class="nav-item" data-view="calificaciones" onclick="navigateTo('calificaciones')"><span class="emoji">📊</span> Calificaciones</button>
     <button type="button" class="nav-item" data-view="alimentacion" onclick="navigateTo('alimentacion')"><span class="emoji">🍽️</span> Alimentación</button>
-    <button type="button" class="nav-item" data-view="checklist" onclick="navigateTo('checklist')"><span class="emoji">✅</span> Checklist</button>
+    <button type="button" class="nav-item" data-view="checklist" onclick="navigateTo('checklist')"><span class="emoji">☑️</span> Checklist</button>
     <button type="button" class="nav-item" data-view="gastos" onclick="navigateTo('gastos')"><span class="emoji">💸</span> Gastos</button>
     <button type="button" class="nav-item" data-view="metas" onclick="navigateTo('metas')"><span class="emoji">🎯</span> Metas</button>
-    <button type="button" class="nav-item" data-view="guia" onclick="navigateTo('guia')"><span class="emoji">🪞</span> Guía</button>
+    <button type="button" class="nav-item" data-view="guia" onclick="navigateTo('guia')"><span class="emoji">📖</span> Guía</button>
     <button type="button" class="nav-item" data-view="convicciones" onclick="navigateTo('convicciones')"><span class="emoji">✝️</span> Convicciones</button>
-    <button type="button" class="nav-item" data-view="cierre" onclick="navigateTo('cierre')"><span class="emoji">📊</span> Cierres</button>
-    <button type="button" class="nav-item" data-view="resumenes" onclick="navigateTo('resumenes')"><span class="emoji">📋</span> Resúmenes</button>
+    <button type="button" class="nav-item" data-view="cierre" onclick="navigateTo('cierre')"><span class="emoji">📋</span> Cierres</button>
+    <button type="button" class="nav-item" data-view="resumenes" onclick="navigateTo('resumenes')"><span class="emoji">📝</span> Resúmenes</button>
   </aside>
-  <div id="main">
-    <div id="topbar">
-      <button type="button" id="menu-btn" onclick="toggleSidebar()">☰</button>
-      <div style="font-weight:700;font-size:0.9rem;" id="top-title">Dashboard</div>
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+  <div class="main">
+    <div class="topbar">
+      <button type="button" onclick="toggleSidebar()" aria-label="Menú">☰</button>
+      <div id="top-title">Dashboard</div>
     </div>
-    <div id="views">
+    <div class="content">
       <div id="view-dashboard" class="view active">
-        <div style="padding:1.25rem 1rem 0.5rem;">
-          <h2 style="margin:0;font-size:1.25rem;">Hola, <span id="greet-name">Mary</span> ✨</h2>
-          <p style="margin:0.35rem 0 0;color:var(--muted);font-size:0.85rem;">Tu suite personal · un solo lugar</p>
-        </div>
-        <div class="dash-grid">
+        <div class="dashboard">
+          <h2 style="margin:0 0 0.75rem;font-size:1.1rem">Áreas</h2>
+          <div class="area-grid">
           <div class="area-card" onclick="navigateTo('poker')"><div class="card-icon" style="background:linear-gradient(135deg,#4c1d95,#a78bfa);">♠️</div><h3>Póker</h3><p>Sesiones, EV, mindset</p><button type="button" class="enter-btn">Abrir</button></div>
-          <div class="area-card" onclick="navigateTo('fitness')"><div class="card-icon" style="background:linear-gradient(135deg,#ec4899,#a78bfa);">💪</div><h3>Fitness</h3><p>Entreno, comida, cardio</p><button type="button" class="enter-btn">Abrir</button></div>
-          <div class="area-card" onclick="navigateTo('espiritual')"><div class="card-icon" style="background:linear-gradient(135deg,#ec4899,#c4b5fd);">🕊️</div><h3>Espiritual</h3><p>Devocional y lectura</p><button type="button" class="enter-btn">Abrir</button></div>
-          <div class="area-card" onclick="navigateTo('planner')"><div class="card-icon" style="background:linear-gradient(135deg,#f472b6,#a78bfa);">📅</div><h3>Daily Planner</h3><p>Métricas y reflexión</p><button type="button" class="enter-btn">Abrir</button></div>
-          <div class="area-card" onclick="navigateTo('calificaciones')"><div class="card-icon" style="background:linear-gradient(135deg,#ec4899,#a78bfa);">📝</div><h3>Calificaciones</h3><p>Cierre diario · bonos</p><button type="button" class="enter-btn">Abrir</button></div>
-          <div class="area-card" onclick="navigateTo('alimentacion')"><div class="card-icon" style="background:linear-gradient(135deg,#ec4899,#a78bfa);">🍽️</div><h3>Alimentación</h3><p>Macros Martín · salsas</p><button type="button" class="enter-btn">Abrir</button></div>
-          <div class="area-card" onclick="navigateTo('checklist')"><div class="card-icon" style="background:linear-gradient(135deg,#34d399,#a78bfa);">✅</div><h3>Checklist</h3><p>Monitoreo operativo</p><button type="button" class="enter-btn">Abrir</button></div>
-          <div class="area-card" onclick="navigateTo('gastos')"><div class="card-icon" style="background:linear-gradient(135deg,#f472b6,#c4b5fd);">💸</div><h3>Gastos</h3><p>Movimientos y plan</p><button type="button" class="enter-btn">Abrir</button></div>
-          <div class="area-card" onclick="navigateTo('metas')"><div class="card-icon" style="background:linear-gradient(135deg,#ec4899,#a78bfa);">🎯</div><h3>Metas</h3><p>That Girl Challenge</p><button type="button" class="enter-btn">Abrir</button></div>
-          <div class="area-card" onclick="navigateTo('convicciones')"><div class="card-icon" style="background:linear-gradient(135deg,#a78bfa,#f472b6);">✝️</div><h3>Convicciones</h3><p>21 pilares</p><button type="button" class="enter-btn">Abrir</button></div>
-          <div class="area-card" onclick="navigateTo('guia')"><div class="card-icon" style="background:linear-gradient(135deg,#c4b5fd,#ec4899);">🪞</div><h3>Guía</h3><p>Autoconocimiento</p><button type="button" class="enter-btn">Abrir</button></div>
-          <div class="area-card" onclick="navigateTo('pendientes')"><div class="card-icon" style="background:linear-gradient(135deg,#f472b6,#a78bfa);">✅</div><h3>Pendientes</h3><p>Tareas</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('fitness')"><div class="card-icon" style="background:linear-gradient(135deg,#0f766e,#5eead4);">💪</div><h3>Fitness</h3><p>Entrenamiento y hábitos</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('espiritual')"><div class="card-icon" style="background:linear-gradient(135deg,#7c3aed,#c4b5fd);">✝️</div><h3>Espiritual</h3><p>Devocional y reflexión</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('planner')"><div class="card-icon" style="background:linear-gradient(135deg,#db2777,#f9a8d4);">📅</div><h3>Daily Planner</h3><p>Plan del día</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('pendientes')"><div class="card-icon" style="background:linear-gradient(135deg,#b45309,#fcd34d);">✅</div><h3>Pendientes</h3><p>Tareas abiertas</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('calificaciones')"><div class="card-icon" style="background:linear-gradient(135deg,#9d174d,#f472b6);">📊</div><h3>Calificaciones</h3><p>Notas del equipo</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('alimentacion')"><div class="card-icon" style="background:linear-gradient(135deg,#047857,#6ee7b7);">🍽️</div><h3>Alimentación</h3><p>Macros y salsas</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('checklist')"><div class="card-icon" style="background:linear-gradient(135deg,#6d28d9,#c4b5fd);">☑️</div><h3>Checklist</h3><p>Monitoreo operativo</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('gastos')"><div class="card-icon" style="background:linear-gradient(135deg,#be123c,#fb7185);">💸</div><h3>Gastos</h3><p>Control financiero</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('metas')"><div class="card-icon" style="background:linear-gradient(135deg,#1d4ed8,#93c5fd);">🎯</div><h3>Metas</h3><p>Objetivos y retos</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('convicciones')"><div class="card-icon" style="background:linear-gradient(135deg,#7c3aed,#f0abfc);">✝️</div><h3>Convicciones</h3><p>21 pilares</p><button type="button" class="enter-btn">Abrir</button></div>
+          <div class="area-card" onclick="navigateTo('cierre')"><div class="card-icon" style="background:linear-gradient(135deg,#4c1d95,#e879f9);">📋</div><h3>Cierres</h3><p>Reportes PDF</p><button type="button" class="enter-btn">Abrir</button></div>
+          </div>
         </div>
       </div>
       <div id="view-poker" class="view"><iframe class="module-frame" src="poker.html" title="Póker"></iframe></div>
@@ -153,23 +118,6 @@
   </div>
 </div>
 <script>
-(function(){
-  document.querySelectorAll('iframe.module-frame').forEach(function(frame){
-    frame.addEventListener('load', function(){
-      try {
-        var doc = frame.contentDocument;
-        if(!doc) return;
-        if(!doc.querySelector('link[data-mary-theme]')){
-          var link = doc.createElement('link');
-          link.rel = 'stylesheet';
-          link.href = (location.origin || '') + '/mary-theme.css?v=2';
-          link.setAttribute('data-mary-theme','1');
-          doc.head.appendChild(link);
-        }
-      } catch(e){}
-    });
-  });
-})();
 function toggleSidebar(){
   document.getElementById('sidebar').classList.toggle('open');
   document.getElementById('overlay').classList.toggle('show');
@@ -178,11 +126,40 @@ function closeSidebar(){
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('overlay').classList.remove('show');
 }
-function navigateTo(view){
-  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
-  var el = document.getElementById('view-'+view);
+
+  function injectPokerTheme(){
+    try{
+      var f=document.querySelector('#view-poker iframe');
+      if(!f) return;
+      var run=function(){
+        try{
+          var d=f.contentDocument; if(!d) return;
+          var inner=d.getElementById && d.getElementById('poker-frame');
+          var targets=[d];
+          if(inner && inner.contentDocument) targets.push(inner.contentDocument);
+          targets.forEach(function(doc){
+            ['mary-theme.css','poker-theme.css'].forEach(function(href){
+              if(doc.querySelector('link[href="'+href+'"]')) return;
+              var l=doc.createElement('link');
+              l.rel='stylesheet';
+              l.href=href;
+              doc.head.appendChild(l);
+            });
+          });
+        }catch(e){}
+      };
+      f.addEventListener('load', run);
+      setTimeout(run, 600);
+    }catch(e){}
+  }
+
+  function navigateTo(view){
+  document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  var el=document.getElementById('view-'+view);
   if(el) el.classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(function(b){b.classList.toggle('active', b.getAttribute('data-view')===view);});
+  var nav=document.querySelector('.nav-item[data-view="'+view+'"]');
+  if(nav) nav.classList.add('active');
   var titles = {dashboard:'Dashboard',poker:'Póker',fitness:'Fitness',espiritual:'Espiritual',planner:'Daily Planner',pendientes:'Pendientes',calificaciones:'Calificaciones',alimentacion:'Alimentación',checklist:'Checklist',gastos:'Gastos',metas:'Metas',guia:'Guía',convicciones:'Convicciones',cierre:'Cierres',resumenes:'Resúmenes'};
   document.getElementById('top-title').textContent = titles[view] || view;
   closeSidebar();
@@ -220,6 +197,12 @@ function navigateTo(view){
 })();
 var hash = (location.hash||'').replace('#','');
 if(hash) navigateTo(hash);
+document.addEventListener('DOMContentLoaded', function(){ injectPokerTheme(); });
+var __nav = navigateTo;
+navigateTo = function(n){
+  __nav(n);
+  if(n==='poker') setTimeout(injectPokerTheme, 350);
+};
 </script>
 </body>
 </html>
