@@ -1,15 +1,10 @@
-(async function(){
-  try {
-    var code = '';
-    for (var i = 0; i < 10; i++) {
-      var r = await fetch('chkm-'+i+'.txt?v=fix9');
-      if (!r.ok) throw new Error('part '+i+' '+r.status);
-      code += await r.text();
-    }
-    (0, eval)(code);
-  } catch (e) {
-    console.error(e);
-    var el = document.getElementById('sync');
-    if (el) el.textContent = 'Error: ' + e.message;
-  }
+(function(){
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/gh/marpk07/mary-life@8dc46b61fed8d6222cd0ce8485c43d2626cd2137/checklist-app.js';
+  s.onload=function(){ console.log('checklist core CDN'); };
+  s.onerror=function(){
+    var el=document.getElementById('sync');
+    if(el) el.textContent='Error cargando checklist';
+  };
+  document.head.appendChild(s);
 })();

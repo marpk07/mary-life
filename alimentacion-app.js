@@ -1,15 +1,15 @@
-(async function(){
-  try {
-    var code = '';
-    for (var i = 0; i < 10; i++) {
-      var r = await fetch('alimm-'+i+'.txt?v=fix9');
-      if (!r.ok) throw new Error('part '+i+' '+r.status);
-      code += await r.text();
-    }
-    (0, eval)(code);
-  } catch (e) {
-    console.error(e);
-    var el = document.getElementById('sync');
-    if (el) el.textContent = 'Error: ' + e.message;
-  }
+(function(){
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/gh/marpk07/mary-life@8dc46b61fed8d6222cd0ce8485c43d2626cd2137/alimentacion-app.js';
+  s.onload=function(){
+    console.log('alimentacion core CDN');
+    var p=document.createElement('script');
+    p.src='alimentacion-patch.js?v=3';
+    document.head.appendChild(p);
+  };
+  s.onerror=function(){
+    var el=document.getElementById('sync');
+    if(el) el.textContent='Error cargando alimentación';
+  };
+  document.head.appendChild(s);
 })();
