@@ -1,10 +1,15 @@
-(function(){
-  var s=document.createElement('script');
-  s.src='https://cdn.jsdelivr.net/gh/marpk07/mary-life@8dc46b61fed8d6222cd0ce8485c43d2626cd2137/alimentacion-app.js';
-  s.onload=function(){ console.log('alimentacion core loaded from CDN'); };
-  s.onerror=function(){
-    var el=document.getElementById('sync');
-    if(el) el.textContent='Error cargando alimentación';
-  };
-  document.head.appendChild(s);
+(async function(){
+  try {
+    var code = '';
+    for (var i = 0; i < 4; i++) {
+      var r = await fetch('alim-'+i+'.txt?v=fix8');
+      if (!r.ok) throw new Error('part '+i+' '+r.status);
+      code += await r.text();
+    }
+    (0, eval)(code);
+  } catch (e) {
+    console.error(e);
+    var el = document.getElementById('sync');
+    if (el) el.textContent = 'Error: ' + e.message;
+  }
 })();
