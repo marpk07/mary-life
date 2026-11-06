@@ -1,0 +1,55 @@
+n num(p.weight);
+      return null;
+    }
+    if(p.weight!==''&&p.weight!=null) return num(p.weight);
+    if(p.mid!==''&&p.mid!=null) return num(p.mid);
+    if(p.final!==''&&p.final!=null) return num(p.final);
+    return null;
+  }
+  /** Base del pote: campo base (abrir hoy / override) o cierre del día anterior del mismo índice */
+  function potBase(day, pot, idx, prevPotsByName){
+    if(pot && pot.base!==''&&pot.base!=null) return num(pot.base);
+    const name = pot && pot.name;
+    const prevList = (prevPotsByName && name && prevPotsByName[name]) || [];
+    const prev = prevList[idx];
+    const pw = potWeight(prev, 'final');
+    return pw;
+  }
+  function salsaConsumo(day, mode){
+    mode = mode || 'final';
+    const todayP=ensure(day).pots||[], prevP=ensure(prevDay(day)).pots||[];
+    function byName(list){ const map={}; list.forEach(function(p){ if(!map[p.name]) map[p.name]=[]; map[p.name].push(p); }); return map; }
+    const tMap=byName(todayP), pMap=byName(prevP);
+    const names=Object.keys(Object.assign({},tMap,pMap)); const out=[];
+    names.forEach(function(name){
+      const ta=tMap[name]||[], pa=pMap[name]||[]; const n=Math.max(ta.length,pa.length);
+      for(var i=0;i<n;i++){
+        const pot = ta[i] || null;
+        const base = potBase(day, pot || {name:name}, i, pMap);
+        const cur = pot ? potWeight(pot, mode==='mid' ? 'mid' : 'final') : null;
+        if(base==null || cur==null) out.push({name:name,idx:i,grams:null,missing:true,prev:base,cur:cur,mode:mode,finished:!!(pot&&pot.finished)});
+        else out.push({name:name,idx:i,grams:Math.max(0,base-cur),missing:false,prev:base,cur:cur,mode:mode,finished:!!(pot&&pot.finished)});
+      }
+    });
+    return out;
+  }
+  function dayTotals(day){
+    const d=ensure(day); let kcal=0,p=0,c=0,g=0; const lines=[];
+    (d.meals||[]).forEach(function(m){ const mac=mealMacros(m); kcal+=mac.kcal;p+=mac.p;c+=mac.c;g+=mac.g; lines.push({m:m,mac:mac,auto:false}); });
+    salsaConsumo(day,'final').forEach(function(s){ if(s.missing||!s.grams) return; const mac=per100Macros(s.name,s.grams); kcal+=mac.kcal;p+=mac.p;c+=mac.c;g+=mac.g; lines.push({m:{name:s.name+(s.idx?(' #'+(s.idx+1)):''),grams:s.grams,salsa:true},mac:mac,auto:true}); });
+    return {kcal:r0(kcal),p:r0(p),c:r0(c),g:r0(g),lines:lines};
+  }
+  function periodDetail(days){
+    const counts={}, salsaGrams={};
+    days.forEach(function(day){
+      const d=ensure(day);
+      (d.meals||[]).forEach(function(m){ const key=m.name||m.id||'otro'; if(!counts[key]) counts[key]={qty:0,times:0}; counts[key].qty += num(m.qty)||1; counts[key].times += 1; });
+      salsaConsumo(day,'final').forEach(function(s){ if(s.missing||!s.grams) return; if(!salsaGrams[s.name]) salsaGrams[s.name]=0; salsaGrams[s.name]+=s.grams; });
+    });
+    return {counts,salsaGrams};
+  }
+  window.showTab=function(id){
+    ['dia','salsas','reportes'].forEach(function(t){
+      document.getElementById('tab-'+t).classList.toggle('hidden',t!==id);
+      const btn=document.querySelector('.tab[data-t="'+t+'"]');
+      if(btn) btn.classList.toggle('on',t===id); 
