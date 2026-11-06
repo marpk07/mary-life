@@ -1,8 +1,8 @@
 (async function(){
   try {
     var code = '';
-    for (var i = 0; i < 4; i++) {
-      var r = await fetch('alim-'+i+'.txt?v=fix8');
+    for (var i = 0; i < 10; i++) {
+      var r = await fetch('alimm-'+i+'.txt?v=fix9');
       if (!r.ok) throw new Error('part '+i+' '+r.status);
       code += await r.text();
     }
