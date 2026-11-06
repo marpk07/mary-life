@@ -1,0 +1,29 @@
+>({day,t:dayTotals(day)}));
+    const withData=rows.filter(r=>r.t.kcal>0); const n=withData.length||1;
+    const sum={kcal:0,p:0,c:0,g:0}; withData.forEach(r=>{sum.kcal+=r.t.kcal;sum.p+=r.t.p;sum.c+=r.t.c;sum.g+=r.t.g;});
+    const det=periodDetail(days);
+    try{
+      const {jsPDF}=window.jspdf; const doc=new jsPDF({unit:'pt',format:'a4'});
+      const purple=[124,58,160], pink=[236,72,153], lilac=[248,244,255];
+      doc.setFillColor(...lilac); doc.rect(0,0,595,70,'F');
+      doc.setFillColor(...purple); doc.roundedRect(40,22,220,18,9,9,'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(255,255,255);
+      doc.text(('Macros Martín · '+fmtDM(from)+' → '+fmtDM(to)).toUpperCase(),50,34);
+      doc.setFillColor(...pink); doc.roundedRect(40,46,100,16,8,8,'F');
+      doc.setFontSize(9); doc.text('Reporte',52,57);
+      doc.autoTable({startY:90,head:[['kcal prom.','P','C','G']],body:[[Math.round(sum.kcal/n),Math.round(sum.p/n)+' g',Math.round(sum.c/n)+' g',Math.round(sum.g/n)+' g']],headStyles:{fillColor:lilac,textColor:purple},margin:{left:40,right:40}});
+      const foodBody=Object.keys(det.counts).map(function(name){ const c=det.counts[name]; return [name, String(Math.round(c.qty*10)/10), String(c.times)]; });
+      if(foodBody.length) doc.autoTable({startY:doc.lastAutoTable.finalY+12,head:[['Alimento','Cantidad','Veces']],body:foodBody,headStyles:{fillColor:lilac,textColor:purple},margin:{left:40,right:40}});
+      const salsaBody=Object.keys(det.salsaGrams).map(function(name){ return [name, r0(det.salsaGrams[name])+' g']; });
+      if(salsaBody.length) doc.autoTable({startY:doc.lastAutoTable.finalY+12,head:[['Salsa','Consumo período']],body:salsaBody,headStyles:{fillColor:lilac,textColor:purple},margin:{left:40,right:40}});
+      doc.autoTable({startY:doc.lastAutoTable.finalY+12,head:[['Día','kcal','P','C','G']],body:rows.map(r=>[fmtDM(r.day),r.t.kcal,r.t.p,r.t.c,r.t.g]),headStyles:{fillColor:lilac,textColor:purple},margin:{left:40,right:40}});
+      doc.save('macros_martin_'+from+'_'+to+'.pdf');
+    }catch(e){console.error(e);alert('Error PDF');}
+  };
+  (async function init(){
+    loadLocal(); await loadCloud();
+    document.getElementById('day').value=today();
+    document.getElementById('day').addEventListener('change',function(){renderMeals();renderSalsas();});
+    document.getElementById('r-to').value=today(); setRange(7); renderMeals();
+  })();
+})();
