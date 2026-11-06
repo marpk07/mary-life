@@ -1,0 +1,55 @@
+p[1],10);}
+  function num(v){const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?0:n;}
+  function r0(n){return Math.round(Number(n)||0);}
+  function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',1800);}
+  function loadLocal(){ try{const r=localStorage.getItem(LS);if(r){const p=JSON.parse(r);if(p&&typeof p==='object'){store=Object.assign({days:{},updatedAt:null},p);}}}catch(e){} if(!store.days) store.days={}; }
+  function saveLocal(){ try{localStorage.setItem(LS,JSON.stringify(store));}catch(e){} }
+  async function loadCloud(){
+    if(!db){ setStatus('Sin nube · solo local'); return; }
+    try{
+      setStatus('Sincronizando…');
+      const snap=await db.collection(COL).doc(DOC).get();
+      if(snap.exists){
+        const d=snap.data();
+        if(d && (!store.updatedAt || (d.updatedAt||0)>=store.updatedAt)){ store=d; if(!store.days) store.days={}; saveLocal(); }
+      }
+      setStatus('☁ Firebase listo');
+    }catch(e){ console.warn(e); setStatus('Local (nube no disponible)'); }
+  }
+  async function saveCloud(){
+    if(!db) return;
+    try{
+      store.updatedAt=Date.now();
+      await db.collection(COL).doc(DOC).set({...store, updatedAt:store.updatedAt},{merge:true});
+      setStatus('☁ Guardado · '+new Date().toLocaleTimeString());
+    }catch(e){ console.warn(e); setStatus('Error al guardar en nube'); }
+  }
+  function persist(){ saveLocal(); saveCloud(); }
+  function ensure(day){
+    if(!store.days[day]) store.days[day]={meals:[],pots:[],note:''};
+    const d=store.days[day]; if(!d.meals) d.meals=[]; if(!d.pots) d.pots=[];
+    if(d.salsaWeights && typeof d.salsaWeights==='object' && !d._migrated){
+      Object.keys(d.salsaWeights).forEach(function(name){ const w=d.salsaWeights[name]; if(w!==''&&w!=null) d.pots.push({id:'m'+Math.random().toString(36).slice(2,7),name:name,weight:num(w),mid:''}); });
+      d._migrated=true;
+    }
+    if(!d.pots.length){
+      ['Hershey','Miel','Leche condensada tradicional','Mayonesa','Nutella','Cocada'].forEach(function(name){
+        d.pots.push({id:'s'+Math.random().toString(36).slice(2,7),name:name,weight:'',mid:''});
+      });
+    }
+    return d;
+  }
+  function per100Macros(name, grams){ const m=PER100[name]; if(!m||!grams) return {kcal:0,p:0,c:0,g:0}; const f=num(grams)/100; return {kcal:m.kcal*f,p:m.p*f,c:m.c*f,g:m.g*f}; }
+  function mealMacros(m){
+    if(m.custom) return {kcal:num(m.kcal),p:num(m.p),c:num(m.c),g:num(m.g)};
+    if(m.byGram||m.salsa) return per100Macros(m.name, m.grams||m.qty);
+    const f=FOODS.find(x=>x.id===m.id); if(!f) return {kcal:0,p:0,c:0,g:0};
+    if(f.byGram) return per100Macros(f.name, m.qty);
+    let mult=num(m.qty)||1; if(f.pct) mult=mult/100;
+    return {kcal:f.kcal*mult,p:f.p*mult,c:f.c*mult,g:f.g*mult};
+  }
+  function potWeight(p, prefer){
+    if(!p) return null;
+    if(prefer==='mid'){
+      if(p.mid!==''&&p.mid!=null) return num(p.mid);
+      if(p.weight!==''&&p.weight!=null) retur
