@@ -4,7 +4,7 @@
   s.onload=function(){
     console.log('alimentacion core CDN');
     var p=document.createElement('script');
-    p.src='alimentacion-patch.js?v=3';
+    p.src='alimentacion-patch.js?v=4';
     document.head.appendChild(p);
   };
   s.onerror=function(){
