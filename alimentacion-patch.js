@@ -1,4 +1,4 @@
-/* Patch v8 — Inicio/Fin + gramos visibles + total por tipo de salsa */
+/* Patch v9 — Día 100% controlado por Inicio/Fin; total por tipo con gramos */
 (function () {
   var LS = 'MARY_ALIM_MARTIN_V1';
   var COL = 'mary_alimentacion';
@@ -13,12 +13,37 @@
     'Dulce de leche': { kcal: 335, p: 6.4, c: 62, g: 7 },
     Cocada: { kcal: 323, p: 7, c: 51, g: 10 },
     Mantequilla: { kcal: 717, p: 0.85, c: 0.06, g: 81.1 },
-    'Queso parmesano': { kcal: 431, p: 38, c: 4, g: 29 }
+    'Queso parmesano': { kcal: 431, p: 38, c: 4, g: 29 },
+    'Arroz cocido': { kcal: 130, p: 2.7, c: 28, g: 0.3 },
+    'Papa cruda': { kcal: 77, p: 2, c: 17, g: 0.1 },
+    'Tilapia cruda': { kcal: 96, p: 20.1, c: 0, g: 1.7 },
+    'Tilapia cocida': { kcal: 128, p: 26, c: 0, g: 2.7 }
   };
-  var SALSA_NAMES = Object.keys(PER100);
+  var FOODS_FIXED = {
+    yopro15: { kcal: 159, p: 15, c: 20, g: 2 },
+    yopro23: { kcal: 171, p: 23, c: 13, g: 3 },
+    gatorade: { kcal: 120, p: 0, c: 30, g: 0 },
+    panqueca100: { kcal: 432, p: 48, c: 34, g: 9, pct: true },
+    banano: { kcal: 53, p: 1, c: 14, g: 0 },
+    arroz_mantequilla: { kcal: 308, p: 5.4, c: 56.4, g: 6 },
+    sudado: { kcal: 313, p: 43.8, c: 0.2, g: 15.4 },
+    napolitana: { kcal: 560, p: 62, c: 14, g: 29 }
+  };
+  var SALSA_NAMES = [
+    'Hershey',
+    'Miel',
+    'Leche condensada tradicional',
+    'Leche condensada La Lechera',
+    'Mayonesa',
+    'Nutella',
+    'Dulce de leche',
+    'Cocada',
+    'Mantequilla',
+    'Queso parmesano'
+  ];
 
   function num(v) {
-    var n = parseFloat(String(v).replace(',', '.'));
+    var n = parseFloat(String(v == null ? '' : v).replace(',', '.'));
     return isNaN(n) ? 0 : n;
   }
   function r0(n) {
@@ -31,7 +56,7 @@
     t.style.display = 'block';
     setTimeout(function () {
       t.style.display = 'none';
-    }, 1800);
+    }, 2000);
   }
   function today() {
     var d = new Date();
@@ -65,11 +90,6 @@
     if (!d.pots) d.pots = [];
     return d;
   }
-  function potLabel(p) {
-    var base = p.name || 'Salsa';
-    if (p.label && String(p.label).trim()) return base + ' · ' + String(p.label).trim();
-    return base;
-  }
   function potInicio(p) {
     if (p.inicio !== '' && p.inicio != null) return num(p.inicio);
     return null;
@@ -84,37 +104,64 @@
     if (a == null || b == null) return null;
     return Math.max(0, a - b);
   }
-  function macrosFor(name, grams) {
+  function potLabel(p) {
+    var base = p.name || 'Salsa';
+    if (p.label && String(p.label).trim()) return base + ' · ' + String(p.label).trim();
+    return base;
+  }
+  function macrosPer100(name, grams) {
     var m = PER100[name];
     if (!m || !grams) return { kcal: 0, p: 0, c: 0, g: 0 };
     var f = num(grams) / 100;
     return { kcal: m.kcal * f, p: m.p * f, c: m.c * f, g: m.g * f };
   }
-
-  function isOldSalsaMeal(m) {
+  function mealMacros(m) {
+    if (!m) return { kcal: 0, p: 0, c: 0, g: 0 };
+    if (m.custom || m._salsaAuto)
+      return { kcal: num(m.kcal), p: num(m.p), c: num(m.c), g: num(m.g) };
+    if (m.byGram || m.salsa)
+      return macrosPer100(m.name, m.grams || m.qty);
+    var f = FOODS_FIXED[m.id];
+    if (f) {
+      var mult = num(m.qty) || 1;
+      if (f.pct) mult = mult / 100;
+      return { kcal: f.kcal * mult, p: f.p * mult, c: f.c * mult, g: f.g * mult };
+    }
+    if (m.name && PER100[m.name]) return macrosPer100(m.name, m.grams || m.qty);
+    return { kcal: num(m.kcal), p: num(m.p), c: num(m.c), g: num(m.g) };
+  }
+  function isSalsaMeal(m) {
     if (!m) return false;
-    if (m._salsaAuto) return true;
-    if (m.salsa) return true;
+    if (m._salsaAuto || m.salsa) return true;
     var n = String(m.name || '').toLowerCase();
     if (n.indexOf('· salsas') >= 0 || n.indexOf('· salsa') >= 0) return true;
     if (/\(salsa\)/i.test(m.name || '')) return true;
-    if (m.byGram || m.grams != null) {
-      for (var i = 0; i < SALSA_NAMES.length; i++) {
-        var sn = SALSA_NAMES[i].toLowerCase();
-        if (n === sn || n.indexOf(sn) === 0) {
-          if (n.indexOf('sudado') < 0 && n.indexOf('napolitana') < 0) return true;
-        }
+    for (var i = 0; i < SALSA_NAMES.length; i++) {
+      var sn = SALSA_NAMES[i].toLowerCase();
+      if (n === sn || n.indexOf(sn) === 0) {
+        if (n.indexOf('sudado') < 0 && n.indexOf('napolitana') < 0) return true;
       }
     }
     return false;
   }
 
-  function syncSalsaMeals(d) {
-    // 1) Quitar residuales
-    d.meals = (d.meals || []).filter(function (m) {
-      return !isOldSalsaMeal(m);
+  function buildSalsaTotals(pots) {
+    var byName = {};
+    (pots || []).forEach(function (p) {
+      var gr = potConsumo(p);
+      if (gr == null || gr <= 0) return;
+      var key = p.name || 'Salsa';
+      if (!byName[key]) byName[key] = { grams: 0, labels: [] };
+      byName[key].grams += gr;
+      if (p.label && String(p.label).trim()) byName[key].labels.push(String(p.label).trim());
     });
-    // 2) Potes limpios (sin weight/mid para que el core viejo no calcule)
+    return byName;
+  }
+
+  function syncSalsaMeals(d) {
+    d.meals = (d.meals || []).filter(function (m) {
+      return !isSalsaMeal(m);
+    });
     (d.pots || []).forEach(function (p) {
       if ((p.fin === '' || p.fin == null) && p.weight !== '' && p.weight != null) {
         p.fin = num(p.weight);
@@ -123,33 +170,19 @@
       p.mid = '';
       if (p.base !== undefined) p.base = '';
     });
-    // 3) Sumar por TIPO de salsa (name) → un solo total del día
-    var byName = {};
-    (d.pots || []).forEach(function (p) {
-      var gr = potConsumo(p);
-      if (gr == null || gr <= 0) return;
-      var key = p.name || 'Salsa';
-      if (!byName[key]) byName[key] = { grams: 0, labels: [] };
-      byName[key].grams += gr;
-      if (p.label && String(p.label).trim()) {
-        byName[key].labels.push(String(p.label).trim());
-      }
-    });
+    var byName = buildSalsaTotals(d.pots);
     Object.keys(byName).forEach(function (name) {
       var info = byName[name];
       var gr = info.grams;
       if (gr <= 0) return;
-      var mac = macrosFor(name, gr);
+      var mac = macrosPer100(name, gr);
       var labelPart = '';
       if (info.labels.length === 1) labelPart = ' · ' + info.labels[0];
       else if (info.labels.length > 1) labelPart = ' · varios';
-      // Nombre con gramos visibles: "Leche condensada tradicional (131 g) · salsa"
-      var display =
-        name + labelPart + ' (' + r0(gr) + ' g) · salsa';
       d.meals.push({
         _salsaAuto: true,
-        id: 'salsa_' + name.replace(/\s+/g, '_').slice(0, 20),
-        name: display,
+        id: 'salsa_' + name.replace(/\s+/g, '_').slice(0, 24),
+        name: name + labelPart + ' (' + r0(gr) + ' g) · salsa',
         qty: 1,
         grams: gr,
         custom: true,
@@ -172,14 +205,10 @@
           .firestore()
           .collection(COL)
           .doc(DOC)
-          .set(Object.assign({}, store, { updatedAt: store.updatedAt }), {
-            merge: true
-          })
+          .set(Object.assign({}, store, { updatedAt: store.updatedAt }), { merge: true })
           .then(function () {
             var el = document.getElementById('sync');
-            if (el)
-              el.textContent =
-                '☁ Salsas · ' + new Date().toLocaleTimeString();
+            if (el) el.textContent = '☁ Salsas OK · ' + new Date().toLocaleTimeString();
           })
           .catch(function (e) {
             console.warn(e);
@@ -198,14 +227,124 @@
     return d;
   }
 
-  function cleanDayDom() {
+  /** Render completo del día: comidas normales + salsas (Inicio/Fin) */
+  function renderDayFromPatch() {
+    var store = loadStore();
+    var day = dayVal();
+    var d = ensureDay(store, day);
+    syncSalsaMeals(d);
+    persistFull(store);
+
     var list = document.getElementById('meals-list');
+    var kpis = document.getElementById('kpis');
     if (!list) return;
-    list.querySelectorAll('.item').forEach(function (item) {
-      var t = (item.textContent || '').toLowerCase();
-      if (t.indexOf('· salsas') >= 0) item.remove();
+
+    var total = { kcal: 0, p: 0, c: 0, g: 0 };
+    var html = '';
+
+    // 1) Comidas normales (no salsa)
+    (d.meals || []).forEach(function (m, idx) {
+      if (m._salsaAuto) return; // se pintan después de forma clara
+      if (isSalsaMeal(m)) return;
+      var mac = mealMacros(m);
+      total.kcal += mac.kcal;
+      total.p += mac.p;
+      total.c += mac.c;
+      total.g += mac.g;
+      var label = m.name || m.id || 'Alimento';
+      if (m.byGram && m.grams) label = label + ' (' + r0(m.grams) + ' g)';
+      else if (m.qty && m.qty !== 1 && !m.byGram) label = label + ' × ' + m.qty;
+      html +=
+        '<div class="item" data-meal-idx="' +
+        idx +
+        '">' +
+        '<div><b>' +
+        label +
+        '</b><div class="muted">' +
+        r0(mac.kcal) +
+        ' kcal | ' +
+        r0(mac.p) +
+        ' g P | ' +
+        r0(mac.c) +
+        ' g C | ' +
+        r0(mac.g) +
+        ' g G</div></div>' +
+        '<button type="button" class="btn btn-ghost" onclick="window._patchDelMeal(' +
+        idx +
+        ')">✕</button></div>';
     });
+
+    // 2) Salsas: total por tipo con gramos
+    var byName = buildSalsaTotals(d.pots);
+    var salsaKeys = Object.keys(byName);
+    if (!salsaKeys.length) {
+      // nada de salsas con consumo
+    }
+    salsaKeys.forEach(function (name) {
+      var info = byName[name];
+      var gr = info.grams;
+      if (gr <= 0) return;
+      var mac = macrosPer100(name, gr);
+      total.kcal += mac.kcal;
+      total.p += mac.p;
+      total.c += mac.c;
+      total.g += mac.g;
+      var labelPart = '';
+      if (info.labels.length === 1) labelPart = ' · ' + info.labels[0];
+      else if (info.labels.length > 1) labelPart = ' · varios';
+      var label = name + labelPart + ' (' + r0(gr) + ' g) · salsa';
+      html +=
+        '<div class="item" data-salsa="' +
+        name.replace(/"/g, '') +
+        '">' +
+        '<div><b>' +
+        label +
+        '</b><div class="muted">' +
+        r0(mac.kcal) +
+        ' kcal | ' +
+        r0(mac.p) +
+        ' g P | ' +
+        r0(mac.c) +
+        ' g C | ' +
+        r0(mac.g) +
+        ' g G</div></div>' +
+        '<span class="muted" style="font-size:.7rem">auto</span></div>';
+    });
+
+    if (!html) {
+      html = '<p class="muted">Sin comidas aún. Agrega alimentos o completa Inicio/Fin en Salsas.</p>';
+    }
+    list.innerHTML = html;
+
+    if (kpis) {
+      kpis.innerHTML =
+        '<div class="kpi"><div class="n">' +
+        r0(total.kcal) +
+        '</div><div class="l">kcal</div></div>' +
+        '<div class="kpi"><div class="n">' +
+        r0(total.p) +
+        ' g</div><div class="l">Proteína</div></div>' +
+        '<div class="kpi"><div class="n">' +
+        r0(total.c) +
+        ' g</div><div class="l">Carbos</div></div>' +
+        '<div class="kpi"><div class="n">' +
+        r0(total.g) +
+        ' g</div><div class="l">Grasas</div></div>';
+    }
   }
+
+  window._patchDelMeal = function (idx) {
+    var store = loadStore();
+    var d = ensureDay(store, dayVal());
+    if (!d.meals[idx] || d.meals[idx]._salsaAuto) {
+      toast('Las salsas se editan en la pestaña Salsas');
+      return;
+    }
+    d.meals.splice(idx, 1);
+    persistFull(store);
+    renderDayFromPatch();
+    toast('Eliminado');
+  };
 
   function ensureDulceOption() {
     var sel = document.getElementById('salsa-add-name');
@@ -231,9 +370,9 @@
     muted.innerHTML =
       '<b>Cómo llenar</b><br>' +
       '• <b>Inicio</b> y <b>Fin</b> → consumo = Inicio − Fin<br>' +
-      '• Si Inicio = Fin → <b>0 g</b> (no va al día)<br>' +
-      '• Dos potes de la misma salsa → se <b>suman</b> en un solo total<br>' +
-      '• Etiqueta solo para distinguirlo aquí (cocina / mesa)';
+      '• Eso se suma <b>una sola vez</b> a los macros del día<br>' +
+      '• Dos potes de la misma salsa → se <b>suman</b> en un total<br>' +
+      '• Rellenaron hoy → <b>Rellené</b>';
   }
 
   function renderSalsasSimple() {
@@ -254,7 +393,7 @@
           var ini = p.inicio !== '' && p.inicio != null ? p.inicio : '';
           var fin = p.fin !== '' && p.fin != null ? p.fin : '';
           var gr = potConsumo(p);
-          var mac = gr != null ? macrosFor(p.name, gr) : null;
+          var mac = gr != null ? macrosPer100(p.name, gr) : null;
           var consTxt =
             gr == null
               ? '<span class="muted">Completa Inicio y Fin</span>'
@@ -324,7 +463,7 @@
               label +
               '</b><div class="muted">0 g (no va al día)</div></div></div>'
             );
-          var mac = macrosFor(p.name, gr);
+          var mac = macrosPer100(p.name, gr);
           totalK += mac.kcal;
           return (
             '<div class="item"><div><b>' +
@@ -431,7 +570,7 @@
   window.saveSalsas = function () {
     applyAndSave();
     renderSalsasSimple();
-    toast('Guardado. En Día verás el total por salsa');
+    toast('Guardado · abre Día para ver el total');
   };
 
   var _saveDay = window.saveDay;
@@ -442,25 +581,36 @@
         await _saveDay();
       } catch (e) {}
     }
-    setTimeout(function () {
-      applyAndSave();
-      cleanDayDom();
-    }, 400);
+    setTimeout(renderDayFromPatch, 80);
+    setTimeout(renderDayFromPatch, 350);
   };
 
   var _showTab = window.showTab;
   window.showTab = function (id) {
     if (id === 'dia') applyAndSave();
     if (typeof _showTab === 'function') _showTab(id);
-    if (id === 'salsas') setTimeout(renderSalsasSimple, 40);
+    if (id === 'salsas') setTimeout(renderSalsasSimple, 30);
     if (id === 'dia') {
-      setTimeout(function () {
-        applyAndSave();
-        cleanDayDom();
-      }, 150);
-      setTimeout(cleanDayDom, 400);
+      setTimeout(renderDayFromPatch, 40);
+      setTimeout(renderDayFromPatch, 200);
+      setTimeout(renderDayFromPatch, 500);
     }
   };
+
+  // Si el core vuelve a pintar la lista, la reescribimos
+  function watchMealsList() {
+    var root = document.getElementById('meals-list');
+    if (!root || root._patchObs) return;
+    root._patchObs = true;
+    var timer = null;
+    new MutationObserver(function () {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(function () {
+        var tab = document.getElementById('tab-dia');
+        if (tab && !tab.classList.contains('hidden')) renderDayFromPatch();
+      }, 60);
+    }).observe(root, { childList: true, subtree: true });
+  }
 
   function hookDay() {
     var el = document.getElementById('day');
@@ -470,8 +620,8 @@
       setTimeout(function () {
         applyAndSave();
         renderSalsasSimple();
-        cleanDayDom();
-      }, 120);
+        renderDayFromPatch();
+      }, 100);
     });
   }
 
@@ -479,22 +629,17 @@
     ensureDulceOption();
     improveHelp();
     hookDay();
+    watchMealsList();
     applyAndSave();
-    cleanDayDom();
-    var tab = document.getElementById('tab-salsas');
-    if (tab && !tab.classList.contains('hidden')) renderSalsasSimple();
-    var root = document.getElementById('meals-list');
-    if (root && !root._salsaCleanObs) {
-      root._salsaCleanObs = true;
-      new MutationObserver(function () {
-        cleanDayDom();
-      }).observe(root, { childList: true, subtree: true });
-    }
+    var tabS = document.getElementById('tab-salsas');
+    if (tabS && !tabS.classList.contains('hidden')) renderSalsasSimple();
+    var tabD = document.getElementById('tab-dia');
+    if (tabD && !tabD.classList.contains('hidden')) renderDayFromPatch();
   }
 
   if (document.readyState === 'loading')
     document.addEventListener('DOMContentLoaded', function () {
-      setTimeout(start, 1000);
+      setTimeout(start, 900);
     });
-  else setTimeout(start, 1000);
+  else setTimeout(start, 900);
 })();
