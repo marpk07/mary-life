@@ -1,4 +1,4 @@
-/* Patch v9 — Día 100% controlado por Inicio/Fin; total por tipo con gramos */
+/* Patch v10 — Salsas Inicio/Fin + Mini sandwich tilapia meal prep */
 (function () {
   var LS = 'MARY_ALIM_MARTIN_V1';
   var COL = 'mary_alimentacion';
@@ -27,8 +27,22 @@
     banano: { kcal: 53, p: 1, c: 14, g: 0 },
     arroz_mantequilla: { kcal: 308, p: 5.4, c: 56.4, g: 6 },
     sudado: { kcal: 313, p: 43.8, c: 0.2, g: 15.4 },
-    napolitana: { kcal: 560, p: 62, c: 14, g: 29 }
+    napolitana: { kcal: 560, p: 62, c: 14, g: 29 },
+    // Mini sandwich meal prep (por unidad)
+    mini_sandwich: { kcal: 413, p: 21.2, c: 55.4, g: 11.5 }
   };
+  var EXTRA_FOODS = [
+    {
+      id: 'mini_sandwich',
+      name: 'Mini sandwich tilapia',
+      cat: 'Meal prep',
+      hint: '1 unidad · tilapia, queso y mayonesa',
+      kcal: 413,
+      p: 21.2,
+      c: 55.4,
+      g: 11.5
+    }
+  ];
   var SALSA_NAMES = [
     'Hershey',
     'Miel',
@@ -208,7 +222,7 @@
           .set(Object.assign({}, store, { updatedAt: store.updatedAt }), { merge: true })
           .then(function () {
             var el = document.getElementById('sync');
-            if (el) el.textContent = '☁ Salsas OK · ' + new Date().toLocaleTimeString();
+            if (el) el.textContent = '☁ OK · ' + new Date().toLocaleTimeString();
           })
           .catch(function (e) {
             console.warn(e);
@@ -227,7 +241,6 @@
     return d;
   }
 
-  /** Render completo del día: comidas normales + salsas (Inicio/Fin) */
   function renderDayFromPatch() {
     var store = loadStore();
     var day = dayVal();
@@ -242,9 +255,8 @@
     var total = { kcal: 0, p: 0, c: 0, g: 0 };
     var html = '';
 
-    // 1) Comidas normales (no salsa)
     (d.meals || []).forEach(function (m, idx) {
-      if (m._salsaAuto) return; // se pintan después de forma clara
+      if (m._salsaAuto) return;
       if (isSalsaMeal(m)) return;
       var mac = mealMacros(m);
       total.kcal += mac.kcal;
@@ -252,8 +264,14 @@
       total.c += mac.c;
       total.g += mac.g;
       var label = m.name || m.id || 'Alimento';
-      if (m.byGram && m.grams) label = label + ' (' + r0(m.grams) + ' g)';
-      else if (m.qty && m.qty !== 1 && !m.byGram) label = label + ' × ' + m.qty;
+      if (m.id === 'mini_sandwich' || (m.name && m.name.indexOf('Mini sandwich') === 0)) {
+        var q = num(m.qty) || 1;
+        label = 'Mini sandwich tilapia' + (q !== 1 ? ' × ' + q : '');
+      } else if (m.byGram && m.grams) {
+        label = label + ' (' + r0(m.grams) + ' g)';
+      } else if (m.qty && m.qty !== 1 && !m.byGram) {
+        label = label + ' × ' + m.qty;
+      }
       html +=
         '<div class="item" data-meal-idx="' +
         idx +
@@ -274,13 +292,8 @@
         ')">✕</button></div>';
     });
 
-    // 2) Salsas: total por tipo con gramos
     var byName = buildSalsaTotals(d.pots);
-    var salsaKeys = Object.keys(byName);
-    if (!salsaKeys.length) {
-      // nada de salsas con consumo
-    }
-    salsaKeys.forEach(function (name) {
+    Object.keys(byName).forEach(function (name) {
       var info = byName[name];
       var gr = info.grams;
       if (gr <= 0) return;
@@ -294,9 +307,7 @@
       else if (info.labels.length > 1) labelPart = ' · varios';
       var label = name + labelPart + ' (' + r0(gr) + ' g) · salsa';
       html +=
-        '<div class="item" data-salsa="' +
-        name.replace(/"/g, '') +
-        '">' +
+        '<div class="item">' +
         '<div><b>' +
         label +
         '</b><div class="muted">' +
@@ -312,7 +323,8 @@
     });
 
     if (!html) {
-      html = '<p class="muted">Sin comidas aún. Agrega alimentos o completa Inicio/Fin en Salsas.</p>';
+      html =
+        '<p class="muted">Sin comidas aún. Agrega alimentos o completa Inicio/Fin en Salsas.</p>';
     }
     list.innerHTML = html;
 
@@ -331,6 +343,8 @@
         r0(total.g) +
         ' g</div><div class="l">Grasas</div></div>';
     }
+
+    injectExtraFoods();
   }
 
   window._patchDelMeal = function (idx) {
@@ -345,6 +359,58 @@
     renderDayFromPatch();
     toast('Eliminado');
   };
+
+  window._addExtraFood = function (id) {
+    var f = null;
+    for (var i = 0; i < EXTRA_FOODS.length; i++) {
+      if (EXTRA_FOODS[i].id === id) f = EXTRA_FOODS[i];
+    }
+    if (!f) return;
+    var v = prompt('Cantidad de "' + f.name + '" (unidades)', '1');
+    if (v == null || v === '') return;
+    var qty = num(v) || 1;
+    var store = loadStore();
+    var d = ensureDay(store, dayVal());
+    d.meals.push({
+      id: f.id,
+      name: f.name,
+      qty: qty,
+      custom: true,
+      kcal: r0(f.kcal * qty),
+      p: Math.round(f.p * qty * 10) / 10,
+      c: Math.round(f.c * qty * 10) / 10,
+      g: Math.round(f.g * qty * 10) / 10
+    });
+    persistFull(store);
+    renderDayFromPatch();
+    toast(f.name + (qty !== 1 ? ' × ' + qty : '') + ' agregado');
+  };
+
+  function injectExtraFoods() {
+    var box = document.getElementById('food-quick');
+    if (!box) return;
+    EXTRA_FOODS.forEach(function (f) {
+      if (box.querySelector('[data-extra="' + f.id + '"]')) return;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'food-btn';
+      btn.setAttribute('data-extra', f.id);
+      btn.innerHTML =
+        '<b>' +
+        f.name +
+        '</b><div class="muted">' +
+        f.cat +
+        ' · ' +
+        f.hint +
+        '</div>';
+      btn.onclick = function () {
+        window._addExtraFood(f.id);
+      };
+      // Ponerlo arriba de la lista
+      if (box.firstChild) box.insertBefore(btn, box.firstChild);
+      else box.appendChild(btn);
+    });
+  }
 
   function ensureDulceOption() {
     var sel = document.getElementById('salsa-add-name');
@@ -597,7 +663,6 @@
     }
   };
 
-  // Si el core vuelve a pintar la lista, la reescribimos
   function watchMealsList() {
     var root = document.getElementById('meals-list');
     if (!root || root._patchObs) return;
@@ -631,6 +696,7 @@
     hookDay();
     watchMealsList();
     applyAndSave();
+    injectExtraFoods();
     var tabS = document.getElementById('tab-salsas');
     if (tabS && !tabS.classList.contains('hidden')) renderSalsasSimple();
     var tabD = document.getElementById('tab-dia');
