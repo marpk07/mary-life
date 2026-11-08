@@ -1,6 +1,7 @@
-/* Patch v10 — Salsas Inicio/Fin + Mini sandwich tilapia meal prep */
+/* Patch v11 — Salsas Inicio/Fin + Mini sandwich que NO se borra */
 (function () {
   var LS = 'MARY_ALIM_MARTIN_V1';
+  var LS_EXTRA = 'MARY_ALIM_EXTRA_MEALS_V1'; // comidas del patch (no las pisa el core)
   var COL = 'mary_alimentacion';
   var DOC = 'martin_data';
   var PER100 = {
@@ -28,7 +29,6 @@
     arroz_mantequilla: { kcal: 308, p: 5.4, c: 56.4, g: 6 },
     sudado: { kcal: 313, p: 43.8, c: 0.2, g: 15.4 },
     napolitana: { kcal: 560, p: 62, c: 14, g: 29 },
-    // Mini sandwich meal prep (por unidad)
     mini_sandwich: { kcal: 413, p: 21.2, c: 55.4, g: 11.5 }
   };
   var EXTRA_FOODS = [
@@ -97,6 +97,30 @@
       return { days: {}, updatedAt: null };
     }
   }
+  function loadExtra() {
+    try {
+      var r = localStorage.getItem(LS_EXTRA);
+      if (!r) return {};
+      var p = JSON.parse(r);
+      return p && typeof p === 'object' ? p : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  function saveExtra(extra) {
+    try {
+      localStorage.setItem(LS_EXTRA, JSON.stringify(extra));
+    } catch (e) {}
+  }
+  function getExtraMeals(day) {
+    var extra = loadExtra();
+    return (extra[day] || []).slice();
+  }
+  function setExtraMeals(day, meals) {
+    var extra = loadExtra();
+    extra[day] = meals || [];
+    saveExtra(extra);
+  }
   function ensureDay(store, day) {
     if (!store.days[day]) store.days[day] = { meals: [], pots: [], note: '' };
     var d = store.days[day];
@@ -131,7 +155,7 @@
   }
   function mealMacros(m) {
     if (!m) return { kcal: 0, p: 0, c: 0, g: 0 };
-    if (m.custom || m._salsaAuto)
+    if (m.custom || m._salsaAuto || m._patchExtra)
       return { kcal: num(m.kcal), p: num(m.p), c: num(m.c), g: num(m.g) };
     if (m.byGram || m.salsa)
       return macrosPer100(m.name, m.grams || m.qty);
@@ -241,11 +265,13 @@
     return d;
   }
 
+  /** Lista completa: comidas core + extra (sandwich) + salsas */
   function renderDayFromPatch() {
     var store = loadStore();
     var day = dayVal();
     var d = ensureDay(store, day);
     syncSalsaMeals(d);
+    // No pisamos extra meals en el store principal; viven en LS_EXTRA
     persistFull(store);
 
     var list = document.getElementById('meals-list');
@@ -254,28 +280,23 @@
 
     var total = { kcal: 0, p: 0, c: 0, g: 0 };
     var html = '';
+    var extra = getExtraMeals(day);
 
+    // 1) Comidas normales del store (sin salsas)
     (d.meals || []).forEach(function (m, idx) {
       if (m._salsaAuto) return;
       if (isSalsaMeal(m)) return;
+      if (m._patchExtra) return; // se pintan desde LS_EXTRA
       var mac = mealMacros(m);
       total.kcal += mac.kcal;
       total.p += mac.p;
       total.c += mac.c;
       total.g += mac.g;
       var label = m.name || m.id || 'Alimento';
-      if (m.id === 'mini_sandwich' || (m.name && m.name.indexOf('Mini sandwich') === 0)) {
-        var q = num(m.qty) || 1;
-        label = 'Mini sandwich tilapia' + (q !== 1 ? ' × ' + q : '');
-      } else if (m.byGram && m.grams) {
-        label = label + ' (' + r0(m.grams) + ' g)';
-      } else if (m.qty && m.qty !== 1 && !m.byGram) {
-        label = label + ' × ' + m.qty;
-      }
+      if (m.byGram && m.grams) label = label + ' (' + r0(m.grams) + ' g)';
+      else if (m.qty && m.qty !== 1 && !m.byGram) label = label + ' × ' + m.qty;
       html +=
-        '<div class="item" data-meal-idx="' +
-        idx +
-        '">' +
+        '<div class="item">' +
         '<div><b>' +
         label +
         '</b><div class="muted">' +
@@ -287,11 +308,40 @@
         ' g C | ' +
         r0(mac.g) +
         ' g G</div></div>' +
-        '<button type="button" class="btn btn-ghost" onclick="window._patchDelMeal(' +
+        '<button type="button" class="btn btn-ghost" onclick="window._patchDelCoreMeal(' +
         idx +
         ')">✕</button></div>';
     });
 
+    // 2) Comidas del patch (Mini sandwich, etc.) — NO las borra el core
+    extra.forEach(function (m, eidx) {
+      var mac = mealMacros(m);
+      total.kcal += mac.kcal;
+      total.p += mac.p;
+      total.c += mac.c;
+      total.g += mac.g;
+      var label = m.name || 'Alimento';
+      var q = num(m.qty) || 1;
+      if (q !== 1) label = label + ' × ' + q;
+      html +=
+        '<div class="item">' +
+        '<div><b>' +
+        label +
+        '</b><div class="muted">' +
+        r0(mac.kcal) +
+        ' kcal | ' +
+        r0(mac.p) +
+        ' g P | ' +
+        r0(mac.c) +
+        ' g C | ' +
+        r0(mac.g) +
+        ' g G</div></div>' +
+        '<button type="button" class="btn btn-ghost" onclick="window._patchDelExtra(' +
+        eidx +
+        ')">✕</button></div>';
+    });
+
+    // 3) Salsas (Inicio/Fin)
     var byName = buildSalsaTotals(d.pots);
     Object.keys(byName).forEach(function (name) {
       var info = byName[name];
@@ -347,15 +397,24 @@
     injectExtraFoods();
   }
 
-  window._patchDelMeal = function (idx) {
+  window._patchDelCoreMeal = function (idx) {
     var store = loadStore();
     var d = ensureDay(store, dayVal());
     if (!d.meals[idx] || d.meals[idx]._salsaAuto) {
-      toast('Las salsas se editan en la pestaña Salsas');
+      toast('Las salsas se editan en Salsas');
       return;
     }
     d.meals.splice(idx, 1);
     persistFull(store);
+    renderDayFromPatch();
+    toast('Eliminado');
+  };
+
+  window._patchDelExtra = function (eidx) {
+    var day = dayVal();
+    var extra = getExtraMeals(day);
+    extra.splice(eidx, 1);
+    setExtraMeals(day, extra);
     renderDayFromPatch();
     toast('Eliminado');
   };
@@ -369,19 +428,20 @@
     var v = prompt('Cantidad de "' + f.name + '" (unidades)', '1');
     if (v == null || v === '') return;
     var qty = num(v) || 1;
-    var store = loadStore();
-    var d = ensureDay(store, dayVal());
-    d.meals.push({
+    var day = dayVal();
+    var extra = getExtraMeals(day);
+    extra.push({
+      _patchExtra: true,
       id: f.id,
       name: f.name,
       qty: qty,
       custom: true,
-      kcal: r0(f.kcal * qty),
+      kcal: Math.round(f.kcal * qty * 10) / 10,
       p: Math.round(f.p * qty * 10) / 10,
       c: Math.round(f.c * qty * 10) / 10,
       g: Math.round(f.g * qty * 10) / 10
     });
-    persistFull(store);
+    setExtraMeals(day, extra);
     renderDayFromPatch();
     toast(f.name + (qty !== 1 ? ' × ' + qty : '') + ' agregado');
   };
@@ -406,7 +466,6 @@
       btn.onclick = function () {
         window._addExtraFood(f.id);
       };
-      // Ponerlo arriba de la lista
       if (box.firstChild) box.insertBefore(btn, box.firstChild);
       else box.appendChild(btn);
     });
@@ -668,12 +727,23 @@
     if (!root || root._patchObs) return;
     root._patchObs = true;
     var timer = null;
+    var rendering = false;
     new MutationObserver(function () {
+      if (rendering) return;
       if (timer) clearTimeout(timer);
       timer = setTimeout(function () {
         var tab = document.getElementById('tab-dia');
-        if (tab && !tab.classList.contains('hidden')) renderDayFromPatch();
-      }, 60);
+        if (tab && !tab.classList.contains('hidden')) {
+          rendering = true;
+          try {
+            renderDayFromPatch();
+          } finally {
+            setTimeout(function () {
+              rendering = false;
+            }, 100);
+          }
+        }
+      }, 80);
     }).observe(root, { childList: true, subtree: true });
   }
 
