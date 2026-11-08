@@ -1,7 +1,7 @@
-/* Patch v11 — Salsas Inicio/Fin + Mini sandwich que NO se borra */
+/* Patch v12 — Salsas Inicio/Fin + sandwich estable + copiar WhatsApp correcto */
 (function () {
   var LS = 'MARY_ALIM_MARTIN_V1';
-  var LS_EXTRA = 'MARY_ALIM_EXTRA_MEALS_V1'; // comidas del patch (no las pisa el core)
+  var LS_EXTRA = 'MARY_ALIM_EXTRA_MEALS_V1';
   var COL = 'mary_alimentacion';
   var DOC = 'martin_data';
   var PER100 = {
@@ -85,6 +85,18 @@
   function dayVal() {
     var el = document.getElementById('day');
     return (el && el.value) || today();
+  }
+  function fmtDM(day) {
+    if (!day) return '';
+    var p = String(day).split('-');
+    if (p.length !== 3) return day;
+    return p[2] + '/' + p[1] + '/' + p[0];
+  }
+  function fmtShort(day) {
+    if (!day) return '';
+    var p = String(day).split('-');
+    if (p.length !== 3) return day;
+    return p[2] + '/' + p[1];
   }
   function loadStore() {
     try {
@@ -182,7 +194,6 @@
     }
     return false;
   }
-
   function buildSalsaTotals(pots) {
     var byName = {};
     (pots || []).forEach(function (p) {
@@ -195,7 +206,6 @@
     });
     return byName;
   }
-
   function syncSalsaMeals(d) {
     d.meals = (d.meals || []).filter(function (m) {
       return !isSalsaMeal(m);
@@ -231,7 +241,6 @@
       });
     });
   }
-
   function persistFull(store) {
     store.updatedAt = Date.now();
     try {
@@ -256,7 +265,6 @@
       console.warn(e);
     }
   }
-
   function applyAndSave() {
     var store = loadStore();
     var d = ensureDay(store, dayVal());
@@ -264,84 +272,45 @@
     persistFull(store);
     return d;
   }
+  function copyText(t) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(t).then(
+        function () {
+          toast('Copiado ✓');
+        },
+        function () {
+          prompt('Copia', t);
+        }
+      );
+    } else prompt('Copia', t);
+  }
 
-  /** Lista completa: comidas core + extra (sandwich) + salsas */
-  function renderDayFromPatch() {
+  /** Totales reales del día = core + extra + salsas Inicio/Fin */
+  function patchDayTotals(day) {
     var store = loadStore();
-    var day = dayVal();
     var d = ensureDay(store, day);
-    syncSalsaMeals(d);
-    // No pisamos extra meals en el store principal; viven en LS_EXTRA
-    persistFull(store);
-
-    var list = document.getElementById('meals-list');
-    var kpis = document.getElementById('kpis');
-    if (!list) return;
-
     var total = { kcal: 0, p: 0, c: 0, g: 0 };
-    var html = '';
-    var extra = getExtraMeals(day);
+    var lines = [];
 
-    // 1) Comidas normales del store (sin salsas)
-    (d.meals || []).forEach(function (m, idx) {
-      if (m._salsaAuto) return;
-      if (isSalsaMeal(m)) return;
-      if (m._patchExtra) return; // se pintan desde LS_EXTRA
+    (d.meals || []).forEach(function (m) {
+      if (m._salsaAuto || isSalsaMeal(m) || m._patchExtra) return;
       var mac = mealMacros(m);
       total.kcal += mac.kcal;
       total.p += mac.p;
       total.c += mac.c;
       total.g += mac.g;
-      var label = m.name || m.id || 'Alimento';
-      if (m.byGram && m.grams) label = label + ' (' + r0(m.grams) + ' g)';
-      else if (m.qty && m.qty !== 1 && !m.byGram) label = label + ' × ' + m.qty;
-      html +=
-        '<div class="item">' +
-        '<div><b>' +
-        label +
-        '</b><div class="muted">' +
-        r0(mac.kcal) +
-        ' kcal | ' +
-        r0(mac.p) +
-        ' g P | ' +
-        r0(mac.c) +
-        ' g C | ' +
-        r0(mac.g) +
-        ' g G</div></div>' +
-        '<button type="button" class="btn btn-ghost" onclick="window._patchDelCoreMeal(' +
-        idx +
-        ')">✕</button></div>';
+      lines.push({ m: m, mac: mac, kind: 'food' });
     });
 
-    // 2) Comidas del patch (Mini sandwich, etc.) — NO las borra el core
-    extra.forEach(function (m, eidx) {
+    getExtraMeals(day).forEach(function (m) {
       var mac = mealMacros(m);
       total.kcal += mac.kcal;
       total.p += mac.p;
       total.c += mac.c;
       total.g += mac.g;
-      var label = m.name || 'Alimento';
-      var q = num(m.qty) || 1;
-      if (q !== 1) label = label + ' × ' + q;
-      html +=
-        '<div class="item">' +
-        '<div><b>' +
-        label +
-        '</b><div class="muted">' +
-        r0(mac.kcal) +
-        ' kcal | ' +
-        r0(mac.p) +
-        ' g P | ' +
-        r0(mac.c) +
-        ' g C | ' +
-        r0(mac.g) +
-        ' g G</div></div>' +
-        '<button type="button" class="btn btn-ghost" onclick="window._patchDelExtra(' +
-        eidx +
-        ')">✕</button></div>';
+      lines.push({ m: m, mac: mac, kind: 'extra' });
     });
 
-    // 3) Salsas (Inicio/Fin)
     var byName = buildSalsaTotals(d.pots);
     Object.keys(byName).forEach(function (name) {
       var info = byName[name];
@@ -355,9 +324,68 @@
       var labelPart = '';
       if (info.labels.length === 1) labelPart = ' · ' + info.labels[0];
       else if (info.labels.length > 1) labelPart = ' · varios';
-      var label = name + labelPart + ' (' + r0(gr) + ' g) · salsa';
+      lines.push({
+        m: {
+          name: name + labelPart,
+          grams: gr,
+          salsa: true
+        },
+        mac: mac,
+        kind: 'salsa'
+      });
+    });
+
+    return {
+      kcal: r0(total.kcal),
+      p: r0(total.p),
+      c: r0(total.c),
+      g: r0(total.g),
+      lines: lines
+    };
+  }
+
+  function renderDayFromPatch() {
+    var store = loadStore();
+    var day = dayVal();
+    var d = ensureDay(store, day);
+    syncSalsaMeals(d);
+    persistFull(store);
+
+    var list = document.getElementById('meals-list');
+    var kpis = document.getElementById('kpis');
+    if (!list) return;
+
+    var t = patchDayTotals(day);
+    var html = '';
+
+    t.lines.forEach(function (L) {
+      var m = L.m;
+      var mac = L.mac;
+      var label = m.name || m.id || 'Alimento';
+      if (L.kind === 'salsa') {
+        label = label + ' (' + r0(m.grams) + ' g) · salsa';
+      } else if (m.byGram && m.grams) {
+        label = label + ' (' + r0(m.grams) + ' g)';
+      } else if (m.qty && m.qty !== 1 && !m.byGram) {
+        label = label + ' × ' + m.qty;
+      }
+      var delBtn = '';
+      if (L.kind === 'extra') {
+        // índice en extra se resuelve al borrar por nombre+qty en el momento
+        delBtn =
+          '<button type="button" class="btn btn-ghost" data-extra-del="1">✕</button>';
+      } else if (L.kind === 'food') {
+        delBtn =
+          '<button type="button" class="btn btn-ghost" data-core-name="' +
+          String(m.name || m.id || '').replace(/"/g, '') +
+          '">✕</button>';
+      } else {
+        delBtn = '<span class="muted" style="font-size:.7rem">auto</span>';
+      }
       html +=
-        '<div class="item">' +
+        '<div class="item" data-kind="' +
+        L.kind +
+        '">' +
         '<div><b>' +
         label +
         '</b><div class="muted">' +
@@ -369,7 +397,8 @@
         ' g C | ' +
         r0(mac.g) +
         ' g G</div></div>' +
-        '<span class="muted" style="font-size:.7rem">auto</span></div>';
+        delBtn +
+        '</div>';
     });
 
     if (!html) {
@@ -378,32 +407,51 @@
     }
     list.innerHTML = html;
 
+    // Wire delete buttons
+    list.querySelectorAll('[data-extra-del]').forEach(function (btn, i) {
+      btn.onclick = function () {
+        window._patchDelExtra(i);
+      };
+    });
+    list.querySelectorAll('[data-core-name]').forEach(function (btn) {
+      btn.onclick = function () {
+        var name = btn.getAttribute('data-core-name');
+        window._patchDelCoreByName(name);
+      };
+    });
+
     if (kpis) {
       kpis.innerHTML =
         '<div class="kpi"><div class="n">' +
-        r0(total.kcal) +
+        t.kcal +
         '</div><div class="l">kcal</div></div>' +
         '<div class="kpi"><div class="n">' +
-        r0(total.p) +
+        t.p +
         ' g</div><div class="l">Proteína</div></div>' +
         '<div class="kpi"><div class="n">' +
-        r0(total.c) +
+        t.c +
         ' g</div><div class="l">Carbos</div></div>' +
         '<div class="kpi"><div class="n">' +
-        r0(total.g) +
+        t.g +
         ' g</div><div class="l">Grasas</div></div>';
     }
 
     injectExtraFoods();
   }
 
-  window._patchDelCoreMeal = function (idx) {
+  window._patchDelCoreByName = function (name) {
     var store = loadStore();
     var d = ensureDay(store, dayVal());
-    if (!d.meals[idx] || d.meals[idx]._salsaAuto) {
-      toast('Las salsas se editan en Salsas');
-      return;
+    var idx = -1;
+    for (var i = 0; i < d.meals.length; i++) {
+      var m = d.meals[i];
+      if (m._salsaAuto || isSalsaMeal(m)) continue;
+      if ((m.name || m.id) === name) {
+        idx = i;
+        break;
+      }
     }
+    if (idx < 0) return;
     d.meals.splice(idx, 1);
     persistFull(store);
     renderDayFromPatch();
@@ -413,6 +461,7 @@
   window._patchDelExtra = function (eidx) {
     var day = dayVal();
     var extra = getExtraMeals(day);
+    // eidx is index among extra-only lines in current render order
     extra.splice(eidx, 1);
     setExtraMeals(day, extra);
     renderDayFromPatch();
@@ -470,6 +519,98 @@
       else box.appendChild(btn);
     });
   }
+
+  // ——— COPIAR WHATSAPP (con sandwich + salsas reales) ———
+  window.copyAlimentos = function () {
+    applyAndSave();
+    var day = dayVal();
+    var t = patchDayTotals(day);
+    var msg = 'REGISTRO DE ALIMENTOS Y MACROS\n\n';
+    t.lines.forEach(function (L) {
+      var m = L.m;
+      var mac = L.mac;
+      var label = m.name || 'Alimento';
+      if (L.kind === 'salsa') {
+        label = label + ' (' + r0(m.grams) + ' g)';
+      } else if (m.byGram && m.grams) {
+        label = label + ' (' + r0(m.grams) + ' g)';
+      } else if (m.qty && m.qty !== 1) {
+        label = label + ' (' + m.qty + ')';
+      }
+      msg +=
+        '• ' +
+        label +
+        ': ' +
+        r0(mac.kcal) +
+        ' kcal | ' +
+        r0(mac.p) +
+        ' g P | ' +
+        r0(mac.c) +
+        ' g C | ' +
+        r0(mac.g) +
+        ' g G\n';
+    });
+    msg +=
+      '\n------------------------------\n' +
+      fmtDM(day) +
+      '\nCalorías: ' +
+      t.kcal +
+      ' kcal\nProteínas: ' +
+      t.p +
+      ' g\nCarbohidratos: ' +
+      t.c +
+      ' g\nGrasas: ' +
+      t.g +
+      ' g';
+    copyText(msg);
+  };
+
+  window.copyConsumoSalsas = function () {
+    applyAndSave();
+    var day = dayVal();
+    var store = loadStore();
+    var d = ensureDay(store, day);
+    var msg = 'Consumo salsas ' + fmtShort(day) + '\n';
+    var any = false;
+    (d.pots || []).forEach(function (p) {
+      var ini = potInicio(p);
+      var fin = potFin(p);
+      var gr = potConsumo(p);
+      var label = potLabel(p);
+      any = true;
+      if (ini == null || fin == null) {
+        msg += label + ': (sin datos)\n';
+      } else if (!gr) {
+        msg += label + ': sin consumo\n';
+      } else {
+        msg +=
+          label +
+          ' ' +
+          r0(ini) +
+          'g-' +
+          r0(fin) +
+          'g: ' +
+          r0(gr) +
+          'g\n';
+      }
+    });
+    if (!any) msg += '(sin potes)\n';
+    copyText(msg.trim());
+  };
+
+  window.copyCierreSalsas = function () {
+    applyAndSave();
+    var day = dayVal();
+    var store = loadStore();
+    var d = ensureDay(store, day);
+    var msg = 'Cierre salsas ' + fmtShort(day) + '\n';
+    (d.pots || []).forEach(function (p) {
+      var fin = potFin(p);
+      var w = fin == null ? '—' : r0(fin) + 'g';
+      msg += potLabel(p) + ' ' + w + '\n';
+    });
+    copyText(msg.trim());
+  };
 
   function ensureDulceOption() {
     var sel = document.getElementById('salsa-add-name');
