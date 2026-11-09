@@ -1,4 +1,4 @@
-/* Patch v13 — Salsas Inicio/Fin + sandwich sync + reporte PDF claro */
+/* Patch v14 — NO pisar datos · merge seguro Firebase · reporte híbrido */
 (function () {
   var LS = 'MARY_ALIM_MARTIN_V1';
   var LS_EXTRA = 'MARY_ALIM_EXTRA_MEALS_V1';
@@ -70,7 +70,7 @@
     t.style.display = 'block';
     setTimeout(function () {
       t.style.display = 'none';
-    }, 2200);
+    }, 2500);
   }
   function today() {
     var d = new Date();
@@ -110,49 +110,163 @@
       return { days: {}, extraMeals: {}, updatedAt: null };
     }
   }
+  function dayRichness(d) {
+    if (!d) return 0;
+    var n = 0;
+    n += (d.meals && d.meals.length) || 0;
+    n += (d.pots && d.pots.length) || 0;
+    (d.pots || []).forEach(function (p) {
+      if (p.weight !== '' && p.weight != null) n += 2;
+      if (p.mid !== '' && p.mid != null) n += 1;
+      if (p.inicio !== '' && p.inicio != null) n += 2;
+      if (p.fin !== '' && p.fin != null) n += 2;
+    });
+    return n;
+  }
+  function storeRichness(s) {
+    if (!s || !s.days) return 0;
+    var n = 0;
+    Object.keys(s.days).forEach(function (k) {
+      n += dayRichness(s.days[k]);
+    });
+    if (s.extraMeals) {
+      Object.keys(s.extraMeals).forEach(function (k) {
+        n += (s.extraMeals[k] && s.extraMeals[k].length) || 0;
+      });
+    }
+    return n;
+  }
+  /** Une dos días sin borrar datos: prefiere el que tiene más info por campo */
+  function mergeDay(a, b) {
+    if (!a) return b || { meals: [], pots: [], note: '' };
+    if (!b) return a;
+    var out = {
+      meals: [],
+      pots: [],
+      note: a.note || b.note || ''
+    };
+    // meals: unir por id/name+qty, sin duplicar
+    var seen = {};
+    function addMeals(list) {
+      (list || []).forEach(function (m) {
+        var key =
+          (m.id || '') +
+          '|' +
+          (m.name || '') +
+          '|' +
+          (m.qty || '') +
+          '|' +
+          (m.grams || '') +
+          '|' +
+          (m.kcal || '');
+        if (seen[key]) return;
+        seen[key] = 1;
+        out.meals.push(m);
+      });
+    }
+    // Preferir el día con más meals primero
+    if ((a.meals || []).length >= (b.meals || []).length) {
+      addMeals(a.meals);
+      addMeals(b.meals);
+    } else {
+      addMeals(b.meals);
+      addMeals(a.meals);
+    }
+    // pots: merge by name+label index
+    function potKey(p) {
+      return (p.name || '') + '||' + (p.label || '') + '||' + (p.id || '');
+    }
+    var potMap = {};
+    function mergePot(p) {
+      if (!p) return;
+      var k = potKey(p);
+      // also try by name only if single
+      if (!potMap[k]) {
+        potMap[k] = JSON.parse(JSON.stringify(p));
+        return;
+      }
+      var t = potMap[k];
+      // keep any non-empty field
+      ['weight', 'mid', 'inicio', 'fin', 'base', 'label'].forEach(function (f) {
+        if ((t[f] === '' || t[f] == null) && p[f] !== '' && p[f] != null) t[f] = p[f];
+      });
+      if (!t.name && p.name) t.name = p.name;
+    }
+    (a.pots || []).forEach(mergePot);
+    (b.pots || []).forEach(mergePot);
+    out.pots = Object.keys(potMap).map(function (k) {
+      return potMap[k];
+    });
+    return out;
+  }
+  function mergeStores(local, cloud) {
+    var out = {
+      days: {},
+      extraMeals: {},
+      updatedAt: Math.max(local.updatedAt || 0, cloud.updatedAt || 0)
+    };
+    var allDays = {};
+    Object.keys(local.days || {}).forEach(function (k) {
+      allDays[k] = 1;
+    });
+    Object.keys(cloud.days || {}).forEach(function (k) {
+      allDays[k] = 1;
+    });
+    Object.keys(allDays).forEach(function (day) {
+      out.days[day] = mergeDay(local.days && local.days[day], cloud.days && cloud.days[day]);
+    });
+    var allExtra = {};
+    Object.keys(local.extraMeals || {}).forEach(function (k) {
+      allExtra[k] = 1;
+    });
+    Object.keys(cloud.extraMeals || {}).forEach(function (k) {
+      allExtra[k] = 1;
+    });
+    Object.keys(allExtra).forEach(function (day) {
+      var a = (local.extraMeals && local.extraMeals[day]) || [];
+      var b = (cloud.extraMeals && cloud.extraMeals[day]) || [];
+      var seen = {};
+      var list = [];
+      a.concat(b).forEach(function (m) {
+        var key = (m.id || '') + '|' + (m.qty || '') + '|' + (m.kcal || '');
+        if (seen[key]) return;
+        seen[key] = 1;
+        list.push(m);
+      });
+      out.extraMeals[day] = list;
+    });
+    return out;
+  }
   function migrateExtraIntoStore(store) {
-    // Migrar LS_EXTRA viejo → store.extraMeals (se sincroniza con Firebase)
     try {
       var r = localStorage.getItem(LS_EXTRA);
-      if (r) {
-        var old = JSON.parse(r);
-        if (old && typeof old === 'object') {
-          if (!store.extraMeals) store.extraMeals = {};
-          Object.keys(old).forEach(function (day) {
-            var list = old[day] || [];
-            if (!store.extraMeals[day]) store.extraMeals[day] = [];
-            list.forEach(function (m) {
-              var exists = store.extraMeals[day].some(function (x) {
-                return x.id === m.id && x.qty === m.qty && x.kcal === m.kcal;
-              });
-              if (!exists) store.extraMeals[day].push(m);
-            });
+      if (!r) return;
+      var old = JSON.parse(r);
+      if (!old || typeof old !== 'object') return;
+      if (!store.extraMeals) store.extraMeals = {};
+      Object.keys(old).forEach(function (day) {
+        var list = old[day] || [];
+        if (!store.extraMeals[day]) store.extraMeals[day] = [];
+        list.forEach(function (m) {
+          var exists = store.extraMeals[day].some(function (x) {
+            return x.id === m.id && x.qty === m.qty && x.kcal === m.kcal;
           });
-        }
-      }
+          if (!exists) store.extraMeals[day].push(m);
+        });
+      });
     } catch (e) {}
   }
   function getExtraMeals(day) {
     var store = loadStore();
-    migrateExtraIntoStore(store);
     return ((store.extraMeals && store.extraMeals[day]) || []).slice();
   }
   function setExtraMeals(day, meals) {
     var store = loadStore();
     if (!store.extraMeals) store.extraMeals = {};
     store.extraMeals[day] = meals || [];
-    persistFull(store);
-    // también mirror en LS_EXTRA por compatibilidad
-    try {
-      var extra = {};
-      try {
-        extra = JSON.parse(localStorage.getItem(LS_EXTRA) || '{}') || {};
-      } catch (e2) {
-        extra = {};
-      }
-      extra[day] = meals || [];
-      localStorage.setItem(LS_EXTRA, JSON.stringify(extra));
-    } catch (e) {}
+    saveLocalOnly(store);
+    // subir sin pisar otros días
+    safeCloudWrite(store);
   }
   function ensureDay(store, day) {
     if (!store.days[day]) store.days[day] = { meals: [], pots: [], note: '' };
@@ -207,15 +321,9 @@
     var n = String(m.name || '').toLowerCase();
     if (n.indexOf('· salsas') >= 0 || n.indexOf('· salsa') >= 0) return true;
     if (/\(salsa\)/i.test(m.name || '')) return true;
-    for (var i = 0; i < SALSA_NAMES.length; i++) {
-      var sn = SALSA_NAMES[i].toLowerCase();
-      if (n === sn || n.indexOf(sn) === 0) {
-        if (n.indexOf('sudado') < 0 && n.indexOf('napolitana') < 0) return true;
-      }
-    }
     return false;
   }
-  function buildSalsaTotals(pots) {
+  function buildSalsaTotalsNew(pots) {
     var byName = {};
     (pots || []).forEach(function (p) {
       var gr = potConsumo(p);
@@ -227,19 +335,21 @@
     });
     return byName;
   }
-  function syncSalsaMeals(d) {
+  /** NO borra weight/mid históricos. Solo limpia weight del día actual si ya hay inicio+fin */
+  function softSyncSalsaMeals(d, day) {
+    // Quitar solo auto-meals de salsas del patch, no tocar comidas reales
     d.meals = (d.meals || []).filter(function (m) {
-      return !isSalsaMeal(m);
+      return !m._salsaAuto;
     });
+    var isToday = day === today();
     (d.pots || []).forEach(function (p) {
-      if ((p.fin === '' || p.fin == null) && p.weight !== '' && p.weight != null) {
-        p.fin = num(p.weight);
+      // Si tiene inicio y fin, no necesitamos weight para el cálculo nuevo
+      // pero NO lo borramos en días pasados
+      if (isToday && potInicio(p) != null && potFin(p) != null) {
+        // dejar weight como está por seguridad; no borrar
       }
-      p.weight = '';
-      p.mid = '';
-      if (p.base !== undefined) p.base = '';
     });
-    var byName = buildSalsaTotals(d.pots);
+    var byName = buildSalsaTotalsNew(d.pots);
     Object.keys(byName).forEach(function (name) {
       var info = byName[name];
       var gr = info.grams;
@@ -262,38 +372,101 @@
       });
     });
   }
-  function persistFull(store) {
-    migrateExtraIntoStore(store);
-    store.updatedAt = Date.now();
+  function saveLocalOnly(store) {
     try {
       localStorage.setItem(LS, JSON.stringify(store));
     } catch (e) {}
+  }
+  function safeCloudWrite(store) {
+    // Solo escribe si el store local NO está más vacío que lo que ya había
     try {
-      if (window.firebase && firebase.apps && firebase.apps.length) {
-        firebase
-          .firestore()
-          .collection(COL)
-          .doc(DOC)
-          .set(Object.assign({}, store, { updatedAt: store.updatedAt }), { merge: true })
-          .then(function () {
+      if (!(window.firebase && firebase.apps && firebase.apps.length)) return;
+      var db = firebase.firestore();
+      db.collection(COL)
+        .doc(DOC)
+        .get()
+        .then(function (snap) {
+          var cloud = snap.exists ? snap.data() : { days: {}, updatedAt: 0 };
+          if (!cloud.days) cloud.days = {};
+          var merged = mergeStores(store, cloud);
+          // Si el merge quedó vacío y cloud tenía datos, NO escribir
+          if (storeRichness(merged) < storeRichness(cloud) * 0.5 && storeRichness(cloud) > 5) {
+            console.warn('Abort write: local too empty vs cloud');
+            // Restaurar cloud a local
+            saveLocalOnly(mergeStores(cloud, store));
             var el = document.getElementById('sync');
-            if (el) el.textContent = '☁ Sincronizado · ' + new Date().toLocaleTimeString();
-          })
-          .catch(function (e) {
-            console.warn(e);
-          });
-      }
+            if (el) el.textContent = '☁ Datos nube restaurados';
+            return;
+          }
+          merged.updatedAt = Date.now();
+          return db
+            .collection(COL)
+            .doc(DOC)
+            .set(merged, { merge: false })
+            .then(function () {
+              saveLocalOnly(merged);
+              var el = document.getElementById('sync');
+              if (el)
+                el.textContent = '☁ Sincronizado · ' + new Date().toLocaleTimeString();
+            });
+        })
+        .catch(function (e) {
+          console.warn(e);
+        });
     } catch (e) {
       console.warn(e);
     }
   }
   function applyAndSave() {
     var store = loadStore();
-    var d = ensureDay(store, dayVal());
-    syncSalsaMeals(d);
-    persistFull(store);
+    var day = dayVal();
+    var d = ensureDay(store, day);
+    softSyncSalsaMeals(d, day);
+    saveLocalOnly(store);
+    safeCloudWrite(store);
     return d;
   }
+
+  /** Pull cloud and merge into local — recovery path */
+  function pullCloudMerge() {
+    try {
+      if (!(window.firebase && firebase.apps && firebase.apps.length)) return Promise.resolve();
+      var db = firebase.firestore();
+      return db
+        .collection(COL)
+        .doc(DOC)
+        .get()
+        .then(function (snap) {
+          var local = loadStore();
+          migrateExtraIntoStore(local);
+          if (!snap.exists) {
+            saveLocalOnly(local);
+            return local;
+          }
+          var cloud = snap.data() || {};
+          if (!cloud.days) cloud.days = {};
+          var merged = mergeStores(local, cloud);
+          // Si cloud es más rico, úsalo
+          if (storeRichness(cloud) > storeRichness(local)) {
+            merged = mergeStores(cloud, local);
+          }
+          saveLocalOnly(merged);
+          var el = document.getElementById('sync');
+          if (el) {
+            el.textContent =
+              '☁ Merge OK · ' +
+              Object.keys(merged.days).length +
+              ' días · ' +
+              new Date().toLocaleTimeString();
+          }
+          return merged;
+        });
+    } catch (e) {
+      console.warn(e);
+      return Promise.resolve();
+    }
+  }
+
   function copyText(t) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(t).then(
@@ -305,6 +478,67 @@
         }
       );
     } else prompt('Copia', t);
+  }
+
+  function prevDayStr(day) {
+    var d = new Date(day + 'T12:00:00');
+    d.setDate(d.getDate() - 1);
+    return (
+      d.getFullYear() +
+      '-' +
+      String(d.getMonth() + 1).padStart(2, '0') +
+      '-' +
+      String(d.getDate()).padStart(2, '0')
+    );
+  }
+
+  /** Consumo salsas híbrido: Inicio/Fin si hay; si no, weight vs día anterior (sistema viejo) */
+  function hybridSalsaGrams(store, day) {
+    var d = ensureDay(store, day);
+    var byName = buildSalsaTotalsNew(d.pots);
+    if (Object.keys(byName).length) return byName;
+
+    // Fallback sistema viejo: prev weight - today weight
+    var prev = ensureDay(store, prevDayStr(day));
+    function byNameList(list) {
+      var map = {};
+      (list || []).forEach(function (p) {
+        if (!map[p.name]) map[p.name] = [];
+        map[p.name].push(p);
+      });
+      return map;
+    }
+    var tMap = byNameList(d.pots);
+    var pMap = byNameList(prev.pots);
+    var names = {};
+    Object.keys(tMap).forEach(function (n) {
+      names[n] = 1;
+    });
+    Object.keys(pMap).forEach(function (n) {
+      names[n] = 1;
+    });
+    var out = {};
+    Object.keys(names).forEach(function (name) {
+      var ta = tMap[name] || [];
+      var pa = pMap[name] || [];
+      var n = Math.max(ta.length, pa.length);
+      for (var i = 0; i < n; i++) {
+        var pw =
+          pa[i] && pa[i].weight !== '' && pa[i].weight != null
+            ? num(pa[i].weight)
+            : null;
+        var tw =
+          ta[i] && ta[i].weight !== '' && ta[i].weight != null
+            ? num(ta[i].weight)
+            : null;
+        if (pw == null || tw == null) continue;
+        var gr = Math.max(0, pw - tw);
+        if (gr <= 0) continue;
+        if (!out[name]) out[name] = { grams: 0, labels: [] };
+        out[name].grams += gr;
+      }
+    });
+    return out;
   }
 
   function patchDayTotals(day) {
@@ -332,7 +566,7 @@
       lines.push({ m: m, mac: mac, kind: 'extra' });
     });
 
-    var byName = buildSalsaTotals(d.pots);
+    var byName = hybridSalsaGrams(store, day);
     Object.keys(byName).forEach(function (name) {
       var info = byName[name];
       var gr = info.grams;
@@ -343,8 +577,7 @@
       total.c += mac.c;
       total.g += mac.g;
       var labelPart = '';
-      if (info.labels.length === 1) labelPart = ' · ' + info.labels[0];
-      else if (info.labels.length > 1) labelPart = ' · varios';
+      if (info.labels && info.labels.length === 1) labelPart = ' · ' + info.labels[0];
       lines.push({
         m: { name: name + labelPart, grams: gr, salsa: true },
         mac: mac,
@@ -380,10 +613,10 @@
   }
 
   function patchPeriodDetail(days) {
+    var store = loadStore();
     var counts = {};
     var salsaGrams = {};
     days.forEach(function (day) {
-      var store = loadStore();
       var d = ensureDay(store, day);
       (d.meals || []).forEach(function (m) {
         if (m._salsaAuto || isSalsaMeal(m)) return;
@@ -399,7 +632,7 @@
         counts[key].qty += num(m.qty) || 1;
         counts[key].times += 1;
       });
-      var byName = buildSalsaTotals(d.pots);
+      var byName = hybridSalsaGrams(store, day);
       Object.keys(byName).forEach(function (name) {
         if (!salsaGrams[name]) salsaGrams[name] = 0;
         salsaGrams[name] += byName[name].grams;
@@ -412,8 +645,8 @@
     var store = loadStore();
     var day = dayVal();
     var d = ensureDay(store, day);
-    syncSalsaMeals(d);
-    persistFull(store);
+    softSyncSalsaMeals(d, day);
+    saveLocalOnly(store);
 
     var list = document.getElementById('meals-list');
     var kpis = document.getElementById('kpis');
@@ -427,13 +660,9 @@
       var m = L.m;
       var mac = L.mac;
       var label = m.name || m.id || 'Alimento';
-      if (L.kind === 'salsa') {
-        label = label + ' (' + r0(m.grams) + ' g) · salsa';
-      } else if (m.byGram && m.grams) {
-        label = label + ' (' + r0(m.grams) + ' g)';
-      } else if (m.qty && m.qty !== 1 && !m.byGram) {
-        label = label + ' × ' + m.qty;
-      }
+      if (L.kind === 'salsa') label = label + ' (' + r0(m.grams) + ' g) · salsa';
+      else if (m.byGram && m.grams) label = label + ' (' + r0(m.grams) + ' g)';
+      else if (m.qty && m.qty !== 1 && !m.byGram) label = label + ' × ' + m.qty;
       var delBtn = '';
       if (L.kind === 'extra') {
         delBtn =
@@ -450,8 +679,7 @@
         delBtn = '<span class="muted" style="font-size:.7rem">auto</span>';
       }
       html +=
-        '<div class="item">' +
-        '<div><b>' +
+        '<div class="item"><div><b>' +
         label +
         '</b><div class="muted">' +
         r0(mac.kcal) +
@@ -468,7 +696,7 @@
 
     if (!html) {
       html =
-        '<p class="muted">Sin comidas aún. Agrega alimentos o completa Inicio/Fin en Salsas.</p>';
+        '<p class="muted">Sin comidas aún. Si faltan datos de la semana, espera ☁ Merge OK y recarga.</p>';
     }
     list.innerHTML = html;
 
@@ -487,7 +715,6 @@
         t.g +
         ' g</div><div class="l">Grasas</div></div>';
     }
-
     injectExtraFoods();
   }
 
@@ -505,7 +732,8 @@
     }
     if (idx < 0) return;
     d.meals.splice(idx, 1);
-    persistFull(store);
+    saveLocalOnly(store);
+    safeCloudWrite(store);
     renderDayFromPatch();
     toast('Eliminado');
   };
@@ -615,20 +843,13 @@
     applyAndSave();
     var day = dayVal();
     var store = loadStore();
-    var d = ensureDay(store, day);
+    var byName = hybridSalsaGrams(store, day);
     var msg = 'Consumo salsas ' + fmtShort(day) + '\n';
-    var any = false;
-    (d.pots || []).forEach(function (p) {
-      var ini = potInicio(p);
-      var fin = potFin(p);
-      var gr = potConsumo(p);
-      var label = potLabel(p);
-      any = true;
-      if (ini == null || fin == null) msg += label + ': (sin datos)\n';
-      else if (!gr) msg += label + ': sin consumo\n';
-      else msg += label + ' ' + r0(ini) + 'g-' + r0(fin) + 'g: ' + r0(gr) + 'g\n';
+    var keys = Object.keys(byName);
+    if (!keys.length) msg += '(sin datos)\n';
+    keys.forEach(function (name) {
+      msg += name + ': ' + r0(byName[name].grams) + 'g\n';
     });
-    if (!any) msg += '(sin potes)\n';
     copyText(msg.trim());
   };
 
@@ -640,317 +861,296 @@
     var msg = 'Cierre salsas ' + fmtShort(day) + '\n';
     (d.pots || []).forEach(function (p) {
       var fin = potFin(p);
-      var w = fin == null ? '—' : r0(fin) + 'g';
+      var w =
+        fin != null
+          ? r0(fin) + 'g'
+          : p.weight !== '' && p.weight != null
+            ? r0(num(p.weight)) + 'g'
+            : '—';
       msg += potLabel(p) + ' ' + w + '\n';
     });
     copyText(msg.trim());
   };
 
-  // ——— REPORTE + PDF ———
   window.exportPDF = function () {
-    applyAndSave();
-    var from = document.getElementById('r-from') && document.getElementById('r-from').value;
-    var to = document.getElementById('r-to') && document.getElementById('r-to').value;
-    if (!from || !to) {
-      alert('Elige rango de fechas');
-      return;
-    }
-    var days = daysInRange(from, to);
-    var rows = days.map(function (day) {
-      return { day: day, t: patchDayTotals(day) };
-    });
-    var withData = rows.filter(function (r) {
-      return r.t.kcal > 0;
-    });
-    var n = withData.length || 1;
-    var sum = { kcal: 0, p: 0, c: 0, g: 0 };
-    withData.forEach(function (r) {
-      sum.kcal += r.t.kcal;
-      sum.p += r.t.p;
-      sum.c += r.t.c;
-      sum.g += r.t.g;
-    });
-    var det = patchPeriodDetail(days);
-
-    var maxK = withData[0],
-      minK = withData[0],
-      maxP = withData[0],
-      minP = withData[0];
-    withData.forEach(function (r) {
-      if (r.t.kcal > maxK.t.kcal) maxK = r;
-      if (r.t.kcal < minK.t.kcal) minK = r;
-      if (r.t.p > maxP.t.p) maxP = r;
-      if (r.t.p < minP.t.p) minP = r;
-    });
-
-    try {
-      var jsPDF = window.jspdf.jsPDF;
-      var doc = new jsPDF({ unit: 'pt', format: 'a4' });
-      var purple = [124, 58, 160];
-      var pink = [236, 72, 153];
-      var lilac = [248, 244, 255];
-
-      // Header más ancho para que no corte fechas
-      doc.setFillColor(lilac[0], lilac[1], lilac[2]);
-      doc.rect(0, 0, 595, 78, 'F');
-      doc.setFillColor(purple[0], purple[1], purple[2]);
-      doc.roundedRect(40, 18, 515, 22, 10, 10, 'F');
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.setTextColor(255, 255, 255);
-      doc.text(
-        ('MACROS MARTÍN · ' + fmtDM(from) + ' → ' + fmtDM(to)).toUpperCase(),
-        52,
-        33
-      );
-      doc.setFillColor(pink[0], pink[1], pink[2]);
-      doc.roundedRect(40, 48, 90, 16, 8, 8, 'F');
-      doc.setFontSize(9);
-      doc.text('Reporte', 52, 59);
-
-      var y = 95;
-      doc.autoTable({
-        startY: y,
-        head: [['kcal prom.', 'P', 'C', 'G']],
-        body: [
-          [
-            Math.round(sum.kcal / n),
-            Math.round(sum.p / n) + ' g',
-            Math.round(sum.c / n) + ' g',
-            Math.round(sum.g / n) + ' g'
-          ]
-        ],
-        headStyles: { fillColor: lilac, textColor: purple },
-        margin: { left: 40, right: 40 }
+    pullCloudMerge().then(function () {
+      var from = document.getElementById('r-from') && document.getElementById('r-from').value;
+      var to = document.getElementById('r-to') && document.getElementById('r-to').value;
+      if (!from || !to) {
+        alert('Elige rango de fechas');
+        return;
+      }
+      var days = daysInRange(from, to);
+      var rows = days.map(function (day) {
+        return { day: day, t: patchDayTotals(day) };
       });
-
-      // Máx / mín
-      if (withData.length) {
-        y = doc.lastAutoTable.finalY + 10;
-        doc.setFont('helvetica', 'normal');
+      var withData = rows.filter(function (r) {
+        return r.t.kcal > 0;
+      });
+      var n = withData.length || 1;
+      var sum = { kcal: 0, p: 0, c: 0, g: 0 };
+      withData.forEach(function (r) {
+        sum.kcal += r.t.kcal;
+        sum.p += r.t.p;
+        sum.c += r.t.c;
+        sum.g += r.t.g;
+      });
+      var det = patchPeriodDetail(days);
+      var maxK = withData[0],
+        minK = withData[0],
+        maxP = withData[0],
+        minP = withData[0];
+      withData.forEach(function (r) {
+        if (r.t.kcal > maxK.t.kcal) maxK = r;
+        if (r.t.kcal < minK.t.kcal) minK = r;
+        if (r.t.p > maxP.t.p) maxP = r;
+        if (r.t.p < minP.t.p) minP = r;
+      });
+      try {
+        var jsPDF = window.jspdf.jsPDF;
+        var doc = new jsPDF({ unit: 'pt', format: 'a4' });
+        var purple = [124, 58, 160];
+        var pink = [236, 72, 153];
+        var lilac = [248, 244, 255];
+        doc.setFillColor(lilac[0], lilac[1], lilac[2]);
+        doc.rect(0, 0, 595, 78, 'F');
+        doc.setFillColor(purple[0], purple[1], purple[2]);
+        doc.roundedRect(40, 18, 515, 22, 10, 10, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(255, 255, 255);
+        doc.text(
+          ('MACROS MARTÍN · ' + fmtDM(from) + ' → ' + fmtDM(to)).toUpperCase(),
+          52,
+          33
+        );
+        doc.setFillColor(pink[0], pink[1], pink[2]);
+        doc.roundedRect(40, 48, 90, 16, 8, 8, 'F');
         doc.setFontSize(9);
-        doc.setTextColor(80, 60, 100);
-        doc.text(
-          'Más kcal: ' +
-            maxK.t.kcal +
-            ' (' +
-            fmtDM(maxK.day) +
-            ')   ·   Menos kcal: ' +
-            minK.t.kcal +
-            ' (' +
-            fmtDM(minK.day) +
-            ')',
-          40,
-          y
-        );
-        doc.text(
-          'Más proteína: ' +
-            maxP.t.p +
-            ' g (' +
-            fmtDM(maxP.day) +
-            ')   ·   Menos proteína: ' +
-            minP.t.p +
-            ' g (' +
-            fmtDM(minP.day) +
-            ')',
-          40,
-          y + 14
-        );
-        y = y + 24;
-      } else {
-        y = doc.lastAutoTable.finalY + 12;
-      }
-
-      // Alimentos: Veces = cuántas veces se registró; Detalle = total unidades o %
-      var foodBody = Object.keys(det.counts).map(function (name) {
-        var c = det.counts[name];
-        var detalle;
-        if (c.isPct || name === 'Panquecas') {
-          detalle = c.times + ' veces · % sumado ' + r0(c.qty);
-        } else {
-          detalle =
-            c.times +
-            ' veces · total ' +
-            (Math.round(c.qty * 10) / 10) +
-            ' uds';
-        }
-        return [name, String(c.times), detalle];
-      });
-      if (foodBody.length) {
+        doc.text('Reporte', 52, 59);
         doc.autoTable({
-          startY: y,
-          head: [['Alimento', 'Veces', 'Detalle']],
-          body: foodBody,
-          headStyles: { fillColor: lilac, textColor: purple },
-          margin: { left: 40, right: 40 },
-          columnStyles: { 0: { cellWidth: 180 }, 1: { cellWidth: 50 }, 2: { cellWidth: 240 } }
-        });
-        y = doc.lastAutoTable.finalY + 12;
-      }
-
-      var salsaBody = Object.keys(det.salsaGrams).map(function (name) {
-        return [name, r0(det.salsaGrams[name]) + ' g'];
-      });
-      if (salsaBody.length) {
-        doc.autoTable({
-          startY: y,
-          head: [['Salsa', 'Consumo del período']],
-          body: salsaBody,
+          startY: 95,
+          head: [['kcal prom.', 'P', 'C', 'G']],
+          body: [
+            [
+              Math.round(sum.kcal / n),
+              Math.round(sum.p / n) + ' g',
+              Math.round(sum.c / n) + ' g',
+              Math.round(sum.g / n) + ' g'
+            ]
+          ],
           headStyles: { fillColor: lilac, textColor: purple },
           margin: { left: 40, right: 40 }
         });
-        y = doc.lastAutoTable.finalY + 12;
+        var y = doc.lastAutoTable.finalY + 10;
+        if (withData.length) {
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9);
+          doc.setTextColor(80, 60, 100);
+          doc.text(
+            'Más kcal: ' +
+              maxK.t.kcal +
+              ' (' +
+              fmtDM(maxK.day) +
+              ')   ·   Menos kcal: ' +
+              minK.t.kcal +
+              ' (' +
+              fmtDM(minK.day) +
+              ')',
+            40,
+            y
+          );
+          doc.text(
+            'Más proteína: ' +
+              maxP.t.p +
+              ' g (' +
+              fmtDM(maxP.day) +
+              ')   ·   Menos proteína: ' +
+              minP.t.p +
+              ' g (' +
+              fmtDM(minP.day) +
+              ')',
+            40,
+            y + 14
+          );
+          y += 28;
+        }
+        var foodBody = Object.keys(det.counts).map(function (name) {
+          var c = det.counts[name];
+          var detalle =
+            c.isPct || name === 'Panquecas'
+              ? c.times + ' veces · % sumado ' + r0(c.qty)
+              : c.times + ' veces · total ' + Math.round(c.qty * 10) / 10 + ' uds';
+          return [name, String(c.times), detalle];
+        });
+        if (foodBody.length) {
+          doc.autoTable({
+            startY: y,
+            head: [['Alimento', 'Veces', 'Detalle']],
+            body: foodBody,
+            headStyles: { fillColor: lilac, textColor: purple },
+            margin: { left: 40, right: 40 }
+          });
+          y = doc.lastAutoTable.finalY + 12;
+        }
+        var salsaBody = Object.keys(det.salsaGrams).map(function (name) {
+          return [name, r0(det.salsaGrams[name]) + ' g'];
+        });
+        if (salsaBody.length) {
+          doc.autoTable({
+            startY: y,
+            head: [['Salsa', 'Consumo del período']],
+            body: salsaBody,
+            headStyles: { fillColor: lilac, textColor: purple },
+            margin: { left: 40, right: 40 }
+          });
+          y = doc.lastAutoTable.finalY + 12;
+        }
+        doc.autoTable({
+          startY: y,
+          head: [['Día', 'kcal', 'P', 'C', 'G']],
+          body: rows.map(function (r) {
+            return [fmtDM(r.day), r.t.kcal, r.t.p, r.t.c, r.t.g];
+          }),
+          headStyles: { fillColor: lilac, textColor: purple },
+          margin: { left: 40, right: 40 }
+        });
+        doc.save('macros_martin_' + from + '_' + to + '.pdf');
+        toast('PDF listo');
+      } catch (e) {
+        console.error(e);
+        alert('Error PDF');
       }
-
-      doc.autoTable({
-        startY: y,
-        head: [['Día', 'kcal', 'P', 'C', 'G']],
-        body: rows.map(function (r) {
-          return [fmtDM(r.day), r.t.kcal, r.t.p, r.t.c, r.t.g];
-        }),
-        headStyles: { fillColor: lilac, textColor: purple },
-        margin: { left: 40, right: 40 }
-      });
-
-      doc.save('macros_martin_' + from + '_' + to + '.pdf');
-      toast('PDF listo');
-    } catch (e) {
-      console.error(e);
-      alert('Error PDF: ' + (e && e.message ? e.message : e));
-    }
+    });
   };
 
   window.renderReport = function () {
-    applyAndSave();
-    var from = document.getElementById('r-from') && document.getElementById('r-from').value;
-    var to = document.getElementById('r-to') && document.getElementById('r-to').value;
-    if (!from || !to) return;
-    var days = daysInRange(from, to);
-    var rows = days.map(function (day) {
-      return { day: day, t: patchDayTotals(day) };
-    });
-    var withData = rows.filter(function (r) {
-      return r.t.kcal > 0;
-    });
-    var n = withData.length || 1;
-    var sum = { kcal: 0, p: 0, c: 0, g: 0 };
-    withData.forEach(function (r) {
-      sum.kcal += r.t.kcal;
-      sum.p += r.t.p;
-      sum.c += r.t.c;
-      sum.g += r.t.g;
-    });
-    var avg = {
-      kcal: r0(sum.kcal / n),
-      p: r0(sum.p / n),
-      c: r0(sum.c / n),
-      g: r0(sum.g / n)
-    };
-    var maxK = withData[0],
-      minK = withData[0],
-      maxP = withData[0],
-      minP = withData[0];
-    withData.forEach(function (r) {
-      if (!maxK || r.t.kcal > maxK.t.kcal) maxK = r;
-      if (!minK || r.t.kcal < minK.t.kcal) minK = r;
-      if (!maxP || r.t.p > maxP.t.p) maxP = r;
-      if (!minP || r.t.p < minP.t.p) minP = r;
-    });
-    var det = patchPeriodDetail(days);
-
-    var html =
-      '<div class="sec" style="margin-top:0">Resumen ' +
-      fmtDM(from) +
-      ' → ' +
-      fmtDM(to) +
-      '</div>';
-    html +=
-      '<div class="grid2">' +
-      '<div class="kpi"><div class="v">' +
-      avg.kcal +
-      '</div><div class="l">kcal prom.</div></div>' +
-      '<div class="kpi"><div class="v">' +
-      avg.p +
-      ' g</div><div class="l">P prom.</div></div>' +
-      '<div class="kpi"><div class="v">' +
-      avg.c +
-      ' g</div><div class="l">C prom.</div></div>' +
-      '<div class="kpi"><div class="v">' +
-      avg.g +
-      ' g</div><div class="l">G prom.</div></div></div>';
-
-    if (withData.length) {
+    pullCloudMerge().then(function () {
+      var from = document.getElementById('r-from') && document.getElementById('r-from').value;
+      var to = document.getElementById('r-to') && document.getElementById('r-to').value;
+      if (!from || !to) return;
+      var days = daysInRange(from, to);
+      var rows = days.map(function (day) {
+        return { day: day, t: patchDayTotals(day) };
+      });
+      var withData = rows.filter(function (r) {
+        return r.t.kcal > 0;
+      });
+      var n = withData.length || 1;
+      var sum = { kcal: 0, p: 0, c: 0, g: 0 };
+      withData.forEach(function (r) {
+        sum.kcal += r.t.kcal;
+        sum.p += r.t.p;
+        sum.c += r.t.c;
+        sum.g += r.t.g;
+      });
+      var avg = {
+        kcal: r0(sum.kcal / n),
+        p: r0(sum.p / n),
+        c: r0(sum.c / n),
+        g: r0(sum.g / n)
+      };
+      var maxK = withData[0],
+        minK = withData[0],
+        maxP = withData[0],
+        minP = withData[0];
+      withData.forEach(function (r) {
+        if (!maxK || r.t.kcal > maxK.t.kcal) maxK = r;
+        if (!minK || r.t.kcal < minK.t.kcal) minK = r;
+        if (!maxP || r.t.p > maxP.t.p) maxP = r;
+        if (!minP || r.t.p < minP.t.p) minP = r;
+      });
+      var det = patchPeriodDetail(days);
+      var html =
+        '<div class="sec" style="margin-top:0">Resumen ' +
+        fmtDM(from) +
+        ' → ' +
+        fmtDM(to) +
+        '</div>';
       html +=
-        '<p class="muted" style="margin-top:.75rem">Más kcal: <b>' +
-        maxK.t.kcal +
-        '</b> (' +
-        fmtDM(maxK.day) +
-        ') · Menos kcal: <b>' +
-        minK.t.kcal +
-        '</b> (' +
-        fmtDM(minK.day) +
-        ')</p>';
-      html +=
-        '<p class="muted">Más proteína: <b>' +
-        maxP.t.p +
-        ' g</b> (' +
-        fmtDM(maxP.day) +
-        ') · Menos proteína: <b>' +
-        minP.t.p +
-        ' g</b> (' +
-        fmtDM(minP.day) +
-        ')</p>';
-    }
-
-    html += '<div class="sec">Alimentos del período</div>';
-    Object.keys(det.counts).forEach(function (name) {
-      var c = det.counts[name];
-      var detTxt;
-      if (c.isPct || name === 'Panquecas') {
-        detTxt = c.times + ' veces · % sumado: ' + r0(c.qty);
+        '<div class="grid2">' +
+        '<div class="kpi"><div class="v">' +
+        avg.kcal +
+        '</div><div class="l">kcal prom.</div></div>' +
+        '<div class="kpi"><div class="v">' +
+        avg.p +
+        ' g</div><div class="l">P prom.</div></div>' +
+        '<div class="kpi"><div class="v">' +
+        avg.c +
+        ' g</div><div class="l">C prom.</div></div>' +
+        '<div class="kpi"><div class="v">' +
+        avg.g +
+        ' g</div><div class="l">G prom.</div></div></div>';
+      if (withData.length) {
+        html +=
+          '<p class="muted" style="margin-top:.75rem">Más kcal: <b>' +
+          maxK.t.kcal +
+          '</b> (' +
+          fmtDM(maxK.day) +
+          ') · Menos kcal: <b>' +
+          minK.t.kcal +
+          '</b> (' +
+          fmtDM(minK.day) +
+          ')</p>';
+        html +=
+          '<p class="muted">Más proteína: <b>' +
+          maxP.t.p +
+          ' g</b> (' +
+          fmtDM(maxP.day) +
+          ') · Menos proteína: <b>' +
+          minP.t.p +
+          ' g</b> (' +
+          fmtDM(minP.day) +
+          ')</p>';
       } else {
-        detTxt =
-          c.times + ' veces · total: ' + Math.round(c.qty * 10) / 10 + ' uds';
+        html +=
+          '<p class="muted" style="margin-top:.75rem">Sin días con datos en este rango. Si antes había, espera ☁ Merge OK y vuelve a pulsar Ver reporte.</p>';
       }
-      html +=
-        '<div class="item"><div><b>' +
-        name +
-        '</b><div class="muted">' +
-        detTxt +
-        '</div></div></div>';
+      html += '<div class="sec">Alimentos del período</div>';
+      Object.keys(det.counts).forEach(function (name) {
+        var c = det.counts[name];
+        var detTxt =
+          c.isPct || name === 'Panquecas'
+            ? c.times + ' veces · % sumado: ' + r0(c.qty)
+            : c.times + ' veces · total: ' + Math.round(c.qty * 10) / 10 + ' uds';
+        html +=
+          '<div class="item"><div><b>' +
+          name +
+          '</b><div class="muted">' +
+          detTxt +
+          '</div></div></div>';
+      });
+      if (!Object.keys(det.counts).length)
+        html += '<p class="muted">Sin alimentos registrados en el rango.</p>';
+      html += '<div class="sec">Salsas del período</div>';
+      Object.keys(det.salsaGrams).forEach(function (name) {
+        html +=
+          '<div class="item"><div><b>' +
+          name +
+          '</b><div class="muted">' +
+          r0(det.salsaGrams[name]) +
+          ' g</div></div></div>';
+      });
+      if (!Object.keys(det.salsaGrams).length)
+        html += '<p class="muted">Sin consumo de salsas en el rango.</p>';
+      html += '<div class="sec">Por día</div>';
+      rows.forEach(function (r) {
+        html +=
+          '<div class="item"><div><b>' +
+          fmtDM(r.day) +
+          '</b><div class="muted">' +
+          r.t.kcal +
+          ' kcal | ' +
+          r.t.p +
+          ' P | ' +
+          r.t.c +
+          ' C | ' +
+          r.t.g +
+          ' G</div></div></div>';
+      });
+      var box = document.getElementById('report-box');
+      if (box) box.innerHTML = html;
     });
-
-    html += '<div class="sec">Salsas del período</div>';
-    Object.keys(det.salsaGrams).forEach(function (name) {
-      html +=
-        '<div class="item"><div><b>' +
-        name +
-        '</b><div class="muted">' +
-        r0(det.salsaGrams[name]) +
-        ' g</div></div></div>';
-    });
-    if (!Object.keys(det.salsaGrams).length) {
-      html += '<p class="muted">Sin consumo de salsas en el rango.</p>';
-    }
-
-    html += '<div class="sec">Por día</div>';
-    rows.forEach(function (r) {
-      html +=
-        '<div class="item"><div><b>' +
-        fmtDM(r.day) +
-        '</b><div class="muted">' +
-        r.t.kcal +
-        ' kcal | ' +
-        r.t.p +
-        ' P | ' +
-        r.t.c +
-        ' C | ' +
-        r.t.g +
-        ' G</div></div></div>';
-    });
-
-    var box = document.getElementById('report-box');
-    if (box) box.innerHTML = html;
   };
 
   function ensureDulceOption() {
@@ -977,9 +1177,8 @@
     muted.innerHTML =
       '<b>Cómo llenar</b><br>' +
       '• <b>Inicio</b> y <b>Fin</b> → consumo = Inicio − Fin<br>' +
-      '• Eso se suma <b>una sola vez</b> a los macros del día<br>' +
-      '• Dos potes de la misma salsa → se <b>suman</b> en un total<br>' +
-      '• Rellenaron hoy → <b>Rellené</b>';
+      '• Datos viejos (peso) también se usan en reportes<br>' +
+      '• Dos potes iguales → etiqueta';
   }
 
   function renderSalsasSimple() {
@@ -990,7 +1189,6 @@
     if (!list) return;
     var store = loadStore();
     var d = ensureDay(store, dayVal());
-
     if (!(d.pots || []).length) {
       list.innerHTML =
         '<p class="muted">Sin potes. Elige una salsa y pulsa <b>+ Otra</b>.</p>';
@@ -1003,7 +1201,11 @@
           var mac = gr != null ? macrosPer100(p.name, gr) : null;
           var consTxt =
             gr == null
-              ? '<span class="muted">Completa Inicio y Fin</span>'
+              ? p.weight !== '' && p.weight != null
+                ? '<span class="muted">Peso guardado: ' +
+                  r0(num(p.weight)) +
+                  ' g (sistema anterior)</span>'
+                : '<span class="muted">Completa Inicio y Fin</span>'
               : gr === 0
                 ? '<b>0 g</b> · no se suma al día'
                 : '<b>' +
@@ -1051,30 +1253,17 @@
         })
         .join('');
     }
-
     if (cons) {
+      var byName = hybridSalsaGrams(store, dayVal());
       var totalK = 0;
-      var rows = (d.pots || [])
-        .map(function (p) {
-          var gr = potConsumo(p);
-          var label = potLabel(p);
-          if (gr == null)
-            return (
-              '<div class="item"><div><b>' +
-              label +
-              '</b><div class="muted">Falta Inicio o Fin</div></div></div>'
-            );
-          if (gr === 0)
-            return (
-              '<div class="item"><div><b>' +
-              label +
-              '</b><div class="muted">0 g (no va al día)</div></div></div>'
-            );
-          var mac = macrosPer100(p.name, gr);
+      var rows = Object.keys(byName)
+        .map(function (name) {
+          var gr = byName[name].grams;
+          var mac = macrosPer100(name, gr);
           totalK += mac.kcal;
           return (
             '<div class="item"><div><b>' +
-            label +
+            name +
             '</b><div class="muted">' +
             r0(gr) +
             ' g · ' +
@@ -1098,23 +1287,20 @@
     if (field === 'inicio' || field === 'fin') {
       d.pots[i][field] = val === '' ? '' : num(val);
     } else d.pots[i][field] = val;
-    d.pots[i].weight = '';
-    d.pots[i].mid = '';
-    syncSalsaMeals(d);
-    persistFull(store);
+    softSyncSalsaMeals(d, dayVal());
+    saveLocalOnly(store);
+    safeCloudWrite(store);
     renderSalsasSimple();
-    var gr = potConsumo(d.pots[i]);
-    if (gr == null) toast('Guardado');
-    else if (gr === 0) toast('0 g · no se suma al día');
-    else toast(r0(gr) + ' g → día');
+    toast('Guardado');
   };
 
   window._salsaDel = function (i) {
     var store = loadStore();
     var d = ensureDay(store, dayVal());
     d.pots.splice(i, 1);
-    syncSalsaMeals(d);
-    persistFull(store);
+    softSyncSalsaMeals(d, dayVal());
+    saveLocalOnly(store);
+    safeCloudWrite(store);
     renderSalsasSimple();
     toast('Pote quitado');
   };
@@ -1127,11 +1313,10 @@
     if (!d.pots[i]) return;
     d.pots[i].inicio = num(v);
     d.pots[i].fin = '';
-    d.pots[i].weight = '';
-    d.pots[i].mid = '';
     if (!d.pots[i].label) d.pots[i].label = 'relleno';
-    syncSalsaMeals(d);
-    persistFull(store);
+    softSyncSalsaMeals(d, dayVal());
+    saveLocalOnly(store);
+    safeCloudWrite(store);
     renderSalsasSimple();
     toast('Inicio = ' + num(v) + ' g');
   };
@@ -1159,8 +1344,9 @@
       weight: '',
       mid: ''
     });
-    syncSalsaMeals(d);
-    persistFull(store);
+    softSyncSalsaMeals(d, dayVal());
+    saveLocalOnly(store);
+    safeCloudWrite(store);
     renderSalsasSimple();
     toast('Pote agregado');
   };
@@ -1177,7 +1363,7 @@
   window.saveSalsas = function () {
     applyAndSave();
     renderSalsasSimple();
-    toast('Guardado · abre Día para ver el total');
+    toast('Guardado');
   };
 
   var _saveDay = window.saveDay;
@@ -1188,83 +1374,46 @@
         await _saveDay();
       } catch (e) {}
     }
-    setTimeout(renderDayFromPatch, 80);
-    setTimeout(renderDayFromPatch, 350);
+    setTimeout(renderDayFromPatch, 100);
   };
 
   var _showTab = window.showTab;
   window.showTab = function (id) {
-    if (id === 'dia') applyAndSave();
     if (typeof _showTab === 'function') _showTab(id);
-    if (id === 'salsas') setTimeout(renderSalsasSimple, 30);
-    if (id === 'dia') {
-      setTimeout(renderDayFromPatch, 40);
-      setTimeout(renderDayFromPatch, 200);
-      setTimeout(renderDayFromPatch, 500);
-    }
-    if (id === 'reportes') setTimeout(function () {
-      if (typeof window.renderReport === 'function') window.renderReport();
-    }, 80);
-  };
-
-  function watchMealsList() {
-    var root = document.getElementById('meals-list');
-    if (!root || root._patchObs) return;
-    root._patchObs = true;
-    var timer = null;
-    var rendering = false;
-    new MutationObserver(function () {
-      if (rendering) return;
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(function () {
-        var tab = document.getElementById('tab-dia');
-        if (tab && !tab.classList.contains('hidden')) {
-          rendering = true;
-          try {
-            renderDayFromPatch();
-          } finally {
-            setTimeout(function () {
-              rendering = false;
-            }, 100);
-          }
-        }
-      }, 80);
-    }).observe(root, { childList: true, subtree: true });
-  }
-
-  function hookDay() {
-    var el = document.getElementById('day');
-    if (!el || el._salsaHooked) return;
-    el._salsaHooked = true;
-    el.addEventListener('change', function () {
+    if (id === 'salsas') setTimeout(renderSalsasSimple, 40);
+    if (id === 'dia') setTimeout(renderDayFromPatch, 80);
+    if (id === 'reportes')
       setTimeout(function () {
-        applyAndSave();
-        renderSalsasSimple();
-        renderDayFromPatch();
+        if (typeof window.renderReport === 'function') window.renderReport();
       }, 100);
-    });
-  }
+  };
 
   function start() {
     ensureDulceOption();
     improveHelp();
-    hookDay();
-    watchMealsList();
-    // Migrar y subir a Firebase para sync teléfono/PC
-    var store = loadStore();
-    migrateExtraIntoStore(store);
-    persistFull(store);
-    applyAndSave();
-    injectExtraFoods();
-    var tabS = document.getElementById('tab-salsas');
-    if (tabS && !tabS.classList.contains('hidden')) renderSalsasSimple();
-    var tabD = document.getElementById('tab-dia');
-    if (tabD && !tabD.classList.contains('hidden')) renderDayFromPatch();
+    // Primero recuperar de la nube, NUNCA escribir vacío encima
+    pullCloudMerge().then(function () {
+      injectExtraFoods();
+      var tabS = document.getElementById('tab-salsas');
+      if (tabS && !tabS.classList.contains('hidden')) renderSalsasSimple();
+      var tabD = document.getElementById('tab-dia');
+      if (tabD && !tabD.classList.contains('hidden')) renderDayFromPatch();
+    });
+    var el = document.getElementById('day');
+    if (el && !el._salsaHooked) {
+      el._salsaHooked = true;
+      el.addEventListener('change', function () {
+        setTimeout(function () {
+          renderSalsasSimple();
+          renderDayFromPatch();
+        }, 100);
+      });
+    }
   }
 
   if (document.readyState === 'loading')
     document.addEventListener('DOMContentLoaded', function () {
-      setTimeout(start, 900);
+      setTimeout(start, 1100);
     });
-  else setTimeout(start, 900);
+  else setTimeout(start, 1100);
 })();
