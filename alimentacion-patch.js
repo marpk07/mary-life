@@ -1,4 +1,4 @@
-/* Patch v12 — Salsas Inicio/Fin + sandwich estable + copiar WhatsApp correcto */
+/* Patch v13 — Salsas Inicio/Fin + sandwich sync + reporte PDF claro */
 (function () {
   var LS = 'MARY_ALIM_MARTIN_V1';
   var LS_EXTRA = 'MARY_ALIM_EXTRA_MEALS_V1';
@@ -70,7 +70,7 @@
     t.style.display = 'block';
     setTimeout(function () {
       t.style.display = 'none';
-    }, 2000);
+    }, 2200);
   }
   function today() {
     var d = new Date();
@@ -101,37 +101,58 @@
   function loadStore() {
     try {
       var r = localStorage.getItem(LS);
-      if (!r) return { days: {}, updatedAt: null };
+      if (!r) return { days: {}, extraMeals: {}, updatedAt: null };
       var p = JSON.parse(r);
       if (!p.days) p.days = {};
+      if (!p.extraMeals) p.extraMeals = {};
       return p;
     } catch (e) {
-      return { days: {}, updatedAt: null };
+      return { days: {}, extraMeals: {}, updatedAt: null };
     }
   }
-  function loadExtra() {
+  function migrateExtraIntoStore(store) {
+    // Migrar LS_EXTRA viejo → store.extraMeals (se sincroniza con Firebase)
     try {
       var r = localStorage.getItem(LS_EXTRA);
-      if (!r) return {};
-      var p = JSON.parse(r);
-      return p && typeof p === 'object' ? p : {};
-    } catch (e) {
-      return {};
-    }
-  }
-  function saveExtra(extra) {
-    try {
-      localStorage.setItem(LS_EXTRA, JSON.stringify(extra));
+      if (r) {
+        var old = JSON.parse(r);
+        if (old && typeof old === 'object') {
+          if (!store.extraMeals) store.extraMeals = {};
+          Object.keys(old).forEach(function (day) {
+            var list = old[day] || [];
+            if (!store.extraMeals[day]) store.extraMeals[day] = [];
+            list.forEach(function (m) {
+              var exists = store.extraMeals[day].some(function (x) {
+                return x.id === m.id && x.qty === m.qty && x.kcal === m.kcal;
+              });
+              if (!exists) store.extraMeals[day].push(m);
+            });
+          });
+        }
+      }
     } catch (e) {}
   }
   function getExtraMeals(day) {
-    var extra = loadExtra();
-    return (extra[day] || []).slice();
+    var store = loadStore();
+    migrateExtraIntoStore(store);
+    return ((store.extraMeals && store.extraMeals[day]) || []).slice();
   }
   function setExtraMeals(day, meals) {
-    var extra = loadExtra();
-    extra[day] = meals || [];
-    saveExtra(extra);
+    var store = loadStore();
+    if (!store.extraMeals) store.extraMeals = {};
+    store.extraMeals[day] = meals || [];
+    persistFull(store);
+    // también mirror en LS_EXTRA por compatibilidad
+    try {
+      var extra = {};
+      try {
+        extra = JSON.parse(localStorage.getItem(LS_EXTRA) || '{}') || {};
+      } catch (e2) {
+        extra = {};
+      }
+      extra[day] = meals || [];
+      localStorage.setItem(LS_EXTRA, JSON.stringify(extra));
+    } catch (e) {}
   }
   function ensureDay(store, day) {
     if (!store.days[day]) store.days[day] = { meals: [], pots: [], note: '' };
@@ -242,6 +263,7 @@
     });
   }
   function persistFull(store) {
+    migrateExtraIntoStore(store);
     store.updatedAt = Date.now();
     try {
       localStorage.setItem(LS, JSON.stringify(store));
@@ -255,7 +277,7 @@
           .set(Object.assign({}, store, { updatedAt: store.updatedAt }), { merge: true })
           .then(function () {
             var el = document.getElementById('sync');
-            if (el) el.textContent = '☁ OK · ' + new Date().toLocaleTimeString();
+            if (el) el.textContent = '☁ Sincronizado · ' + new Date().toLocaleTimeString();
           })
           .catch(function (e) {
             console.warn(e);
@@ -285,7 +307,6 @@
     } else prompt('Copia', t);
   }
 
-  /** Totales reales del día = core + extra + salsas Inicio/Fin */
   function patchDayTotals(day) {
     var store = loadStore();
     var d = ensureDay(store, day);
@@ -325,11 +346,7 @@
       if (info.labels.length === 1) labelPart = ' · ' + info.labels[0];
       else if (info.labels.length > 1) labelPart = ' · varios';
       lines.push({
-        m: {
-          name: name + labelPart,
-          grams: gr,
-          salsa: true
-        },
+        m: { name: name + labelPart, grams: gr, salsa: true },
         mac: mac,
         kind: 'salsa'
       });
@@ -342,6 +359,53 @@
       g: r0(total.g),
       lines: lines
     };
+  }
+
+  function daysInRange(from, to) {
+    var out = [];
+    if (!from || !to) return out;
+    var d = new Date(from + 'T12:00:00');
+    var end = new Date(to + 'T12:00:00');
+    while (d <= end) {
+      out.push(
+        d.getFullYear() +
+          '-' +
+          String(d.getMonth() + 1).padStart(2, '0') +
+          '-' +
+          String(d.getDate()).padStart(2, '0')
+      );
+      d.setDate(d.getDate() + 1);
+    }
+    return out;
+  }
+
+  function patchPeriodDetail(days) {
+    var counts = {};
+    var salsaGrams = {};
+    days.forEach(function (day) {
+      var store = loadStore();
+      var d = ensureDay(store, day);
+      (d.meals || []).forEach(function (m) {
+        if (m._salsaAuto || isSalsaMeal(m)) return;
+        var key = m.name || m.id || 'otro';
+        if (!counts[key]) counts[key] = { qty: 0, times: 0, isPct: false };
+        counts[key].qty += num(m.qty) || 1;
+        counts[key].times += 1;
+        if (m.id === 'panqueca100' || key === 'Panquecas') counts[key].isPct = true;
+      });
+      getExtraMeals(day).forEach(function (m) {
+        var key = m.name || m.id || 'otro';
+        if (!counts[key]) counts[key] = { qty: 0, times: 0, isPct: false };
+        counts[key].qty += num(m.qty) || 1;
+        counts[key].times += 1;
+      });
+      var byName = buildSalsaTotals(d.pots);
+      Object.keys(byName).forEach(function (name) {
+        if (!salsaGrams[name]) salsaGrams[name] = 0;
+        salsaGrams[name] += byName[name].grams;
+      });
+    });
+    return { counts: counts, salsaGrams: salsaGrams };
   }
 
   function renderDayFromPatch() {
@@ -357,6 +421,7 @@
 
     var t = patchDayTotals(day);
     var html = '';
+    var extraIdx = 0;
 
     t.lines.forEach(function (L) {
       var m = L.m;
@@ -371,21 +436,21 @@
       }
       var delBtn = '';
       if (L.kind === 'extra') {
-        // índice en extra se resuelve al borrar por nombre+qty en el momento
         delBtn =
-          '<button type="button" class="btn btn-ghost" data-extra-del="1">✕</button>';
+          '<button type="button" class="btn btn-ghost" onclick="window._patchDelExtra(' +
+          extraIdx +
+          ')">✕</button>';
+        extraIdx++;
       } else if (L.kind === 'food') {
         delBtn =
-          '<button type="button" class="btn btn-ghost" data-core-name="' +
-          String(m.name || m.id || '').replace(/"/g, '') +
-          '">✕</button>';
+          '<button type="button" class="btn btn-ghost" onclick="window._patchDelCoreByName(\'' +
+          String(m.name || m.id || '').replace(/'/g, '') +
+          '\')">✕</button>';
       } else {
         delBtn = '<span class="muted" style="font-size:.7rem">auto</span>';
       }
       html +=
-        '<div class="item" data-kind="' +
-        L.kind +
-        '">' +
+        '<div class="item">' +
         '<div><b>' +
         label +
         '</b><div class="muted">' +
@@ -406,19 +471,6 @@
         '<p class="muted">Sin comidas aún. Agrega alimentos o completa Inicio/Fin en Salsas.</p>';
     }
     list.innerHTML = html;
-
-    // Wire delete buttons
-    list.querySelectorAll('[data-extra-del]').forEach(function (btn, i) {
-      btn.onclick = function () {
-        window._patchDelExtra(i);
-      };
-    });
-    list.querySelectorAll('[data-core-name]').forEach(function (btn) {
-      btn.onclick = function () {
-        var name = btn.getAttribute('data-core-name');
-        window._patchDelCoreByName(name);
-      };
-    });
 
     if (kpis) {
       kpis.innerHTML =
@@ -461,7 +513,6 @@
   window._patchDelExtra = function (eidx) {
     var day = dayVal();
     var extra = getExtraMeals(day);
-    // eidx is index among extra-only lines in current render order
     extra.splice(eidx, 1);
     setExtraMeals(day, extra);
     renderDayFromPatch();
@@ -520,7 +571,6 @@
     });
   }
 
-  // ——— COPIAR WHATSAPP (con sandwich + salsas reales) ———
   window.copyAlimentos = function () {
     applyAndSave();
     var day = dayVal();
@@ -530,13 +580,9 @@
       var m = L.m;
       var mac = L.mac;
       var label = m.name || 'Alimento';
-      if (L.kind === 'salsa') {
-        label = label + ' (' + r0(m.grams) + ' g)';
-      } else if (m.byGram && m.grams) {
-        label = label + ' (' + r0(m.grams) + ' g)';
-      } else if (m.qty && m.qty !== 1) {
-        label = label + ' (' + m.qty + ')';
-      }
+      if (L.kind === 'salsa') label = label + ' (' + r0(m.grams) + ' g)';
+      else if (m.byGram && m.grams) label = label + ' (' + r0(m.grams) + ' g)';
+      else if (m.qty && m.qty !== 1) label = label + ' (' + m.qty + ')';
       msg +=
         '• ' +
         label +
@@ -578,21 +624,9 @@
       var gr = potConsumo(p);
       var label = potLabel(p);
       any = true;
-      if (ini == null || fin == null) {
-        msg += label + ': (sin datos)\n';
-      } else if (!gr) {
-        msg += label + ': sin consumo\n';
-      } else {
-        msg +=
-          label +
-          ' ' +
-          r0(ini) +
-          'g-' +
-          r0(fin) +
-          'g: ' +
-          r0(gr) +
-          'g\n';
-      }
+      if (ini == null || fin == null) msg += label + ': (sin datos)\n';
+      else if (!gr) msg += label + ': sin consumo\n';
+      else msg += label + ' ' + r0(ini) + 'g-' + r0(fin) + 'g: ' + r0(gr) + 'g\n';
     });
     if (!any) msg += '(sin potes)\n';
     copyText(msg.trim());
@@ -610,6 +644,313 @@
       msg += potLabel(p) + ' ' + w + '\n';
     });
     copyText(msg.trim());
+  };
+
+  // ——— REPORTE + PDF ———
+  window.exportPDF = function () {
+    applyAndSave();
+    var from = document.getElementById('r-from') && document.getElementById('r-from').value;
+    var to = document.getElementById('r-to') && document.getElementById('r-to').value;
+    if (!from || !to) {
+      alert('Elige rango de fechas');
+      return;
+    }
+    var days = daysInRange(from, to);
+    var rows = days.map(function (day) {
+      return { day: day, t: patchDayTotals(day) };
+    });
+    var withData = rows.filter(function (r) {
+      return r.t.kcal > 0;
+    });
+    var n = withData.length || 1;
+    var sum = { kcal: 0, p: 0, c: 0, g: 0 };
+    withData.forEach(function (r) {
+      sum.kcal += r.t.kcal;
+      sum.p += r.t.p;
+      sum.c += r.t.c;
+      sum.g += r.t.g;
+    });
+    var det = patchPeriodDetail(days);
+
+    var maxK = withData[0],
+      minK = withData[0],
+      maxP = withData[0],
+      minP = withData[0];
+    withData.forEach(function (r) {
+      if (r.t.kcal > maxK.t.kcal) maxK = r;
+      if (r.t.kcal < minK.t.kcal) minK = r;
+      if (r.t.p > maxP.t.p) maxP = r;
+      if (r.t.p < minP.t.p) minP = r;
+    });
+
+    try {
+      var jsPDF = window.jspdf.jsPDF;
+      var doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      var purple = [124, 58, 160];
+      var pink = [236, 72, 153];
+      var lilac = [248, 244, 255];
+
+      // Header más ancho para que no corte fechas
+      doc.setFillColor(lilac[0], lilac[1], lilac[2]);
+      doc.rect(0, 0, 595, 78, 'F');
+      doc.setFillColor(purple[0], purple[1], purple[2]);
+      doc.roundedRect(40, 18, 515, 22, 10, 10, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.setTextColor(255, 255, 255);
+      doc.text(
+        ('MACROS MARTÍN · ' + fmtDM(from) + ' → ' + fmtDM(to)).toUpperCase(),
+        52,
+        33
+      );
+      doc.setFillColor(pink[0], pink[1], pink[2]);
+      doc.roundedRect(40, 48, 90, 16, 8, 8, 'F');
+      doc.setFontSize(9);
+      doc.text('Reporte', 52, 59);
+
+      var y = 95;
+      doc.autoTable({
+        startY: y,
+        head: [['kcal prom.', 'P', 'C', 'G']],
+        body: [
+          [
+            Math.round(sum.kcal / n),
+            Math.round(sum.p / n) + ' g',
+            Math.round(sum.c / n) + ' g',
+            Math.round(sum.g / n) + ' g'
+          ]
+        ],
+        headStyles: { fillColor: lilac, textColor: purple },
+        margin: { left: 40, right: 40 }
+      });
+
+      // Máx / mín
+      if (withData.length) {
+        y = doc.lastAutoTable.finalY + 10;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(80, 60, 100);
+        doc.text(
+          'Más kcal: ' +
+            maxK.t.kcal +
+            ' (' +
+            fmtDM(maxK.day) +
+            ')   ·   Menos kcal: ' +
+            minK.t.kcal +
+            ' (' +
+            fmtDM(minK.day) +
+            ')',
+          40,
+          y
+        );
+        doc.text(
+          'Más proteína: ' +
+            maxP.t.p +
+            ' g (' +
+            fmtDM(maxP.day) +
+            ')   ·   Menos proteína: ' +
+            minP.t.p +
+            ' g (' +
+            fmtDM(minP.day) +
+            ')',
+          40,
+          y + 14
+        );
+        y = y + 24;
+      } else {
+        y = doc.lastAutoTable.finalY + 12;
+      }
+
+      // Alimentos: Veces = cuántas veces se registró; Detalle = total unidades o %
+      var foodBody = Object.keys(det.counts).map(function (name) {
+        var c = det.counts[name];
+        var detalle;
+        if (c.isPct || name === 'Panquecas') {
+          detalle = c.times + ' veces · % sumado ' + r0(c.qty);
+        } else {
+          detalle =
+            c.times +
+            ' veces · total ' +
+            (Math.round(c.qty * 10) / 10) +
+            ' uds';
+        }
+        return [name, String(c.times), detalle];
+      });
+      if (foodBody.length) {
+        doc.autoTable({
+          startY: y,
+          head: [['Alimento', 'Veces', 'Detalle']],
+          body: foodBody,
+          headStyles: { fillColor: lilac, textColor: purple },
+          margin: { left: 40, right: 40 },
+          columnStyles: { 0: { cellWidth: 180 }, 1: { cellWidth: 50 }, 2: { cellWidth: 240 } }
+        });
+        y = doc.lastAutoTable.finalY + 12;
+      }
+
+      var salsaBody = Object.keys(det.salsaGrams).map(function (name) {
+        return [name, r0(det.salsaGrams[name]) + ' g'];
+      });
+      if (salsaBody.length) {
+        doc.autoTable({
+          startY: y,
+          head: [['Salsa', 'Consumo del período']],
+          body: salsaBody,
+          headStyles: { fillColor: lilac, textColor: purple },
+          margin: { left: 40, right: 40 }
+        });
+        y = doc.lastAutoTable.finalY + 12;
+      }
+
+      doc.autoTable({
+        startY: y,
+        head: [['Día', 'kcal', 'P', 'C', 'G']],
+        body: rows.map(function (r) {
+          return [fmtDM(r.day), r.t.kcal, r.t.p, r.t.c, r.t.g];
+        }),
+        headStyles: { fillColor: lilac, textColor: purple },
+        margin: { left: 40, right: 40 }
+      });
+
+      doc.save('macros_martin_' + from + '_' + to + '.pdf');
+      toast('PDF listo');
+    } catch (e) {
+      console.error(e);
+      alert('Error PDF: ' + (e && e.message ? e.message : e));
+    }
+  };
+
+  window.renderReport = function () {
+    applyAndSave();
+    var from = document.getElementById('r-from') && document.getElementById('r-from').value;
+    var to = document.getElementById('r-to') && document.getElementById('r-to').value;
+    if (!from || !to) return;
+    var days = daysInRange(from, to);
+    var rows = days.map(function (day) {
+      return { day: day, t: patchDayTotals(day) };
+    });
+    var withData = rows.filter(function (r) {
+      return r.t.kcal > 0;
+    });
+    var n = withData.length || 1;
+    var sum = { kcal: 0, p: 0, c: 0, g: 0 };
+    withData.forEach(function (r) {
+      sum.kcal += r.t.kcal;
+      sum.p += r.t.p;
+      sum.c += r.t.c;
+      sum.g += r.t.g;
+    });
+    var avg = {
+      kcal: r0(sum.kcal / n),
+      p: r0(sum.p / n),
+      c: r0(sum.c / n),
+      g: r0(sum.g / n)
+    };
+    var maxK = withData[0],
+      minK = withData[0],
+      maxP = withData[0],
+      minP = withData[0];
+    withData.forEach(function (r) {
+      if (!maxK || r.t.kcal > maxK.t.kcal) maxK = r;
+      if (!minK || r.t.kcal < minK.t.kcal) minK = r;
+      if (!maxP || r.t.p > maxP.t.p) maxP = r;
+      if (!minP || r.t.p < minP.t.p) minP = r;
+    });
+    var det = patchPeriodDetail(days);
+
+    var html =
+      '<div class="sec" style="margin-top:0">Resumen ' +
+      fmtDM(from) +
+      ' → ' +
+      fmtDM(to) +
+      '</div>';
+    html +=
+      '<div class="grid2">' +
+      '<div class="kpi"><div class="v">' +
+      avg.kcal +
+      '</div><div class="l">kcal prom.</div></div>' +
+      '<div class="kpi"><div class="v">' +
+      avg.p +
+      ' g</div><div class="l">P prom.</div></div>' +
+      '<div class="kpi"><div class="v">' +
+      avg.c +
+      ' g</div><div class="l">C prom.</div></div>' +
+      '<div class="kpi"><div class="v">' +
+      avg.g +
+      ' g</div><div class="l">G prom.</div></div></div>';
+
+    if (withData.length) {
+      html +=
+        '<p class="muted" style="margin-top:.75rem">Más kcal: <b>' +
+        maxK.t.kcal +
+        '</b> (' +
+        fmtDM(maxK.day) +
+        ') · Menos kcal: <b>' +
+        minK.t.kcal +
+        '</b> (' +
+        fmtDM(minK.day) +
+        ')</p>';
+      html +=
+        '<p class="muted">Más proteína: <b>' +
+        maxP.t.p +
+        ' g</b> (' +
+        fmtDM(maxP.day) +
+        ') · Menos proteína: <b>' +
+        minP.t.p +
+        ' g</b> (' +
+        fmtDM(minP.day) +
+        ')</p>';
+    }
+
+    html += '<div class="sec">Alimentos del período</div>';
+    Object.keys(det.counts).forEach(function (name) {
+      var c = det.counts[name];
+      var detTxt;
+      if (c.isPct || name === 'Panquecas') {
+        detTxt = c.times + ' veces · % sumado: ' + r0(c.qty);
+      } else {
+        detTxt =
+          c.times + ' veces · total: ' + Math.round(c.qty * 10) / 10 + ' uds';
+      }
+      html +=
+        '<div class="item"><div><b>' +
+        name +
+        '</b><div class="muted">' +
+        detTxt +
+        '</div></div></div>';
+    });
+
+    html += '<div class="sec">Salsas del período</div>';
+    Object.keys(det.salsaGrams).forEach(function (name) {
+      html +=
+        '<div class="item"><div><b>' +
+        name +
+        '</b><div class="muted">' +
+        r0(det.salsaGrams[name]) +
+        ' g</div></div></div>';
+    });
+    if (!Object.keys(det.salsaGrams).length) {
+      html += '<p class="muted">Sin consumo de salsas en el rango.</p>';
+    }
+
+    html += '<div class="sec">Por día</div>';
+    rows.forEach(function (r) {
+      html +=
+        '<div class="item"><div><b>' +
+        fmtDM(r.day) +
+        '</b><div class="muted">' +
+        r.t.kcal +
+        ' kcal | ' +
+        r.t.p +
+        ' P | ' +
+        r.t.c +
+        ' C | ' +
+        r.t.g +
+        ' G</div></div></div>';
+    });
+
+    var box = document.getElementById('report-box');
+    if (box) box.innerHTML = html;
   };
 
   function ensureDulceOption() {
@@ -861,6 +1202,9 @@
       setTimeout(renderDayFromPatch, 200);
       setTimeout(renderDayFromPatch, 500);
     }
+    if (id === 'reportes') setTimeout(function () {
+      if (typeof window.renderReport === 'function') window.renderReport();
+    }, 80);
   };
 
   function watchMealsList() {
@@ -906,6 +1250,10 @@
     improveHelp();
     hookDay();
     watchMealsList();
+    // Migrar y subir a Firebase para sync teléfono/PC
+    var store = loadStore();
+    migrateExtraIntoStore(store);
+    persistFull(store);
     applyAndSave();
     injectExtraFoods();
     var tabS = document.getElementById('tab-salsas');
