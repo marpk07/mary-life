@@ -1,4 +1,4 @@
-/* Patch v15 — Registro manual del día + merge seguro + reporte */
+/* Patch v16 — Formulario macros kcal/P/C/G + carga rápida + merge seguro */
 (function () {
   var LS = 'MARY_ALIM_MARTIN_V1';
   var LS_EXTRA = 'MARY_ALIM_EXTRA_MEALS_V1';
@@ -43,18 +43,13 @@
       g: 11.5
     }
   ];
-  var SALSA_NAMES = [
-    'Hershey',
-    'Miel',
-    'Leche condensada tradicional',
-    'Leche condensada La Lechera',
-    'Mayonesa',
-    'Nutella',
-    'Dulce de leche',
-    'Cocada',
-    'Mantequilla',
-    'Queso parmesano'
-  ];
+  // Datos del PDF 02–05/11 para recuperación rápida
+  var PDF_DAYS = {
+    '2026-11-02': { kcal: 1878, p: 105, c: 228, g: 58 },
+    '2026-11-03': { kcal: 1696, p: 120, c: 177, g: 54 },
+    '2026-11-04': { kcal: 3107, p: 164, c: 406, g: 91 },
+    '2026-11-05': { kcal: 2583, p: 123, c: 348, g: 76 }
+  };
 
   function num(v) {
     var n = parseFloat(String(v == null ? '' : v).replace(',', '.'));
@@ -221,25 +216,6 @@
     });
     return out;
   }
-  function migrateExtraIntoStore(store) {
-    try {
-      var r = localStorage.getItem(LS_EXTRA);
-      if (!r) return;
-      var old = JSON.parse(r);
-      if (!old || typeof old !== 'object') return;
-      if (!store.extraMeals) store.extraMeals = {};
-      Object.keys(old).forEach(function (day) {
-        var list = old[day] || [];
-        if (!store.extraMeals[day]) store.extraMeals[day] = [];
-        list.forEach(function (m) {
-          var exists = store.extraMeals[day].some(function (x) {
-            return x.id === m.id && x.qty === m.qty && x.kcal === m.kcal;
-          });
-          if (!exists) store.extraMeals[day].push(m);
-        });
-      });
-    } catch (e) {}
-  }
   function getExtraMeals(day) {
     var store = loadStore();
     return ((store.extraMeals && store.extraMeals[day]) || []).slice();
@@ -318,7 +294,7 @@
     });
     return byName;
   }
-  function softSyncSalsaMeals(d, day) {
+  function softSyncSalsaMeals(d) {
     d.meals = (d.meals || []).filter(function (m) {
       return !m._salsaAuto;
     });
@@ -328,13 +304,10 @@
       var gr = info.grams;
       if (gr <= 0) return;
       var mac = macrosPer100(name, gr);
-      var labelPart = '';
-      if (info.labels.length === 1) labelPart = ' · ' + info.labels[0];
-      else if (info.labels.length > 1) labelPart = ' · varios';
       d.meals.push({
         _salsaAuto: true,
         id: 'salsa_' + name.replace(/\s+/g, '_').slice(0, 24),
-        name: name + labelPart + ' (' + r0(gr) + ' g) · salsa',
+        name: name + ' (' + r0(gr) + ' g) · salsa',
         qty: 1,
         grams: gr,
         custom: true,
@@ -363,8 +336,6 @@
           var merged = mergeStores(store, cloud);
           if (storeRichness(merged) < storeRichness(cloud) * 0.5 && storeRichness(cloud) > 5) {
             saveLocalOnly(mergeStores(cloud, store));
-            var el = document.getElementById('sync');
-            if (el) el.textContent = '☁ Datos nube restaurados';
             return;
           }
           merged.updatedAt = Date.now();
@@ -374,14 +345,7 @@
             .set(merged, { merge: false })
             .then(function () {
               saveLocalOnly(merged);
-              var el = document.getElementById('sync');
-              if (el) {
-                var nd = Object.keys(merged.days || {}).filter(function (k) {
-                  return dayRichness(merged.days[k]) > 0;
-                }).length;
-                el.textContent =
-                  '☁ ' + nd + ' días con datos · ' + new Date().toLocaleTimeString();
-              }
+              updateSyncStatus(merged);
             });
         })
         .catch(function (e) {
@@ -393,9 +357,8 @@
   }
   function applyAndSave() {
     var store = loadStore();
-    var day = dayVal();
-    var d = ensureDay(store, day);
-    softSyncSalsaMeals(d, day);
+    var d = ensureDay(store, dayVal());
+    softSyncSalsaMeals(d);
     saveLocalOnly(store);
     safeCloudWrite(store);
     return d;
@@ -411,7 +374,6 @@
         .get()
         .then(function (snap) {
           var local = loadStore();
-          migrateExtraIntoStore(local);
           if (!snap.exists) {
             saveLocalOnly(local);
             updateSyncStatus(local);
@@ -428,7 +390,6 @@
           return merged;
         });
     } catch (e) {
-      console.warn(e);
       return Promise.resolve(loadStore());
     }
   }
@@ -516,8 +477,7 @@
     var total = { kcal: 0, p: 0, c: 0, g: 0 };
     var lines = [];
 
-    // Registro manual del día (Bayer / totales a mano)
-    if (d.manual && (num(d.manual.kcal) || num(d.manual.p))) {
+    if (d.manual && (num(d.manual.kcal) || num(d.manual.p) || num(d.manual.c) || num(d.manual.g))) {
       var mm = {
         kcal: num(d.manual.kcal),
         p: num(d.manual.p),
@@ -641,54 +601,84 @@
     return { counts: counts, salsaGrams: salsaGrams };
   }
 
-  function injectManualButton() {
+  function injectManualForm() {
     var tab = document.getElementById('tab-dia');
-    if (!tab || tab.querySelector('[data-manual-day]')) return;
+    if (!tab) return;
+    var existing = tab.querySelector('[data-manual-form]');
+    var store = loadStore();
+    var d = ensureDay(store, dayVal());
+    var man = d.manual || {};
+
+    var html =
+      '<div class="sec" style="margin-top:0">Registro manual del día</div>' +
+      '<p class="muted" style="margin:.2rem 0 .45rem">Escribe los 4 valores y pulsa Guardar. Sirve si Bayer (u otro) ya te dio el total.</p>' +
+      '<div class="grid2" style="margin-bottom:.4rem">' +
+      '<div><label>kcal</label><input type="number" inputmode="decimal" id="man-kcal" value="' +
+      (man.kcal != null ? man.kcal : '') +
+      '" placeholder="ej. 1878"></div>' +
+      '<div><label>Proteína (g)</label><input type="number" inputmode="decimal" id="man-p" value="' +
+      (man.p != null ? man.p : '') +
+      '" placeholder="ej. 105"></div>' +
+      '<div><label>Carbos (g)</label><input type="number" inputmode="decimal" id="man-c" value="' +
+      (man.c != null ? man.c : '') +
+      '" placeholder="ej. 228"></div>' +
+      '<div><label>Grasas (g)</label><input type="number" inputmode="decimal" id="man-g" value="' +
+      (man.g != null ? man.g : '') +
+      '" placeholder="ej. 58"></div>' +
+      '</div>' +
+      '<div class="row">' +
+      '<button type="button" class="btn btn-main" onclick="window._saveManualForm()">💾 Guardar macros</button>' +
+      '<button type="button" class="btn btn-ghost" onclick="window._clearManualDay()">Quitar</button>' +
+      '<button type="button" class="btn btn-pink" onclick="window._loadPdfDays()">📋 Cargar 02–05/11 del PDF</button>' +
+      '</div>';
+
+    if (existing) {
+      existing.innerHTML = html;
+      return;
+    }
     var box = document.createElement('div');
     box.className = 'glass';
-    box.setAttribute('data-manual-day', '1');
-    box.innerHTML =
-      '<div class="sec" style="margin-top:0">Registro rápido del día</div>' +
-      '<p class="muted" style="margin:.25rem 0 .5rem">Si ya tienes los macros (ej. los calculó Bayer), cárgalos aquí sin ir alimento por alimento.</p>' +
-      '<div class="row">' +
-      '<button type="button" class="btn btn-main" onclick="window._addManualDay()">✍️ Macros del día a mano</button>' +
-      '<button type="button" class="btn btn-ghost" onclick="window._clearManualDay()">Quitar manual</button>' +
-      '</div>';
-    // Insertar arriba de comidas
-    var mealsGlass = tab.querySelector('#meals-list');
-    if (mealsGlass && mealsGlass.parentElement) {
-      mealsGlass.parentElement.parentElement.insertBefore(
-        box,
-        mealsGlass.parentElement
-      );
+    box.setAttribute('data-manual-form', '1');
+    box.innerHTML = html;
+    var mealsList = document.getElementById('meals-list');
+    if (mealsList && mealsList.parentElement && mealsList.parentElement.parentElement) {
+      mealsList.parentElement.parentElement.insertBefore(box, mealsList.parentElement);
     } else {
       tab.insertBefore(box, tab.firstChild);
     }
   }
 
-  window._addManualDay = function () {
-    var day = dayVal();
-    var kcal = prompt('Calorías del día (kcal)', '');
-    if (kcal == null || kcal === '') return;
-    var p = prompt('Proteína (g)', '0');
-    if (p == null) return;
-    var c = prompt('Carbohidratos (g)', '0');
-    if (c == null) return;
-    var g = prompt('Grasas (g)', '0');
-    if (g == null) return;
+  window._saveManualForm = function () {
+    var kcalEl = document.getElementById('man-kcal');
+    var pEl = document.getElementById('man-p');
+    var cEl = document.getElementById('man-c');
+    var gEl = document.getElementById('man-g');
+    if (!kcalEl) return;
+    var kcal = num(kcalEl.value);
+    var p = num(pEl && pEl.value);
+    var c = num(cEl && cEl.value);
+    var g = num(gEl && gEl.value);
+    if (!kcal && !p && !c && !g) {
+      toast('Escribe al menos un valor');
+      return;
+    }
     var store = loadStore();
-    var d = ensureDay(store, day);
-    d.manual = {
-      kcal: num(kcal),
-      p: num(p),
-      c: num(c),
-      g: num(g),
-      note: 'manual'
-    };
+    var d = ensureDay(store, dayVal());
+    d.manual = { kcal: kcal, p: p, c: c, g: g, note: 'manual' };
     saveLocalOnly(store);
     safeCloudWrite(store);
     renderDayFromPatch();
-    toast('Macros del día guardados');
+    toast(
+      'Guardado: ' +
+        r0(kcal) +
+        ' kcal · ' +
+        r0(p) +
+        'P · ' +
+        r0(c) +
+        'C · ' +
+        r0(g) +
+        'G'
+    );
   };
 
   window._clearManualDay = function () {
@@ -698,17 +688,45 @@
     saveLocalOnly(store);
     safeCloudWrite(store);
     renderDayFromPatch();
-    toast('Registro manual quitado');
+    toast('Manual quitado');
+  };
+
+  window._loadPdfDays = function () {
+    if (
+      !confirm(
+        '¿Cargar macros de 02, 03, 04 y 05/11/2026 desde el PDF (kcal+P+C+G)?'
+      )
+    )
+      return;
+    var store = loadStore();
+    Object.keys(PDF_DAYS).forEach(function (day) {
+      var d = ensureDay(store, day);
+      var m = PDF_DAYS[day];
+      d.manual = {
+        kcal: m.kcal,
+        p: m.p,
+        c: m.c,
+        g: m.g,
+        note: 'pdf'
+      };
+    });
+    saveLocalOnly(store);
+    safeCloudWrite(store);
+    renderDayFromPatch();
+    toast('4 días del PDF cargados');
+    // refrescar reporte si está visible
+    if (typeof window.renderReport === 'function') {
+      setTimeout(window.renderReport, 300);
+    }
   };
 
   function renderDayFromPatch() {
     var store = loadStore();
     var day = dayVal();
     var d = ensureDay(store, day);
-    softSyncSalsaMeals(d, day);
+    softSyncSalsaMeals(d);
     saveLocalOnly(store);
-
-    injectManualButton();
+    injectManualForm();
 
     var list = document.getElementById('meals-list');
     var kpis = document.getElementById('kpis');
@@ -762,7 +780,7 @@
 
     if (!html) {
       html =
-        '<p class="muted">Sin comidas. Usa <b>Macros del día a mano</b> o agrega alimentos abajo.</p>';
+        '<p class="muted">Sin comidas. Completa el formulario de arriba (kcal, P, C, G) y Guardar.</p>';
     }
     list.innerHTML = html;
 
@@ -801,7 +819,6 @@
     saveLocalOnly(store);
     safeCloudWrite(store);
     renderDayFromPatch();
-    toast('Eliminado');
   };
 
   window._patchDelExtra = function (eidx) {
@@ -810,7 +827,6 @@
     extra.splice(eidx, 1);
     setExtraMeals(day, extra);
     renderDayFromPatch();
-    toast('Eliminado');
   };
 
   window._addExtraFood = function (id) {
@@ -837,7 +853,6 @@
     });
     setExtraMeals(day, extra);
     renderDayFromPatch();
-    toast(f.name + (qty !== 1 ? ' × ' + qty : '') + ' agregado');
   };
 
   function injectExtraFoods() {
@@ -875,7 +890,6 @@
       var mac = L.mac;
       var label = m.name || 'Alimento';
       if (L.kind === 'salsa') label = label + ' (' + r0(m.grams) + ' g)';
-      else if (m.byGram && m.grams) label = label + ' (' + r0(m.grams) + ' g)';
       else if (m.qty && m.qty !== 1) label = label + ' (' + m.qty + ')';
       msg +=
         '• ' +
@@ -911,11 +925,10 @@
     var store = loadStore();
     var byName = hybridSalsaGrams(store, day);
     var msg = 'Consumo salsas ' + fmtShort(day) + '\n';
-    var keys = Object.keys(byName);
-    if (!keys.length) msg += '(sin datos)\n';
-    keys.forEach(function (name) {
+    Object.keys(byName).forEach(function (name) {
       msg += name + ': ' + r0(byName[name].grams) + 'g\n';
     });
+    if (!Object.keys(byName).length) msg += '(sin datos)\n';
     copyText(msg.trim());
   };
 
@@ -942,10 +955,7 @@
     pullCloudMerge().then(function () {
       var from = document.getElementById('r-from') && document.getElementById('r-from').value;
       var to = document.getElementById('r-to') && document.getElementById('r-to').value;
-      if (!from || !to) {
-        alert('Elige rango');
-        return;
-      }
+      if (!from || !to) return alert('Elige rango');
       var days = daysInRange(from, to);
       var rows = days.map(function (day) {
         return { day: day, t: patchDayTotals(day) };
@@ -975,9 +985,9 @@
       try {
         var jsPDF = window.jspdf.jsPDF;
         var doc = new jsPDF({ unit: 'pt', format: 'a4' });
-        var purple = [124, 58, 160];
-        var pink = [236, 72, 153];
-        var lilac = [248, 244, 255];
+        var purple = [124, 58, 160],
+          pink = [236, 72, 153],
+          lilac = [248, 244, 255];
         doc.setFillColor(lilac[0], lilac[1], lilac[2]);
         doc.rect(0, 0, 595, 78, 'F');
         doc.setFillColor(purple[0], purple[1], purple[2]);
@@ -1018,7 +1028,7 @@
               maxK.t.kcal +
               ' (' +
               fmtDM(maxK.day) +
-              ')  ·  Menos kcal: ' +
+              ') · Menos kcal: ' +
               minK.t.kcal +
               ' (' +
               fmtDM(minK.day) +
@@ -1031,7 +1041,7 @@
               maxP.t.p +
               ' g (' +
               fmtDM(maxP.day) +
-              ')  ·  Menos proteína: ' +
+              ') · Menos proteína: ' +
               minP.t.p +
               ' g (' +
               fmtDM(minP.day) +
@@ -1170,7 +1180,7 @@
           ')</p>';
       } else {
         html +=
-          '<p class="muted" style="margin-top:.75rem">Sin datos en este rango. Usa <b>Macros del día a mano</b> en cada fecha para recuperar (ej. desde el PDF o WhatsApp).</p>';
+          '<p class="muted" style="margin-top:.75rem">Sin datos. En Día usa <b>Cargar 02–05/11 del PDF</b> o el formulario de macros.</p>';
       }
       html += '<div class="sec">Alimentos del período</div>';
       Object.keys(det.counts).forEach(function (name) {
@@ -1187,7 +1197,7 @@
           '</div></div></div>';
       });
       if (!Object.keys(det.counts).length)
-        html += '<p class="muted">Sin alimentos en el rango.</p>';
+        html += '<p class="muted">Sin alimentos.</p>';
       html += '<div class="sec">Salsas del período</div>';
       Object.keys(det.salsaGrams).forEach(function (name) {
         html +=
@@ -1198,7 +1208,7 @@
           ' g</div></div></div>';
       });
       if (!Object.keys(det.salsaGrams).length)
-        html += '<p class="muted">Sin salsas en el rango.</p>';
+        html += '<p class="muted">Sin salsas.</p>';
       html += '<div class="sec">Por día</div>';
       rows.forEach(function (r) {
         html +=
@@ -1222,7 +1232,18 @@
   function ensureDulceOption() {
     var sel = document.getElementById('salsa-add-name');
     if (!sel) return;
-    SALSA_NAMES.forEach(function (n) {
+    [
+      'Hershey',
+      'Miel',
+      'Leche condensada tradicional',
+      'Leche condensada La Lechera',
+      'Mayonesa',
+      'Nutella',
+      'Dulce de leche',
+      'Cocada',
+      'Mantequilla',
+      'Queso parmesano'
+    ].forEach(function (n) {
       var found = false;
       for (var i = 0; i < sel.options.length; i++)
         if (sel.options[i].text === n) found = true;
@@ -1235,20 +1256,8 @@
     });
   }
 
-  function improveHelp() {
-    var tab = document.getElementById('tab-salsas');
-    if (!tab) return;
-    var muted = tab.querySelector('.muted');
-    if (!muted) return;
-    muted.innerHTML =
-      '<b>Cómo llenar</b><br>' +
-      '• <b>Inicio</b> y <b>Fin</b> → consumo = Inicio − Fin<br>' +
-      '• Datos de peso anteriores también cuentan en reportes';
-  }
-
   function renderSalsasSimple() {
     ensureDulceOption();
-    improveHelp();
     var list = document.getElementById('salsa-list');
     var cons = document.getElementById('salsa-consumo');
     if (!list) return;
@@ -1266,9 +1275,7 @@
           var mac = gr != null ? macrosPer100(p.name, gr) : null;
           var consTxt =
             gr == null
-              ? p.weight !== '' && p.weight != null
-                ? '<span class="muted">Peso: ' + r0(num(p.weight)) + ' g</span>'
-                : '<span class="muted">Completa Inicio y Fin</span>'
+              ? '<span class="muted">Completa Inicio y Fin</span>'
               : gr === 0
                 ? '<b>0 g</b>'
                 : '<b>' + r0(gr) + ' g</b> → día · ' + r0(mac.kcal) + ' kcal';
@@ -1303,11 +1310,7 @@
             ',\'fin\',this.value)"></div></div>' +
             '<div style="margin-top:.45rem;font-size:.8rem">' +
             consTxt +
-            '</div>' +
-            '<div class="row" style="margin-top:.4rem">' +
-            '<button type="button" class="btn btn-ghost" onclick="window._salsaRelleno(' +
-            i +
-            ')">🔄 Rellené</button></div></div>'
+            '</div></div>'
           );
         })
         .join('');
@@ -1346,31 +1349,16 @@
     if (field === 'inicio' || field === 'fin') {
       d.pots[i][field] = val === '' ? '' : num(val);
     } else d.pots[i][field] = val;
-    softSyncSalsaMeals(d, dayVal());
+    softSyncSalsaMeals(d);
     saveLocalOnly(store);
     safeCloudWrite(store);
     renderSalsasSimple();
-    toast('Guardado');
   };
   window._salsaDel = function (i) {
     var store = loadStore();
     var d = ensureDay(store, dayVal());
     d.pots.splice(i, 1);
-    softSyncSalsaMeals(d, dayVal());
-    saveLocalOnly(store);
-    safeCloudWrite(store);
-    renderSalsasSimple();
-  };
-  window._salsaRelleno = function (i) {
-    var v = prompt('Peso AHORA tras rellenar (g) = nuevo Inicio', '');
-    if (v == null || v === '') return;
-    var store = loadStore();
-    var d = ensureDay(store, dayVal());
-    if (!d.pots[i]) return;
-    d.pots[i].inicio = num(v);
-    d.pots[i].fin = '';
-    if (!d.pots[i].label) d.pots[i].label = 'relleno';
-    softSyncSalsaMeals(d, dayVal());
+    softSyncSalsaMeals(d);
     saveLocalOnly(store);
     safeCloudWrite(store);
     renderSalsasSimple();
@@ -1384,18 +1372,17 @@
     var same = (d.pots || []).filter(function (p) {
       return p.name === name;
     }).length;
-    var label = same ? String(same + 1) : '';
     var ini = prompt('Inicio de "' + name + '" (g)', '');
     d.pots.push({
       id: 's' + Date.now(),
       name: name,
-      label: label,
+      label: same ? String(same + 1) : '',
       inicio: ini === '' || ini == null ? '' : num(ini),
       fin: '',
       weight: '',
       mid: ''
     });
-    softSyncSalsaMeals(d, dayVal());
+    softSyncSalsaMeals(d);
     saveLocalOnly(store);
     safeCloudWrite(store);
     renderSalsasSimple();
@@ -1438,10 +1425,9 @@
 
   function start() {
     ensureDulceOption();
-    improveHelp();
     pullCloudMerge().then(function () {
       injectExtraFoods();
-      injectManualButton();
+      injectManualForm();
       var tabS = document.getElementById('tab-salsas');
       if (tabS && !tabS.classList.contains('hidden')) renderSalsasSimple();
       var tabD = document.getElementById('tab-dia');
