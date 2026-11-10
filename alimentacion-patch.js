@@ -1,13 +1,17 @@
-/* Patch v17 — auto-carga PDF 02-05/11 + formulario macros completo */
+/* Patch v18 — Restaurar macros reales 2–8 nov (Notion) + formulario */
 (function () {
   var LS = 'MARY_ALIM_MARTIN_V1';
   var COL = 'mary_alimentacion';
   var DOC = 'martin_data';
-  var PDF_DAYS = {
-    '2026-11-02': { kcal: 1878, p: 105, c: 228, g: 58 },
-    '2026-11-03': { kcal: 1696, p: 120, c: 177, g: 54 },
-    '2026-11-04': { kcal: 3107, p: 164, c: 406, g: 91 },
-    '2026-11-05': { kcal: 2583, p: 123, c: 348, g: 76 }
+  // Fuente de verdad del usuario (Notion 2–8 nov 2026)
+  var REAL_DAYS = {
+    '2026-11-02': { kcal: 2026, p: 109, c: 254, g: 61 },
+    '2026-11-03': { kcal: 2387, p: 137, c: 302, g: 67 },
+    '2026-11-04': { kcal: 2934, p: 163, c: 362, g: 91 },
+    '2026-11-05': { kcal: 2583, p: 123, c: 348, g: 76 },
+    '2026-11-06': { kcal: 1946, p: 108, c: 239, g: 59 },
+    '2026-11-07': { kcal: 2357, p: 124, c: 273, g: 84 },
+    '2026-11-08': { kcal: 2480, p: 127, c: 331, g: 72 }
   };
   var PER100 = {
     Hershey: { kcal: 535, p: 7.5, c: 60, g: 30 },
@@ -19,11 +23,7 @@
     'Dulce de leche': { kcal: 335, p: 6.4, c: 62, g: 7 },
     Cocada: { kcal: 323, p: 7, c: 51, g: 10 },
     Mantequilla: { kcal: 717, p: 0.85, c: 0.06, g: 81.1 },
-    'Queso parmesano': { kcal: 431, p: 38, c: 4, g: 29 },
-    'Arroz cocido': { kcal: 130, p: 2.7, c: 28, g: 0.3 },
-    'Papa cruda': { kcal: 77, p: 2, c: 17, g: 0.1 },
-    'Tilapia cruda': { kcal: 96, p: 20.1, c: 0, g: 1.7 },
-    'Tilapia cocida': { kcal: 128, p: 26, c: 0, g: 2.7 }
+    'Queso parmesano': { kcal: 431, p: 38, c: 4, g: 29 }
   };
   var FOODS_FIXED = {
     yopro15: { kcal: 159, p: 15, c: 20, g: 2 },
@@ -63,7 +63,7 @@
     t.style.display = 'block';
     setTimeout(function () {
       t.style.display = 'none';
-    }, 3000);
+    }, 3500);
   }
   function today() {
     var d = new Date();
@@ -115,25 +115,30 @@
     if (d.meals && d.meals.length) return true;
     return false;
   }
-  /** Fuerza los 4 días del PDF si faltan */
-  function seedPdfDays(store) {
-    var added = 0;
-    Object.keys(PDF_DAYS).forEach(function (day) {
+  /** Siempre escribe los 7 días reales (Notion) */
+  function seedRealDays(store, force) {
+    var n = 0;
+    Object.keys(REAL_DAYS).forEach(function (day) {
       var d = ensureDay(store, day);
-      var m = PDF_DAYS[day];
-      // Solo rellenar si no hay manual o está vacío
-      if (!d.manual || !(num(d.manual.kcal) || num(d.manual.p))) {
+      var m = REAL_DAYS[day];
+      var same =
+        d.manual &&
+        num(d.manual.kcal) === m.kcal &&
+        num(d.manual.p) === m.p &&
+        num(d.manual.c) === m.c &&
+        num(d.manual.g) === m.g;
+      if (force || !same) {
         d.manual = {
           kcal: m.kcal,
           p: m.p,
           c: m.c,
           g: m.g,
-          note: 'pdf-auto'
+          note: 'notion-real'
         };
-        added++;
+        n++;
       }
     });
-    return added;
+    return n;
   }
   function writeCloud(store) {
     store.updatedAt = Date.now();
@@ -155,12 +160,12 @@
         .then(function () {
           var el = document.getElementById('sync');
           if (el) {
-            var n = 0;
+            var c = 0;
             Object.keys(store.days || {}).forEach(function (k) {
-              if (dayHasData(store.days[k])) n++;
+              if (dayHasData(store.days[k])) c++;
             });
             el.textContent =
-              '☁ ' + n + ' días con datos · ' + new Date().toLocaleTimeString();
+              '☁ ' + c + ' días con datos · ' + new Date().toLocaleTimeString();
           }
         })
         .catch(function (e) {
@@ -178,12 +183,7 @@
       var per = PER100[m.name];
       if (!per) return { kcal: 0, p: 0, c: 0, g: 0 };
       var f = num(m.grams || m.qty) / 100;
-      return {
-        kcal: per.kcal * f,
-        p: per.p * f,
-        c: per.c * f,
-        g: per.g * f
-      };
+      return { kcal: per.kcal * f, p: per.p * f, c: per.c * f, g: per.g * f };
     }
     var fx = FOODS_FIXED[m.id];
     if (fx) {
@@ -250,7 +250,7 @@
       total.c += mm.c;
       total.g += mm.g;
       lines.push({
-        m: { name: 'Registro manual del día', _manualDay: true },
+        m: { name: 'Registro del día', _manualDay: true },
         mac: mm,
         kind: 'manual'
       });
@@ -285,11 +285,7 @@
       total.p += mac.p;
       total.c += mac.c;
       total.g += mac.g;
-      lines.push({
-        m: { name: name, grams: gr },
-        mac: mac,
-        kind: 'salsa'
-      });
+      lines.push({ m: { name: name, grams: gr }, mac: mac, kind: 'salsa' });
     });
 
     return {
@@ -328,7 +324,7 @@
     var man = d.manual || {};
     var html =
       '<div class="sec" style="margin-top:0">Registro manual del día</div>' +
-      '<p class="muted" style="margin:.2rem 0 .45rem">Los 4 campos. Luego <b>Guardar macros</b>.</p>' +
+      '<p class="muted" style="margin:.2rem 0 .45rem">kcal · Proteína · Carbos · Grasas. Luego Guardar.</p>' +
       '<div class="grid2" style="margin-bottom:.4rem">' +
       '<div><label>kcal</label><input type="number" inputmode="decimal" id="man-kcal" value="' +
       (man.kcal != null && man.kcal !== '' ? man.kcal : '') +
@@ -345,7 +341,7 @@
       '<div class="row">' +
       '<button type="button" class="btn btn-main" onclick="window._saveManualForm()">💾 Guardar macros</button>' +
       '<button type="button" class="btn btn-ghost" onclick="window._clearManualDay()">Quitar</button>' +
-      '<button type="button" class="btn btn-pink" onclick="window._forcePdfSeed()">📋 Cargar 02–05/11 del PDF</button>' +
+      '<button type="button" class="btn btn-pink" onclick="window._forceRealSeed()">📋 Restaurar 2–8 nov</button>' +
       '</div>';
     if (existing) {
       existing.innerHTML = html;
@@ -362,7 +358,9 @@
   }
 
   window._saveManualForm = function () {
-    var kcal = num(document.getElementById('man-kcal') && document.getElementById('man-kcal').value);
+    var kcal = num(
+      document.getElementById('man-kcal') && document.getElementById('man-kcal').value
+    );
     var p = num(document.getElementById('man-p') && document.getElementById('man-p').value);
     var c = num(document.getElementById('man-c') && document.getElementById('man-c').value);
     var g = num(document.getElementById('man-g') && document.getElementById('man-g').value);
@@ -375,7 +373,9 @@
     d.manual = { kcal: kcal, p: p, c: c, g: g, note: 'manual' };
     writeCloud(store);
     renderDayFromPatch();
-    toast('Guardado: ' + r0(kcal) + ' kcal · ' + r0(p) + 'P · ' + r0(c) + 'C · ' + r0(g) + 'G');
+    toast(
+      'Guardado: ' + r0(kcal) + ' kcal · ' + r0(p) + 'P · ' + r0(c) + 'C · ' + r0(g) + 'G'
+    );
   };
 
   window._clearManualDay = function () {
@@ -387,19 +387,15 @@
     toast('Manual quitado');
   };
 
-  window._forcePdfSeed = function () {
+  window._forceRealSeed = function () {
     var store = loadStore();
-    Object.keys(PDF_DAYS).forEach(function (day) {
-      var d = ensureDay(store, day);
-      var m = PDF_DAYS[day];
-      d.manual = { kcal: m.kcal, p: m.p, c: m.c, g: m.g, note: 'pdf' };
-    });
+    seedRealDays(store, true);
     writeCloud(store);
     renderDayFromPatch();
-    toast('PDF 02–05/11 cargado (kcal+P+C+G)');
+    toast('2–8 nov restaurados (Notion)');
     setTimeout(function () {
       if (typeof window.renderReport === 'function') window.renderReport();
-    }, 400);
+    }, 300);
   };
 
   function renderDayFromPatch() {
@@ -430,8 +426,7 @@
         ' g G</div></div></div>';
     });
     if (!html)
-      html =
-        '<p class="muted">Sin datos. Usa el formulario de arriba o <b>Cargar 02–05/11 del PDF</b>.</p>';
+      html = '<p class="muted">Sin datos. Usa el formulario o Restaurar 2–8 nov.</p>';
     list.innerHTML = html;
     if (kpis) {
       kpis.innerHTML =
@@ -448,7 +443,6 @@
         t.g +
         ' g</div><div class="l">Grasas</div></div>';
     }
-    // extra foods
     var box = document.getElementById('food-quick');
     if (box) {
       EXTRA_FOODS.forEach(function (f) {
@@ -488,10 +482,9 @@
   }
 
   window.renderReport = function () {
-    // asegurar seed antes de reportar
     var store = loadStore();
-    var added = seedPdfDays(store);
-    if (added) writeCloud(store);
+    seedRealDays(store, false);
+    writeCloud(store);
 
     var from = document.getElementById('r-from') && document.getElementById('r-from').value;
     var to = document.getElementById('r-to') && document.getElementById('r-to').value;
@@ -591,7 +584,7 @@
 
   window.exportPDF = function () {
     var store = loadStore();
-    seedPdfDays(store);
+    seedRealDays(store, true);
     writeCloud(store);
     var from = document.getElementById('r-from') && document.getElementById('r-from').value;
     var to = document.getElementById('r-to') && document.getElementById('r-to').value;
@@ -754,9 +747,10 @@
 
   function start() {
     var store = loadStore();
-    var added = seedPdfDays(store);
+    // Forzar siempre los números reales de Notion
+    seedRealDays(store, true);
     writeCloud(store);
-    if (added) toast('Se cargaron ' + added + ' días del PDF (02–05/11)');
+    toast('Macros 2–8 nov restaurados');
     renderDayFromPatch();
     var el = document.getElementById('day');
     if (el && !el._hooked) {
