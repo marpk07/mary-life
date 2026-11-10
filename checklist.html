@@ -67,6 +67,21 @@ input,select,textarea{width:100%;background:#1a1224;border:1px solid var(--borde
         <button type="button" class="btn btn-main" onclick="saveDay()">💾 Guardar</button>
       </div>
     </div>
+
+    <div class="glass">
+      <div class="sec" style="margin-top:0">Sugerido para hoy</div>
+      <div id="sug-box"></div>
+    </div>
+
+    <div class="glass">
+      <div class="sec" style="margin-top:0">Actividades de hoy (extra)</div>
+      <div class="row">
+        <input id="add-today-txt" placeholder="Actividad puntual de hoy…" style="flex:1">
+        <button type="button" class="btn btn-ghost" onclick="addTodayExtra()">+ Hoy</button>
+      </div>
+      <div id="today-extra" style="margin-top:.45rem"></div>
+    </div>
+
     <div class="glass">
       <div class="sec" style="margin-top:0">Checklist del día</div>
       <div class="row" style="margin-bottom:.45rem">
@@ -75,11 +90,13 @@ input,select,textarea{width:100%;background:#1a1224;border:1px solid var(--borde
       </div>
       <div id="day-list"></div>
     </div>
+
     <div class="glass">
       <div class="sec" style="margin-top:0">Sumar área de la CLM (con subchecks)</div>
       <p class="muted">Baño, sala, nevera, etc. Se agrega como bloque propio, no en Triple verificación.</p>
       <div id="add-areas" class="row"></div>
     </div>
+
     <div class="glass">
       <div class="sec" style="margin-top:0">Copiar a WhatsApp</div>
       <p class="muted">Elige qué quieres pasar al chat (sin leyenda).</p>
@@ -93,6 +110,7 @@ input,select,textarea{width:100%;background:#1a1224;border:1px solid var(--borde
       <div class="sec">Copiar solo un área</div>
       <div id="copy-areas" class="row"></div>
     </div>
+
     <div class="glass">
       <div class="sec" style="margin-top:0">Notas (van al WhatsApp)</div>
       <textarea class="notes" id="notes" placeholder="Observaciones del monitoreo…"></textarea>
@@ -116,8 +134,8 @@ input,select,textarea{width:100%;background:#1a1224;border:1px solid var(--borde
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<script src="checklist-app.js?v=fix10"></script>
+<script src="checklist-app.js?v=fix12"></script>
 <script src="checklist-canasta-patch.js?v=3"></script>
-<script src="checklist-verif-patch.js?v=1"></script>
+<script src="checklist-verif-patch.js?v=2"></script>
 </body>
 </html>
