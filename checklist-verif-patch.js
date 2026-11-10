@@ -1,4 +1,4 @@
-/* Checklist patch — gel inodoro + espejo baño en Verificación */
+/* Checklist verif v2 — gel + espejo en Verificación */
 (function () {
   var EXTRA = [
     'Verificar gel en el inodoro',
@@ -34,93 +34,96 @@
     return (el && el.value) || today();
   }
 
-  function ensureItemsInDay(store, day) {
-    if (!store || !store.days || !store.days[day]) return false;
+  function ensureExtraInDay(store, day) {
+    if (!store) return false;
+    if (!store.days) store.days = {};
+    if (!store.days[day]) return false;
     var d = store.days[day];
-    if (!d.groups) return false;
+    if (!d.groups) d.groups = [];
     var changed = false;
-    d.groups.forEach(function (g) {
-      var title = (g.title || '').toLowerCase();
-      if (title.indexOf('verific') < 0) return;
-      if (!g.items) g.items = [];
-      EXTRA.forEach(function (name) {
-        var exists = g.items.some(function (it) {
-          return (it.name || it) === name;
-        });
-        if (!exists) {
-          g.items.push({
-            id: 'v' + Date.now() + Math.random().toString(36).slice(2, 6),
-            name: name,
-            mark: '',
-            subs: {}
-          });
-          changed = true;
-        }
+    var verif = null;
+    for (var i = 0; i < d.groups.length; i++) {
+      var t = (d.groups[i].title || '').toLowerCase();
+      if (t.indexOf('verific') >= 0) {
+        verif = d.groups[i];
+        break;
+      }
+    }
+    if (!verif && d.groups.length) {
+      verif = { title: 'Verificación', items: [] };
+      d.groups.push(verif);
+      changed = true;
+    }
+    if (!verif) return false;
+    if (!verif.items) verif.items = [];
+    EXTRA.forEach(function (name) {
+      var exists = verif.items.some(function (it) {
+        return (it && (it.name || it)) === name;
       });
+      if (!exists) {
+        verif.items.push({
+          id: 'vf' + Math.random().toString(36).slice(2, 9),
+          name: name,
+          mark: '',
+          subs: {}
+        });
+        changed = true;
+      }
     });
     return changed;
   }
 
-  function injectIntoCatalog() {
-    // Si el core expone CATALOG / AREA_ITEMS, ampliar Verificación
-    try {
-      if (typeof window.CATALOG === 'object' && window.CATALOG) {
-        if (!window.CATALOG['Verificación']) window.CATALOG['Verificación'] = [];
-        EXTRA.forEach(function (n) {
-          if (window.CATALOG['Verificación'].indexOf(n) < 0)
-            window.CATALOG['Verificación'].push(n);
-        });
-      }
-    } catch (e) {}
+  function refreshUI() {
+    if (typeof window.renderHoy === 'function') window.renderHoy();
   }
 
   function apply() {
-    injectIntoCatalog();
     var store = getStore();
     if (!store) return;
     var day = dayVal();
-    if (ensureItemsInDay(store, day)) {
+    if (ensureExtraInDay(store, day)) {
       saveStore(store);
-      // re-render si existe
-      if (typeof window.renderDay === 'function') window.renderDay();
-      else if (typeof window.render === 'function') window.render();
-      else if (typeof window.showTab === 'function') {
-        /* force soft refresh by toggling */
-      }
+      refreshUI();
     }
   }
 
-  // Tras cargar plantilla, también inyectar
-  var _applyTemplate = window.applyTemplate;
-  if (typeof _applyTemplate === 'function') {
-    window.applyTemplate = function (day, tplId) {
-      _applyTemplate(day, tplId);
-      setTimeout(apply, 50);
-    };
-  }
-
-  var _showTab = window.showTab;
-  if (typeof _showTab === 'function') {
-    window.showTab = function (id) {
-      _showTab(id);
-      if (id === 'hoy' || id === 'day' || !id) setTimeout(apply, 80);
-    };
+  function hook() {
+    if (typeof window.applyTemplate === 'function' && !window._verifHooked) {
+      window._verifHooked = true;
+      var orig = window.applyTemplate;
+      window.applyTemplate = function (day, tplId) {
+        orig(day, tplId);
+        setTimeout(apply, 80);
+      };
+    }
+    if (typeof window.showTab === 'function' && !window._verifShowTab) {
+      window._verifShowTab = true;
+      var st = window.showTab;
+      window.showTab = function (id) {
+        st(id);
+        if (id === 'hoy') setTimeout(apply, 100);
+      };
+    }
   }
 
   function start() {
+    hook();
     apply();
     var el = document.getElementById('day');
-    if (el && !el._verifPatch) {
-      el._verifPatch = true;
+    if (el && !el._verif2) {
+      el._verif2 = true;
       el.addEventListener('change', function () {
-        setTimeout(apply, 100);
+        setTimeout(apply, 120);
       });
     }
+    setTimeout(hook, 600);
+    setTimeout(apply, 800);
+    setTimeout(apply, 1600);
   }
 
   if (document.readyState === 'loading')
     document.addEventListener('DOMContentLoaded', function () {
-      setTimeout(start, 900);
+      setTimeout(start, 500);
     });
-  else setTimeout(start, 900);
+  else setTimeout(start, 500);
 })();
