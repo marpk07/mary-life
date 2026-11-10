@@ -24,19 +24,19 @@ h1{margin:0;font-size:1.05rem;font-weight:800;background:linear-gradient(90deg,#
 .btn-ghost{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border)}
 .btn-pink{background:rgba(236,72,153,.25);color:#fbcfe8;border:1px solid rgba(244,114,182,.35)}
 .row{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center}
-.tabs{display:flex;gap:.35rem;overflow-x:auto;padding:.2rem 0 .5rem;-webkit-overflow-scrolling:touch}
-.tab{flex-shrink:0;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);border-radius:999px;padding:.4rem .75rem;font-size:.72rem;font-weight:700;cursor:pointer}
-.tab.on{background:rgba(236,72,153,.2);color:#fbcfe8;border-color:rgba(244,114,182,.45)}
+.tabs{display:flex;gap:.35rem;flex-wrap:wrap;margin:.55rem 0 0;position:relative;z-index:1;background:transparent;padding:.35rem 0}
+.tab{background:rgba(255,255,255,.06);color:var(--muted);border:1px solid transparent;border-radius:999px;padding:.4rem .75rem;font-size:.72rem;font-weight:700;cursor:pointer;position:relative;z-index:2;pointer-events:auto;-webkit-tap-highlight-color:rgba(244,114,182,.25)}
+.tab.on{background:rgba(236,72,153,.22);color:#fff;border-color:rgba(244,114,182,.4)}
+input,select,textarea{width:100%;background:#1a1224;border:1px solid var(--border);border-radius:12px;color:var(--text);padding:.55rem .65rem;font-size:.85rem}
+.item{display:flex;justify-content:space-between;gap:.5rem;align-items:flex-start;padding:.45rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.item:last-child{border-bottom:0}
+.chip{display:inline-flex;align-items:center;gap:.25rem;border-radius:999px;padding:.15rem .45rem;font-size:.68rem;font-weight:700;background:rgba(255,255,255,.06)}
+.mark{min-width:2.1rem;height:2.1rem;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text);font-weight:800;cursor:pointer}
+.sub{margin:.25rem 0 .35rem .15rem;padding:.4rem .5rem;border-left:2px solid rgba(244,114,182,.35);background:rgba(15,10,20,.35);border-radius:0 10px 10px 0}
+.sub-row{display:flex;justify-content:space-between;gap:.4rem;align-items:center;padding:.28rem 0}
 .hidden{display:none!important}
-input[type=date],select,textarea,input[type=text]{width:100%;background:rgba(15,10,20,.55);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:.45rem .55rem;font-size:.85rem}
-.item-row{display:flex;align-items:center;gap:.45rem;padding:.45rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
-.item-name{flex:1;font-size:.82rem;font-weight:600}
-.mark-btn{min-width:2rem;height:2rem;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text);font-size:.85rem;cursor:pointer}
-.sub-list{padding-left:.5rem;margin:.2rem 0 .4rem}
-.sub-row{display:flex;align-items:center;gap:.35rem;padding:.25rem 0;font-size:.78rem}
-.toast{position:fixed;left:50%;bottom:calc(1rem + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#1c1428;border:1px solid var(--border);color:#fbcfe8;padding:.55rem .9rem;border-radius:12px;font-size:.78rem;font-weight:700;display:none;z-index:99}
-.notes{min-height:4rem}
-#sync{font-size:.7rem;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:1.1rem;transform:translateX(-50%);background:#1c1428;border:1px solid var(--border);color:#fbcfe8;padding:.55rem .85rem;border-radius:12px;font-size:.78rem;display:none;z-index:30}
+.notes{min-height:72px}
 </style>
 </head>
 <body>
@@ -44,12 +44,12 @@ input[type=date],select,textarea,input[type=text]{width:100%;background:rgba(15,
   <div class="glass" style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem">
     <div>
       <h1>Checklist operativa</h1>
-      <p class="muted" style="margin:.2rem 0 0">Monitoreo · áreas · verificación</p>
+      <p class="muted" style="margin:.15rem 0 0">Monitoreo · marcas · WhatsApp</p>
     </div>
-    <div id="sync">…</div>
+    <span class="chip" id="sync">…</span>
   </div>
 
-  <div class="tabs">
+  <div class="tabs" id="tabs">
     <button type="button" class="tab on" data-t="hoy" onclick="showTab('hoy')">Hoy</button>
     <button type="button" class="tab" data-t="plantillas" onclick="showTab('plantillas')">Plantillas</button>
     <button type="button" class="tab" data-t="sugerencias" onclick="showTab('sugerencias')">Sugerencias</button>
@@ -57,12 +57,29 @@ input[type=date],select,textarea,input[type=text]{width:100%;background:rgba(15,
 
   <div id="tab-hoy">
     <div class="glass">
-      <div class="row">
-        <input type="date" id="day" style="flex:1">
+      <div class="sec" style="margin-top:0">Plantilla activa</div>
+      <div id="active-tpl" class="muted">Ninguna · ve a Plantillas y elige una</div>
+      <div class="row" style="margin-top:.55rem">
+        <div style="flex:1">
+          <label class="muted">Fecha</label>
+          <input type="date" id="day">
+        </div>
         <button type="button" class="btn btn-main" onclick="saveDay()">💾 Guardar</button>
       </div>
     </div>
-    <div id="day-list"></div>
+    <div class="glass">
+      <div class="sec" style="margin-top:0">Checklist del día</div>
+      <div class="row" style="margin-bottom:.45rem">
+        <input id="add-item-txt" placeholder="Ítem suelto → va a Añadido hoy…" style="flex:1">
+        <button type="button" class="btn btn-ghost" onclick="addCustomItem()">+ Añadido hoy</button>
+      </div>
+      <div id="day-list"></div>
+    </div>
+    <div class="glass">
+      <div class="sec" style="margin-top:0">Sumar área de la CLM (con subchecks)</div>
+      <p class="muted">Baño, sala, nevera, etc. Se agrega como bloque propio, no en Triple verificación.</p>
+      <div id="add-areas" class="row"></div>
+    </div>
     <div class="glass">
       <div class="sec" style="margin-top:0">Copiar a WhatsApp</div>
       <p class="muted">Elige qué quieres pasar al chat (sin leyenda).</p>
