@@ -1,4 +1,4 @@
-/* Patch v14 — NO pisar datos · merge seguro Firebase · reporte híbrido */
+/* Patch v15 — Registro manual del día + merge seguro + reporte */
 (function () {
   var LS = 'MARY_ALIM_MARTIN_V1';
   var LS_EXTRA = 'MARY_ALIM_EXTRA_MEALS_V1';
@@ -70,7 +70,7 @@
     t.style.display = 'block';
     setTimeout(function () {
       t.style.display = 'none';
-    }, 2500);
+    }, 2800);
   }
   function today() {
     var d = new Date();
@@ -112,15 +112,8 @@
   }
   function dayRichness(d) {
     if (!d) return 0;
-    var n = 0;
-    n += (d.meals && d.meals.length) || 0;
-    n += (d.pots && d.pots.length) || 0;
-    (d.pots || []).forEach(function (p) {
-      if (p.weight !== '' && p.weight != null) n += 2;
-      if (p.mid !== '' && p.mid != null) n += 1;
-      if (p.inicio !== '' && p.inicio != null) n += 2;
-      if (p.fin !== '' && p.fin != null) n += 2;
-    });
+    var n = ((d.meals && d.meals.length) || 0) + ((d.pots && d.pots.length) || 0);
+    if (d.manual && (d.manual.kcal || d.manual.p)) n += 5;
     return n;
   }
   function storeRichness(s) {
@@ -129,23 +122,19 @@
     Object.keys(s.days).forEach(function (k) {
       n += dayRichness(s.days[k]);
     });
-    if (s.extraMeals) {
-      Object.keys(s.extraMeals).forEach(function (k) {
-        n += (s.extraMeals[k] && s.extraMeals[k].length) || 0;
-      });
-    }
     return n;
   }
-  /** Une dos días sin borrar datos: prefiere el que tiene más info por campo */
   function mergeDay(a, b) {
     if (!a) return b || { meals: [], pots: [], note: '' };
     if (!b) return a;
     var out = {
       meals: [],
       pots: [],
-      note: a.note || b.note || ''
+      note: a.note || b.note || '',
+      manual: a.manual || b.manual || null
     };
-    // meals: unir por id/name+qty, sin duplicar
+    if (b.manual && (!a.manual || (b.manual.kcal || 0) > (a.manual.kcal || 0)))
+      out.manual = b.manual;
     var seen = {};
     function addMeals(list) {
       (list || []).forEach(function (m) {
@@ -164,7 +153,6 @@
         out.meals.push(m);
       });
     }
-    // Preferir el día con más meals primero
     if ((a.meals || []).length >= (b.meals || []).length) {
       addMeals(a.meals);
       addMeals(b.meals);
@@ -172,7 +160,6 @@
       addMeals(b.meals);
       addMeals(a.meals);
     }
-    // pots: merge by name+label index
     function potKey(p) {
       return (p.name || '') + '||' + (p.label || '') + '||' + (p.id || '');
     }
@@ -180,17 +167,14 @@
     function mergePot(p) {
       if (!p) return;
       var k = potKey(p);
-      // also try by name only if single
       if (!potMap[k]) {
         potMap[k] = JSON.parse(JSON.stringify(p));
         return;
       }
       var t = potMap[k];
-      // keep any non-empty field
       ['weight', 'mid', 'inicio', 'fin', 'base', 'label'].forEach(function (f) {
         if ((t[f] === '' || t[f] == null) && p[f] !== '' && p[f] != null) t[f] = p[f];
       });
-      if (!t.name && p.name) t.name = p.name;
     }
     (a.pots || []).forEach(mergePot);
     (b.pots || []).forEach(mergePot);
@@ -265,7 +249,6 @@
     if (!store.extraMeals) store.extraMeals = {};
     store.extraMeals[day] = meals || [];
     saveLocalOnly(store);
-    // subir sin pisar otros días
     safeCloudWrite(store);
   }
   function ensureDay(store, day) {
@@ -302,7 +285,7 @@
   }
   function mealMacros(m) {
     if (!m) return { kcal: 0, p: 0, c: 0, g: 0 };
-    if (m.custom || m._salsaAuto || m._patchExtra)
+    if (m.custom || m._salsaAuto || m._patchExtra || m._manualDay)
       return { kcal: num(m.kcal), p: num(m.p), c: num(m.c), g: num(m.g) };
     if (m.byGram || m.salsa)
       return macrosPer100(m.name, m.grams || m.qty);
@@ -335,19 +318,9 @@
     });
     return byName;
   }
-  /** NO borra weight/mid históricos. Solo limpia weight del día actual si ya hay inicio+fin */
   function softSyncSalsaMeals(d, day) {
-    // Quitar solo auto-meals de salsas del patch, no tocar comidas reales
     d.meals = (d.meals || []).filter(function (m) {
       return !m._salsaAuto;
-    });
-    var isToday = day === today();
-    (d.pots || []).forEach(function (p) {
-      // Si tiene inicio y fin, no necesitamos weight para el cálculo nuevo
-      // pero NO lo borramos en días pasados
-      if (isToday && potInicio(p) != null && potFin(p) != null) {
-        // dejar weight como está por seguridad; no borrar
-      }
     });
     var byName = buildSalsaTotalsNew(d.pots);
     Object.keys(byName).forEach(function (name) {
@@ -378,7 +351,6 @@
     } catch (e) {}
   }
   function safeCloudWrite(store) {
-    // Solo escribe si el store local NO está más vacío que lo que ya había
     try {
       if (!(window.firebase && firebase.apps && firebase.apps.length)) return;
       var db = firebase.firestore();
@@ -389,10 +361,7 @@
           var cloud = snap.exists ? snap.data() : { days: {}, updatedAt: 0 };
           if (!cloud.days) cloud.days = {};
           var merged = mergeStores(store, cloud);
-          // Si el merge quedó vacío y cloud tenía datos, NO escribir
           if (storeRichness(merged) < storeRichness(cloud) * 0.5 && storeRichness(cloud) > 5) {
-            console.warn('Abort write: local too empty vs cloud');
-            // Restaurar cloud a local
             saveLocalOnly(mergeStores(cloud, store));
             var el = document.getElementById('sync');
             if (el) el.textContent = '☁ Datos nube restaurados';
@@ -406,8 +375,13 @@
             .then(function () {
               saveLocalOnly(merged);
               var el = document.getElementById('sync');
-              if (el)
-                el.textContent = '☁ Sincronizado · ' + new Date().toLocaleTimeString();
+              if (el) {
+                var nd = Object.keys(merged.days || {}).filter(function (k) {
+                  return dayRichness(merged.days[k]) > 0;
+                }).length;
+                el.textContent =
+                  '☁ ' + nd + ' días con datos · ' + new Date().toLocaleTimeString();
+              }
             });
         })
         .catch(function (e) {
@@ -426,11 +400,10 @@
     safeCloudWrite(store);
     return d;
   }
-
-  /** Pull cloud and merge into local — recovery path */
   function pullCloudMerge() {
     try {
-      if (!(window.firebase && firebase.apps && firebase.apps.length)) return Promise.resolve();
+      if (!(window.firebase && firebase.apps && firebase.apps.length))
+        return Promise.resolve(loadStore());
       var db = firebase.firestore();
       return db
         .collection(COL)
@@ -441,32 +414,33 @@
           migrateExtraIntoStore(local);
           if (!snap.exists) {
             saveLocalOnly(local);
+            updateSyncStatus(local);
             return local;
           }
           var cloud = snap.data() || {};
           if (!cloud.days) cloud.days = {};
-          var merged = mergeStores(local, cloud);
-          // Si cloud es más rico, úsalo
-          if (storeRichness(cloud) > storeRichness(local)) {
-            merged = mergeStores(cloud, local);
-          }
+          var merged =
+            storeRichness(cloud) > storeRichness(local)
+              ? mergeStores(cloud, local)
+              : mergeStores(local, cloud);
           saveLocalOnly(merged);
-          var el = document.getElementById('sync');
-          if (el) {
-            el.textContent =
-              '☁ Merge OK · ' +
-              Object.keys(merged.days).length +
-              ' días · ' +
-              new Date().toLocaleTimeString();
-          }
+          updateSyncStatus(merged);
           return merged;
         });
     } catch (e) {
       console.warn(e);
-      return Promise.resolve();
+      return Promise.resolve(loadStore());
     }
   }
-
+  function updateSyncStatus(store) {
+    var el = document.getElementById('sync');
+    if (!el) return;
+    var nd = Object.keys(store.days || {}).filter(function (k) {
+      return dayRichness(store.days[k]) > 0;
+    }).length;
+    el.textContent =
+      '☁ ' + nd + ' días con datos · ' + new Date().toLocaleTimeString();
+  }
   function copyText(t) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(t).then(
@@ -479,7 +453,6 @@
       );
     } else prompt('Copia', t);
   }
-
   function prevDayStr(day) {
     var d = new Date(day + 'T12:00:00');
     d.setDate(d.getDate() - 1);
@@ -491,14 +464,10 @@
       String(d.getDate()).padStart(2, '0')
     );
   }
-
-  /** Consumo salsas híbrido: Inicio/Fin si hay; si no, weight vs día anterior (sistema viejo) */
   function hybridSalsaGrams(store, day) {
     var d = ensureDay(store, day);
     var byName = buildSalsaTotalsNew(d.pots);
     if (Object.keys(byName).length) return byName;
-
-    // Fallback sistema viejo: prev weight - today weight
     var prev = ensureDay(store, prevDayStr(day));
     function byNameList(list) {
       var map = {};
@@ -547,8 +516,35 @@
     var total = { kcal: 0, p: 0, c: 0, g: 0 };
     var lines = [];
 
+    // Registro manual del día (Bayer / totales a mano)
+    if (d.manual && (num(d.manual.kcal) || num(d.manual.p))) {
+      var mm = {
+        kcal: num(d.manual.kcal),
+        p: num(d.manual.p),
+        c: num(d.manual.c),
+        g: num(d.manual.g)
+      };
+      total.kcal += mm.kcal;
+      total.p += mm.p;
+      total.c += mm.c;
+      total.g += mm.g;
+      lines.push({
+        m: {
+          name: 'Registro manual del día',
+          _manualDay: true,
+          custom: true,
+          kcal: mm.kcal,
+          p: mm.p,
+          c: mm.c,
+          g: mm.g
+        },
+        mac: mm,
+        kind: 'manual'
+      });
+    }
+
     (d.meals || []).forEach(function (m) {
-      if (m._salsaAuto || isSalsaMeal(m) || m._patchExtra) return;
+      if (m._salsaAuto || isSalsaMeal(m) || m._patchExtra || m._manualDay) return;
       var mac = mealMacros(m);
       total.kcal += mac.kcal;
       total.p += mac.p;
@@ -576,10 +572,8 @@
       total.p += mac.p;
       total.c += mac.c;
       total.g += mac.g;
-      var labelPart = '';
-      if (info.labels && info.labels.length === 1) labelPart = ' · ' + info.labels[0];
       lines.push({
-        m: { name: name + labelPart, grams: gr, salsa: true },
+        m: { name: name, grams: gr, salsa: true },
         mac: mac,
         kind: 'salsa'
       });
@@ -618,8 +612,14 @@
     var salsaGrams = {};
     days.forEach(function (day) {
       var d = ensureDay(store, day);
+      if (d.manual && (num(d.manual.kcal) || num(d.manual.p))) {
+        var key = 'Registro manual del día';
+        if (!counts[key]) counts[key] = { qty: 0, times: 0, isPct: false };
+        counts[key].times += 1;
+        counts[key].qty += 1;
+      }
       (d.meals || []).forEach(function (m) {
-        if (m._salsaAuto || isSalsaMeal(m)) return;
+        if (m._salsaAuto || isSalsaMeal(m) || m._manualDay) return;
         var key = m.name || m.id || 'otro';
         if (!counts[key]) counts[key] = { qty: 0, times: 0, isPct: false };
         counts[key].qty += num(m.qty) || 1;
@@ -641,12 +641,74 @@
     return { counts: counts, salsaGrams: salsaGrams };
   }
 
+  function injectManualButton() {
+    var tab = document.getElementById('tab-dia');
+    if (!tab || tab.querySelector('[data-manual-day]')) return;
+    var box = document.createElement('div');
+    box.className = 'glass';
+    box.setAttribute('data-manual-day', '1');
+    box.innerHTML =
+      '<div class="sec" style="margin-top:0">Registro rápido del día</div>' +
+      '<p class="muted" style="margin:.25rem 0 .5rem">Si ya tienes los macros (ej. los calculó Bayer), cárgalos aquí sin ir alimento por alimento.</p>' +
+      '<div class="row">' +
+      '<button type="button" class="btn btn-main" onclick="window._addManualDay()">✍️ Macros del día a mano</button>' +
+      '<button type="button" class="btn btn-ghost" onclick="window._clearManualDay()">Quitar manual</button>' +
+      '</div>';
+    // Insertar arriba de comidas
+    var mealsGlass = tab.querySelector('#meals-list');
+    if (mealsGlass && mealsGlass.parentElement) {
+      mealsGlass.parentElement.parentElement.insertBefore(
+        box,
+        mealsGlass.parentElement
+      );
+    } else {
+      tab.insertBefore(box, tab.firstChild);
+    }
+  }
+
+  window._addManualDay = function () {
+    var day = dayVal();
+    var kcal = prompt('Calorías del día (kcal)', '');
+    if (kcal == null || kcal === '') return;
+    var p = prompt('Proteína (g)', '0');
+    if (p == null) return;
+    var c = prompt('Carbohidratos (g)', '0');
+    if (c == null) return;
+    var g = prompt('Grasas (g)', '0');
+    if (g == null) return;
+    var store = loadStore();
+    var d = ensureDay(store, day);
+    d.manual = {
+      kcal: num(kcal),
+      p: num(p),
+      c: num(c),
+      g: num(g),
+      note: 'manual'
+    };
+    saveLocalOnly(store);
+    safeCloudWrite(store);
+    renderDayFromPatch();
+    toast('Macros del día guardados');
+  };
+
+  window._clearManualDay = function () {
+    var store = loadStore();
+    var d = ensureDay(store, dayVal());
+    d.manual = null;
+    saveLocalOnly(store);
+    safeCloudWrite(store);
+    renderDayFromPatch();
+    toast('Registro manual quitado');
+  };
+
   function renderDayFromPatch() {
     var store = loadStore();
     var day = dayVal();
     var d = ensureDay(store, day);
     softSyncSalsaMeals(d, day);
     saveLocalOnly(store);
+
+    injectManualButton();
 
     var list = document.getElementById('meals-list');
     var kpis = document.getElementById('kpis');
@@ -661,10 +723,14 @@
       var mac = L.mac;
       var label = m.name || m.id || 'Alimento';
       if (L.kind === 'salsa') label = label + ' (' + r0(m.grams) + ' g) · salsa';
+      else if (L.kind === 'manual') label = '✍️ ' + label;
       else if (m.byGram && m.grams) label = label + ' (' + r0(m.grams) + ' g)';
       else if (m.qty && m.qty !== 1 && !m.byGram) label = label + ' × ' + m.qty;
       var delBtn = '';
-      if (L.kind === 'extra') {
+      if (L.kind === 'manual') {
+        delBtn =
+          '<button type="button" class="btn btn-ghost" onclick="window._clearManualDay()">✕</button>';
+      } else if (L.kind === 'extra') {
         delBtn =
           '<button type="button" class="btn btn-ghost" onclick="window._patchDelExtra(' +
           extraIdx +
@@ -696,7 +762,7 @@
 
     if (!html) {
       html =
-        '<p class="muted">Sin comidas aún. Si faltan datos de la semana, espera ☁ Merge OK y recarga.</p>';
+        '<p class="muted">Sin comidas. Usa <b>Macros del día a mano</b> o agrega alimentos abajo.</p>';
     }
     list.innerHTML = html;
 
@@ -724,7 +790,7 @@
     var idx = -1;
     for (var i = 0; i < d.meals.length; i++) {
       var m = d.meals[i];
-      if (m._salsaAuto || isSalsaMeal(m)) continue;
+      if (m._salsaAuto || isSalsaMeal(m) || m._manualDay) continue;
       if ((m.name || m.id) === name) {
         idx = i;
         break;
@@ -877,7 +943,7 @@
       var from = document.getElementById('r-from') && document.getElementById('r-from').value;
       var to = document.getElementById('r-to') && document.getElementById('r-to').value;
       if (!from || !to) {
-        alert('Elige rango de fechas');
+        alert('Elige rango');
         return;
       }
       var days = daysInRange(from, to);
@@ -952,7 +1018,7 @@
               maxK.t.kcal +
               ' (' +
               fmtDM(maxK.day) +
-              ')   ·   Menos kcal: ' +
+              ')  ·  Menos kcal: ' +
               minK.t.kcal +
               ' (' +
               fmtDM(minK.day) +
@@ -965,7 +1031,7 @@
               maxP.t.p +
               ' g (' +
               fmtDM(maxP.day) +
-              ')   ·   Menos proteína: ' +
+              ')  ·  Menos proteína: ' +
               minP.t.p +
               ' g (' +
               fmtDM(minP.day) +
@@ -1104,7 +1170,7 @@
           ')</p>';
       } else {
         html +=
-          '<p class="muted" style="margin-top:.75rem">Sin días con datos en este rango. Si antes había, espera ☁ Merge OK y vuelve a pulsar Ver reporte.</p>';
+          '<p class="muted" style="margin-top:.75rem">Sin datos en este rango. Usa <b>Macros del día a mano</b> en cada fecha para recuperar (ej. desde el PDF o WhatsApp).</p>';
       }
       html += '<div class="sec">Alimentos del período</div>';
       Object.keys(det.counts).forEach(function (name) {
@@ -1121,7 +1187,7 @@
           '</div></div></div>';
       });
       if (!Object.keys(det.counts).length)
-        html += '<p class="muted">Sin alimentos registrados en el rango.</p>';
+        html += '<p class="muted">Sin alimentos en el rango.</p>';
       html += '<div class="sec">Salsas del período</div>';
       Object.keys(det.salsaGrams).forEach(function (name) {
         html +=
@@ -1132,7 +1198,7 @@
           ' g</div></div></div>';
       });
       if (!Object.keys(det.salsaGrams).length)
-        html += '<p class="muted">Sin consumo de salsas en el rango.</p>';
+        html += '<p class="muted">Sin salsas en el rango.</p>';
       html += '<div class="sec">Por día</div>';
       rows.forEach(function (r) {
         html +=
@@ -1177,8 +1243,7 @@
     muted.innerHTML =
       '<b>Cómo llenar</b><br>' +
       '• <b>Inicio</b> y <b>Fin</b> → consumo = Inicio − Fin<br>' +
-      '• Datos viejos (peso) también se usan en reportes<br>' +
-      '• Dos potes iguales → etiqueta';
+      '• Datos de peso anteriores también cuentan en reportes';
   }
 
   function renderSalsasSimple() {
@@ -1202,17 +1267,11 @@
           var consTxt =
             gr == null
               ? p.weight !== '' && p.weight != null
-                ? '<span class="muted">Peso guardado: ' +
-                  r0(num(p.weight)) +
-                  ' g (sistema anterior)</span>'
+                ? '<span class="muted">Peso: ' + r0(num(p.weight)) + ' g</span>'
                 : '<span class="muted">Completa Inicio y Fin</span>'
               : gr === 0
-                ? '<b>0 g</b> · no se suma al día'
-                : '<b>' +
-                  r0(gr) +
-                  ' g</b> → día · ' +
-                  r0(mac.kcal) +
-                  ' kcal';
+                ? '<b>0 g</b>'
+                : '<b>' + r0(gr) + ' g</b> → día · ' + r0(mac.kcal) + ' kcal';
           return (
             '<div class="salsa-card">' +
             '<div class="salsa-head"><div style="flex:1">' +
@@ -1234,12 +1293,12 @@
             '<div class="salsa-weights">' +
             '<div><label>Inicio (g)</label><input type="number" step="1" inputmode="decimal" value="' +
             ini +
-            '" placeholder="al empezar" onchange="window._salsaUpd(' +
+            '" onchange="window._salsaUpd(' +
             i +
             ',\'inicio\',this.value)"></div>' +
             '<div><label>Fin (g)</label><input type="number" step="1" inputmode="decimal" value="' +
             fin +
-            '" placeholder="al cerrar" onchange="window._salsaUpd(' +
+            '" onchange="window._salsaUpd(' +
             i +
             ',\'fin\',this.value)"></div></div>' +
             '<div style="margin-top:.45rem;font-size:.8rem">' +
@@ -1248,7 +1307,7 @@
             '<div class="row" style="margin-top:.4rem">' +
             '<button type="button" class="btn btn-ghost" onclick="window._salsaRelleno(' +
             i +
-            ')">🔄 Rellené / pote nuevo</button></div></div>'
+            ')">🔄 Rellené</button></div></div>'
           );
         })
         .join('');
@@ -1276,7 +1335,7 @@
         '<div class="sec" style="margin-top:0">Se suma al día: ' +
         r0(totalK) +
         ' kcal</div>' +
-        (rows || '<p class="muted">Sin datos aún.</p>');
+        (rows || '<p class="muted">Sin datos.</p>');
     }
   }
 
@@ -1293,7 +1352,6 @@
     renderSalsasSimple();
     toast('Guardado');
   };
-
   window._salsaDel = function (i) {
     var store = loadStore();
     var d = ensureDay(store, dayVal());
@@ -1302,9 +1360,7 @@
     saveLocalOnly(store);
     safeCloudWrite(store);
     renderSalsasSimple();
-    toast('Pote quitado');
   };
-
   window._salsaRelleno = function (i) {
     var v = prompt('Peso AHORA tras rellenar (g) = nuevo Inicio', '');
     if (v == null || v === '') return;
@@ -1318,9 +1374,7 @@
     saveLocalOnly(store);
     safeCloudWrite(store);
     renderSalsasSimple();
-    toast('Inicio = ' + num(v) + ' g');
   };
-
   window.addSalsaPot = function () {
     ensureDulceOption();
     var sel = document.getElementById('salsa-add-name');
@@ -1331,10 +1385,7 @@
       return p.name === name;
     }).length;
     var label = same ? String(same + 1) : '';
-    var ini = prompt(
-      'Inicio de "' + name + (label ? ' #' + label : '') + '" (g)',
-      ''
-    );
+    var ini = prompt('Inicio de "' + name + '" (g)', '');
     d.pots.push({
       id: 's' + Date.now(),
       name: name,
@@ -1348,9 +1399,7 @@
     saveLocalOnly(store);
     safeCloudWrite(store);
     renderSalsasSimple();
-    toast('Pote agregado');
   };
-
   window.delPot = function (i) {
     window._salsaDel(i);
   };
@@ -1359,7 +1408,6 @@
     if (field === 'mid') return;
     window._salsaUpd(i, field, val);
   };
-
   window.saveSalsas = function () {
     applyAndSave();
     renderSalsasSimple();
@@ -1391,9 +1439,9 @@
   function start() {
     ensureDulceOption();
     improveHelp();
-    // Primero recuperar de la nube, NUNCA escribir vacío encima
     pullCloudMerge().then(function () {
       injectExtraFoods();
+      injectManualButton();
       var tabS = document.getElementById('tab-salsas');
       if (tabS && !tabS.classList.contains('hidden')) renderSalsasSimple();
       var tabD = document.getElementById('tab-dia');
