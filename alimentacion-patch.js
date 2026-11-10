@@ -1,9 +1,8 @@
-/* Patch v18 — Restaurar macros reales 2–8 nov (Notion) + formulario */
+/* Patch v19 — Manual del día es autoridad (no doble suma) + restaurar 2–8 nov */
 (function () {
   var LS = 'MARY_ALIM_MARTIN_V1';
   var COL = 'mary_alimentacion';
   var DOC = 'martin_data';
-  // Fuente de verdad del usuario (Notion 2–8 nov 2026)
   var REAL_DAYS = {
     '2026-11-02': { kcal: 2026, p: 109, c: 254, g: 61 },
     '2026-11-03': { kcal: 2387, p: 137, c: 302, g: 67 },
@@ -63,7 +62,7 @@
     t.style.display = 'block';
     setTimeout(function () {
       t.style.display = 'none';
-    }, 3500);
+    }, 3000);
   }
   function today() {
     var d = new Date();
@@ -115,7 +114,9 @@
     if (d.meals && d.meals.length) return true;
     return false;
   }
-  /** Siempre escribe los 7 días reales (Notion) */
+  function hasManual(d) {
+    return !!(d && d.manual && (num(d.manual.kcal) || num(d.manual.p) || num(d.manual.c) || num(d.manual.g)));
+  }
   function seedRealDays(store, force) {
     var n = 0;
     Object.keys(REAL_DAYS).forEach(function (day) {
@@ -226,34 +227,40 @@
     return out;
   }
 
+  /**
+   * Si el día tiene registro MANUAL (total del día),
+   * ese es el número oficial: NO se suman alimentos ni sandwich encima.
+   */
   function patchDayTotals(day) {
     var store = loadStore();
     var d = ensureDay(store, day);
     var total = { kcal: 0, p: 0, c: 0, g: 0 };
     var lines = [];
 
-    if (
-      d.manual &&
-      (num(d.manual.kcal) ||
-        num(d.manual.p) ||
-        num(d.manual.c) ||
-        num(d.manual.g))
-    ) {
+    if (hasManual(d)) {
       var mm = {
         kcal: num(d.manual.kcal),
         p: num(d.manual.p),
         c: num(d.manual.c),
         g: num(d.manual.g)
       };
-      total.kcal += mm.kcal;
-      total.p += mm.p;
-      total.c += mm.c;
-      total.g += mm.g;
+      total.kcal = mm.kcal;
+      total.p = mm.p;
+      total.c = mm.c;
+      total.g = mm.g;
       lines.push({
-        m: { name: 'Registro del día', _manualDay: true },
+        m: { name: 'Registro del día (oficial)', _manualDay: true },
         mac: mm,
         kind: 'manual'
       });
+      // No sumar meals / extra / salsas: el manual ya es el total del día
+      return {
+        kcal: r0(total.kcal),
+        p: r0(total.p),
+        c: r0(total.c),
+        g: r0(total.g),
+        lines: lines
+      };
     }
 
     (d.meals || []).forEach(function (m) {
@@ -324,7 +331,7 @@
     var man = d.manual || {};
     var html =
       '<div class="sec" style="margin-top:0">Registro manual del día</div>' +
-      '<p class="muted" style="margin:.2rem 0 .45rem">kcal · Proteína · Carbos · Grasas. Luego Guardar.</p>' +
+      '<p class="muted" style="margin:.2rem 0 .45rem">Si guardas aquí, este total manda en el reporte (no se suma el sandwich u otros encima).</p>' +
       '<div class="grid2" style="margin-bottom:.4rem">' +
       '<div><label>kcal</label><input type="number" inputmode="decimal" id="man-kcal" value="' +
       (man.kcal != null && man.kcal !== '' ? man.kcal : '') +
@@ -392,7 +399,7 @@
     seedRealDays(store, true);
     writeCloud(store);
     renderDayFromPatch();
-    toast('2–8 nov restaurados (Notion)');
+    toast('2–8 nov restaurados');
     setTimeout(function () {
       if (typeof window.renderReport === 'function') window.renderReport();
     }, 300);
@@ -425,8 +432,7 @@
         r0(mac.g) +
         ' g G</div></div></div>';
     });
-    if (!html)
-      html = '<p class="muted">Sin datos. Usa el formulario o Restaurar 2–8 nov.</p>';
+    if (!html) html = '<p class="muted">Sin datos.</p>';
     list.innerHTML = html;
     if (kpis) {
       kpis.innerHTML =
@@ -747,10 +753,8 @@
 
   function start() {
     var store = loadStore();
-    // Forzar siempre los números reales de Notion
     seedRealDays(store, true);
     writeCloud(store);
-    toast('Macros 2–8 nov restaurados');
     renderDayFromPatch();
     var el = document.getElementById('day');
     if (el && !el._hooked) {
