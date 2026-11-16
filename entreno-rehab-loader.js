@@ -10,10 +10,9 @@
     document.head.appendChild(s);
   }
   var files = [
-    'entreno-rehab-app.p1.js?v=7',
-    'entreno-rehab-app.r0.js?v=7',
-    'entreno-rehab-app.r1.js?v=7',
-    'entreno-rehab-app.r2.js?v=7'
+    'entreno-rehab-app.p1.js?v=8',
+    'entreno-rehab-app.r0.js?v=8',
+    'entreno-rehab-app.r1.js?v=8'
   ];
   Promise.all(files.map(function(u){ return fetch(u).then(function(r){ return r.text(); }); }))
     .then(function(parts){
@@ -22,6 +21,7 @@
     })
     .catch(function(e){
       console.error(e);
-      document.getElementById('sync-status').textContent = 'Error cargando app';
+      var el=document.getElementById('sync-status');
+      if(el) el.textContent='Error cargando app';
     });
 })();
