@@ -66,20 +66,17 @@ label{display:block;font-size:.65rem;font-weight:700;color:var(--muted);margin-b
       <button type="button" class="tab" data-t="fisio" onclick="showTab('fisio')">Reporte fisio</button>
     </div>
   </div>
-
   <div id="panel-home">
     <div class="glass pad">
       <label>Fecha de la sesión</label>
       <input type="date" id="session-date">
-      <p class="muted" style="margin:.4rem 0 0">Rehab y gym son sesiones separadas (ej. rehab mañana, push tarde). Elige solo el bloque que vas a hacer ahora.</p>
+      <p class="muted" style="margin:.4rem 0 0">Rehab y gym son sesiones separadas. Elige solo el bloque de ahora.</p>
     </div>
     <div id="tpl-list"></div>
   </div>
-
   <div id="panel-session" style="display:none">
     <div id="session-body"><p class="muted pad">No hay sesión en curso. Ve a <b>Nueva sesión</b>.</p></div>
   </div>
-
   <div id="panel-history" style="display:none">
     <div class="glass pad">
       <div class="grid2">
@@ -87,11 +84,10 @@ label{display:block;font-size:.65rem;font-weight:700;color:var(--muted);margin-b
         <div><label>Hasta</label><input type="date" id="hist-to" onchange="refreshHistory()"></div>
       </div>
       <button type="button" class="btn btn-ghost" style="margin-top:.45rem" onclick="refreshHistory()">Filtrar</button>
-      <p class="muted" style="margin:.35rem 0 0">Puedes editar o borrar cualquier sesión guardada. Al guardar desde el celular se sincroniza con el PC y al revés.</p>
+      <p class="muted" style="margin:.35rem 0 0">Editar o borrar sesiones. Celular y PC se sincronizan al guardar.</p>
     </div>
     <div id="history-body" class="pad"></div>
   </div>
-
   <div id="panel-fisio" style="display:none">
     <div class="glass pad">
       <div class="grid2">
@@ -103,12 +99,10 @@ label{display:block;font-size:.65rem;font-weight:700;color:var(--muted);margin-b
     <div id="fisio-body" class="pad"></div>
   </div>
 </div>
-
 <div id="timer-bar">
   <span id="timer-display">00:00</span>
   <button type="button" class="btn btn-ghost" onclick="stopTimerBtn()">Parar</button>
 </div>
-
-<script src="entreno-rehab-app.js?v=2"></script>
+<script src="entreno-rehab-loader.js?v=3"></script>
 </body>
 </html>
