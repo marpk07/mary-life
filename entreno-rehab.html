@@ -9,7 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-:root{--bg:#0f0a14;--card:rgba(28,20,40,.92);--border:rgba(244,114,182,.22);--pink:#f472b6;--purple:#a78bfa;--text:#f5eef8;--muted:#c4b5d4}
+:root{--bg:#0f0a14;--card:rgba(28,20,40,.92);--border:rgba(244,114,182,.22);--pink:#f472b6;--text:#f5eef8;--muted:#c4b5d4}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;min-height:100vh;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:var(--text);
 background:radial-gradient(circle at 15% 10%,rgba(244,114,182,.12),transparent 42%),radial-gradient(circle at 90% 90%,rgba(167,139,250,.1),transparent 42%),var(--bg);
@@ -36,21 +36,18 @@ label{display:block;font-size:.65rem;font-weight:700;color:var(--muted);margin-b
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
 @media(max-width:560px){.grid2{grid-template-columns:1fr}}
 .ex-card{margin-bottom:.55rem}
-.ex-card.skipped{opacity:.55}
-.plan-note{margin:.25rem 0;font-size:.72rem}
 .hist{font-size:.68rem;color:#ddd6fe;margin:.2rem 0 .35rem}
 .set-row{display:flex;gap:.35rem;align-items:center;margin-bottom:.3rem}
 .set-n{font-size:.7rem;font-weight:800;color:var(--muted);min-width:1.4rem}
 .set-row input{flex:1}
-.set-row input.rpe{max-width:3.5rem}
-.timer-row{display:flex;gap:.35rem;align-items:center;margin:.35rem 0}
-.sec-in{max-width:4.5rem}
+.timer-row{display:flex;gap:.35rem;align-items:center;margin:.35rem 0;flex-wrap:wrap}
 .note-in{margin-top:.35rem}
-.chk{font-size:.7rem;color:var(--muted);display:flex;align-items:center;gap:.25rem}
-#timer-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:1rem;z-index:40;background:#1c1428;border:1px solid var(--border);border-radius:16px;padding:.65rem 1rem;display:none;align-items:center;gap:.75rem;box-shadow:0 8px 32px rgba(0,0,0,.45)}
+#timer-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:1rem;z-index:40;background:#1c1428;border:1px solid var(--border);border-radius:16px;padding:.65rem 1rem;display:none;align-items:center;gap:.75rem}
 #timer-display{font-size:1.4rem;font-weight:800;color:#f9a8d4;min-width:4.5rem;text-align:center}
 .report{white-space:pre-wrap;font-size:.78rem;background:rgba(15,10,20,.5);padding:.75rem;border-radius:12px;border:1px solid var(--border);max-height:50vh;overflow:auto}
 .hist-card{margin-bottom:.45rem}
+.plan-note{margin:.25rem 0;font-size:.72rem}
+.chk{font-size:.7rem;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -84,7 +81,7 @@ label{display:block;font-size:.65rem;font-weight:700;color:var(--muted);margin-b
         <div><label>Hasta</label><input type="date" id="hist-to" onchange="refreshHistory()"></div>
       </div>
       <button type="button" class="btn btn-ghost" style="margin-top:.45rem" onclick="refreshHistory()">Filtrar</button>
-      <p class="muted" style="margin:.35rem 0 0">Editar o borrar sesiones. Celular y PC se sincronizan al guardar.</p>
+      <p class="muted" style="margin:.35rem 0 0">Filtra por fechas. Puedes ver y borrar sesiones. Celular y PC se sincronizan por Firebase al guardar.</p>
     </div>
     <div id="history-body" class="pad"></div>
   </div>
@@ -103,6 +100,6 @@ label{display:block;font-size:.65rem;font-weight:700;color:var(--muted);margin-b
   <span id="timer-display">00:00</span>
   <button type="button" class="btn btn-ghost" onclick="stopTimerBtn()">Parar</button>
 </div>
-<script src="entreno-rehab-loader.js?v=3"></script>
+<script src="entreno-rehab-loader.js?v=6"></script>
 </body>
 </html>
