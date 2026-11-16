@@ -45,9 +45,8 @@
         y=section('Mis actividades del día · autoevaluación',y);
         const maryN=C.consolidatedNote(day,'Mary');
         const maryActs=C.linesToBullets(d.activities.Mary);
-        // Medir altura real (actividades largas se parten en varias líneas)
         doc.setFont('helvetica','normal'); doc.setFontSize(9);
-        let actsContentH = 30; // título Mary
+        let actsContentH = 30;
         if(maryActs.length){
           maryActs.forEach(function(a){
             const lines=doc.splitTextToSize('• '+a, W-110);
@@ -56,7 +55,7 @@
         } else {
           actsContentH += 12;
         }
-        actsContentH += 10; // padding inferior
+        actsContentH += 10;
         const actsH = Math.max(actsContentH, 48);
         card(40,y,W-80,actsH);
         doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...text); doc.text('Mary',55,y+16);
@@ -280,6 +279,63 @@
       margin:{left:40,right:W/2}
     });
     y=doc.lastAutoTable.finalY+16;
+
+    if(y>700){ doc.addPage(); y=40; }
+    y=section('Errores / descuentos del período',y);
+    var allErrors=[];
+    days.forEach(function(day){
+      var data=(store.days[day]&&store.days[day].evaluations)||{};
+      C.PEOPLE.forEach(function(person){
+        C.PEOPLE.forEach(function(ev){
+          var e=data[ev+'→'+person];
+          if(!e||!e.discounts) return;
+          if(e.status&&e.status!=='ok') return;
+          e.discounts.forEach(function(d){
+            if(d.amount===''||d.amount==null) return;
+            var amt=Math.abs(C.num(d.amount));
+            if(!amt && !(d.reason||'').trim()) return;
+            allErrors.push({day:day, person:person, by:ev, amount:amt, reason:d.reason||''});
+          });
+        });
+      });
+    });
+    if(!allErrors.length){
+      doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...muted);
+      doc.text('Sin descuentos en este período.',50,y); y+=16;
+    } else {
+      var totals={};
+      C.PEOPLE.forEach(function(p){ totals[p]=0; });
+      allErrors.forEach(function(e){ totals[e.person]=(totals[e.person]||0)+e.amount; });
+      var sumLine=C.PEOPLE.map(function(p){
+        return p+': −'+(totals[p]?totals[p].toFixed(1).replace('.',','):'0');
+      }).join('   ·   ');
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...pink);
+      doc.text(sumLine,40,y); y+=12;
+      var errBody=allErrors.map(function(e){
+        return [
+          fmtDayShort(e.day),
+          e.person,
+          e.by,
+          '−'+e.amount.toFixed(1).replace('.',','),
+          (e.reason||'—').toString()
+        ];
+      });
+      doc.autoTable({
+        startY:y,
+        head:[['Día','Responsable','Registró','Pts','Motivo']],
+        body:errBody,
+        theme:'grid',
+        styles:{fontSize:8,cellPadding:4,textColor:text},
+        headStyles:{fillColor:lilac,textColor:purple,fontStyle:'bold',fontSize:8},
+        alternateRowStyles:{fillColor:[252,250,255]},
+        columnStyles:{
+          1:{fontStyle:'bold'},
+          3:{fontStyle:'bold',textColor:pink}
+        },
+        margin:{left:40,right:40}
+      });
+      y=doc.lastAutoTable.finalY+14;
+    }
     return y;
   }
   window.exportPDFSemana = function(){
