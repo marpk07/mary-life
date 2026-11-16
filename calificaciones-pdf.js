@@ -45,7 +45,19 @@
         y=section('Mis actividades del día · autoevaluación',y);
         const maryN=C.consolidatedNote(day,'Mary');
         const maryActs=C.linesToBullets(d.activities.Mary);
-        const actsH = Math.max(maryActs.length,1)*12 + 28;
+        // Medir altura real (actividades largas se parten en varias líneas)
+        doc.setFont('helvetica','normal'); doc.setFontSize(9);
+        let actsContentH = 30; // título Mary
+        if(maryActs.length){
+          maryActs.forEach(function(a){
+            const lines=doc.splitTextToSize('• '+a, W-110);
+            actsContentH += Math.max(lines.length,1)*12;
+          });
+        } else {
+          actsContentH += 12;
+        }
+        actsContentH += 10; // padding inferior
+        const actsH = Math.max(actsContentH, 48);
         card(40,y,W-80,actsH);
         doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...text); doc.text('Mary',55,y+16);
         let ly=y+30; doc.setFont('helvetica','normal'); doc.setFontSize(9);
@@ -55,7 +67,8 @@
             doc.setTextColor(...text); doc.text(lines,55,ly); ly+=lines.length*12;
           });
         } else { doc.setTextColor(...muted); doc.text('• Sin actividades registradas',55,ly); }
-        y += actsH + 8;
+        y += actsH + 10;
+        if(y>720){ doc.addPage(); pageHeader(); y=40; }
         doc.setFillColor(...lilac); doc.roundedRect(40,y,100,34,8,8,'F');
         doc.setFontSize(7); doc.setTextColor(...muted); doc.text('AUTOEVAL.',50,y+12);
         doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(...purple);
@@ -79,12 +92,23 @@
         y=section('Actividades del equipo',y);
         ['Laura','Valery'].forEach(function(p){
           const cn=C.consolidatedNote(day,p); const acts=C.linesToBullets(d.activities[p]);
-          const h=Math.min(36+Math.max(acts.length,1)*12+8,130);
+          doc.setFont('helvetica','normal'); doc.setFontSize(9);
+          let need = 28;
+          if(cn.absent){ need += 14; }
+          else if(acts.length){
+            acts.forEach(function(a){
+              const lines=doc.splitTextToSize('• '+a, W-170);
+              need += Math.max(lines.length,1)*11;
+            });
+          } else { need += 14; }
+          need = Math.max(need + 12, 52);
+          const h = need;
+          if(y+h>750){ doc.addPage(); pageHeader(); y=40; }
           card(40,y,W-80,h);
           doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...text); doc.text(p,55,y+16);
           let yy=y+28; doc.setFont('helvetica','normal'); doc.setFontSize(9);
           if(cn.absent){ doc.setTextColor(...muted); doc.text('• '+C.statusLabel(cn.status),55,yy); }
-          else if(acts.length){ acts.slice(0,6).forEach(function(a){ const lines=doc.splitTextToSize('• '+a,W-170); doc.setTextColor(...text); doc.text(lines,55,yy); yy+=lines.length*11; }); }
+          else if(acts.length){ acts.forEach(function(a){ const lines=doc.splitTextToSize('• '+a,W-170); doc.setTextColor(...text); doc.text(lines,55,yy); yy+=lines.length*11; }); }
           else { doc.setTextColor(...muted); doc.text('• Sin información registrada',55,yy); }
           doc.setFillColor(...lilac); doc.roundedRect(W-145,y+10,85,36,8,8,'F');
           doc.setFontSize(6); doc.setTextColor(...muted); doc.text('NOTA DADA POR MARY',W-138,y+20);
@@ -306,38 +330,13 @@
         doc.setFillColor(...pink); doc.roundedRect(40,44,120,16,8,8,'F');
         doc.setFontSize(9); doc.setTextColor(255,255,255); doc.text('Cierre quincenal',52,55);
         var y=88;
-        var weekBonuses={Mary:[],Laura:[],Valery:[]};
         weeks.forEach(function(wdays, idx){
           if(y>100){ doc.addPage(); doc.setFillColor(...lilac); doc.rect(0,0,W,26,'F'); doc.setFillColor(...pink); doc.roundedRect(40,7,120,13,6,6,'F'); doc.setFontSize(7); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.text('CIERRE QUINCENAL',52,16); y=40; }
           var wFrom=wdays[0], wTo=wdays[wdays.length-1];
           y=drawWeekBlock(doc,C,wdays,'Semana '+(idx+1)+' · '+fmtRangeES(wFrom,wTo),y,W,colors);
-          C.PEOPLE.forEach(function(person){
-            var avg=avgOfDays(C,wdays,person);
-            var b=person==='Mary'?C.bonoMary(avg):C.bonoLV(avg);
-            weekBonuses[person].push({avg:avg,bonus:b.bonus,total:b.total,label:b.label});
-          });
-        });
-        if(y>620){ doc.addPage(); y=40; }
-        doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...purple);
-        doc.text('Total quincena (semana 1 + semana 2)',40,y); y+=16;
-        C.PEOPLE.forEach(function(person){
-          var list=weekBonuses[person]||[];
-          var sumBonus=0, sumTotal=0;
-          list.forEach(function(x){ sumBonus+=x.bonus; sumTotal+=x.total; });
-          var cur=person==='Mary'?'$':'R$';
-          doc.setFillColor(255,255,255); doc.setDrawColor(230,220,245);
-          doc.roundedRect(40,y,W-80,52,10,10,'FD');
-          doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(...text);
-          doc.text(person,55,y+16);
-          doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...muted);
-          var detail=list.map(function(x,i){ return 'S'+(i+1)+': prom '+(x.avg==null?'—':x.avg.toFixed(2).replace('.',','))+' · bono +'+cur+x.bonus; }).join('   |   ');
-          doc.text(detail,55,y+30);
-          doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(...pink);
-          doc.text('Bonos: +'+cur+sumBonus+'   ·   Total a pagar: '+cur+sumTotal,55,y+46);
-          y+=62;
         });
         doc.setFontSize(8); doc.setTextColor(...muted);
-        doc.text('Cierre quincenal · '+fmtRangeES(from,to)+' · Cada semana calcula su propio bono; el total suma ambas',40,820);
+        doc.text('Cierre quincenal · '+fmtRangeES(from,to),40,820);
         doc.save('cierre_quincenal_'+from+'_'+to+'.pdf');
       } catch(err){ console.error(err); alert('Error PDF quincenal'); }
     });
