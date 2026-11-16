@@ -1,13 +1,44 @@
-/* Fix: barra MARY no tapa módulos en móvil + tema */
+/* Fix móvil: topbar no tapa módulos + safe-area iPhone */
 @media (max-width: 900px) {
-  #content-area {
-    padding-top: 0 !important;
-    margin-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
-    height: calc(100vh - 56px - env(safe-area-inset-top, 0px)) !important;
+  html, body, .shell {
+    height: 100% !important;
+    min-height: 100dvh !important;
+    min-height: 100vh !important;
   }
-  .view, .module-frame { height: 100% !important; min-height: 100% !important; }
-  #topbar { box-sizing: border-box; }
+  .topbar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 40 !important;
+    box-sizing: border-box !important;
+    padding-top: max(0.55rem, env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: 0.55rem !important;
+    background: rgba(15, 10, 20, 0.97) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .content {
+    margin-top: calc(52px + env(safe-area-inset-top, 0px)) !important;
+    height: calc(100dvh - 52px - env(safe-area-inset-top, 0px)) !important;
+    height: calc(100vh - 52px - env(safe-area-inset-top, 0px)) !important;
+    overflow: hidden !important;
+  }
+  .view,
+  .module-frame {
+    height: 100% !important;
+    min-height: 100% !important;
+  }
+  .sidebar {
+    padding-top: max(1rem, env(safe-area-inset-top, 0px)) !important;
+  }
 }
 .module-frame {
   background: #0f0a14 !important;
+}
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
 }
