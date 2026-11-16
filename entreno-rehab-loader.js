@@ -1,5 +1,4 @@
 (function(){
-  var CDN = 'https://cdn.jsdelivr.net/gh/marpk07/mary-life@f5ea0228d3685d24266bc911ba26266bd7ec592f/entreno-rehab-app.js';
   function inject(code){
     var s=document.createElement('script');
     s.textContent=code;
@@ -7,16 +6,22 @@
   }
   function loadPatch(){
     var s=document.createElement('script');
-    s.src='entreno-rehab-hist-patch.js?v=6';
+    s.src='entreno-rehab-hist-patch.js?v=7';
     document.head.appendChild(s);
   }
-  fetch(CDN).then(function(r){ return r.text(); }).then(function(code){
-    inject(code);
-    loadPatch();
-  }).catch(function(e){
-    console.error(e);
-    fetch('entreno-rehab-app.js?v=6').then(function(r){return r.text();}).then(function(t){
-      if(t && t.indexOf('TEMPLATES')>=0){ inject(t); loadPatch(); }
+  var files = [
+    'entreno-rehab-app.p1.js?v=7',
+    'entreno-rehab-app.r0.js?v=7',
+    'entreno-rehab-app.r1.js?v=7',
+    'entreno-rehab-app.r2.js?v=7'
+  ];
+  Promise.all(files.map(function(u){ return fetch(u).then(function(r){ return r.text(); }); }))
+    .then(function(parts){
+      inject(parts.join(''));
+      loadPatch();
+    })
+    .catch(function(e){
+      console.error(e);
+      document.getElementById('sync-status').textContent = 'Error cargando app';
     });
-  });
 })();
