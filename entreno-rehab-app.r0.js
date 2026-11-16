@@ -183,34 +183,65 @@
     showTab('home');
   };
 
+  function renderTimerDisplay(){
+    const el=document.getElementById('timer-display');
+    if(!el) return;
+    const m=Math.floor(Math.max(0,timer.left)/60), s=Math.max(0,timer.left)%60;
+    el.textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    const pauseBtn=document.getElementById('timer-pause');
+    if(pauseBtn) pauseBtn.textContent = timer.paused ? '▶ Reanudar' : '⏸ Pausar';
+  }
   function stopTimer(){
     if(timer.iv) clearInterval(timer.iv);
-    timer={ exId:null, left:0, total:0, iv:null };
+    timer={ exId:null, left:0, total:0, iv:null, paused:false };
     const bar=document.getElementById('timer-bar');
     if(bar) bar.style.display='none';
+  }
+  function clearTimerInterval(){
+    if(timer.iv){ clearInterval(timer.iv); timer.iv=null; }
   }
 
   window.startTimer = function(exId, sec){
     stopTimer();
     sec = parseInt(sec,10)||30;
-    timer.exId=exId; timer.left=sec; timer.total=sec;
+    timer.exId=exId; timer.left=sec; timer.total=sec; timer.paused=false;
     const bar=document.getElementById('timer-bar');
     if(bar) bar.style.display='flex';
-    tickTimer();
+    renderTimerDisplay();
     timer.iv=setInterval(tickTimer, 1000);
   };
   function tickTimer(){
-    const el=document.getElementById('timer-display');
-    const m=Math.floor(timer.left/60), s=timer.left%60;
-    if(el) el.textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    if(timer.paused) return;
     if(timer.left<=0){
-      stopTimer();
+      clearTimerInterval();
+      renderTimerDisplay();
       if(navigator.vibrate) try{ navigator.vibrate([200,100,200]); }catch(e){}
       const td=document.getElementById('timer-display');
       if(td) td.textContent='¡Listo!';
       return;
     }
     timer.left--;
+    renderTimerDisplay();
   }
+  window.pauseTimerBtn = function(){
+    if(!timer.exId && timer.left<=0 && timer.total<=0) return;
+    if(timer.paused){
+      timer.paused=false;
+      clearTimerInterval();
+      timer.iv=setInterval(tickTimer, 1000);
+    } else {
+      timer.paused=true;
+      clearTimerInterval();
+    }
+    renderTimerDisplay();
+  };
+  window.resetTimerBtn = function(){
+    if(timer.total<=0) return;
+    clearTimerInterval();
+    timer.left=timer.total;
+    timer.paused=false;
+    renderTimerDisplay();
+    timer.iv=setInterval(tickTimer, 1000);
+  };
   window.stopTimerBtn = function(){ stopTimer(); };
 
