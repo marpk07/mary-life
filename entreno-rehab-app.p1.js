@@ -66,7 +66,7 @@
         {id:'m4', name:'Estiramiento flexor de cadera', mode:'time', targetSec:40, sets:1, note:'30–45 s por lado'},
         {id:'m5', name:'Isquios acostada con banda/toalla', mode:'time', targetSec:40, sets:1, note:'30–45 s por lado'},
         {id:'m6', name:'Figura 4 (glúteo)', mode:'time', targetSec:40, sets:1, note:'30–45 s por lado'},
-        {id:'m7', name:'Pantorrilla en pared', mode:'time', targetSec:40, sets:1, note:'30–45 s por lado'},
+        {id:'m7', name:'Pantorrilla en pared', mode:'time', targetSec:30, sets:1, note:'30–45 s por lado'},
         {id:'m8', name:'Pecho en marco de puerta', mode:'time', targetSec:30, sets:1, note:'Sin forzar hombro'},
         {id:'m9', name:'Rodillas al pecho + rotación lumbar', mode:'time', targetSec:30, sets:1, note:'Por lado'},
         {id:'m10', name:'Cuádriceps (opcional)', mode:'time', targetSec:25, sets:1, note:'Si molesta el tendón, sáltalo', optional:true}
@@ -138,19 +138,3 @@
     db = firebase.firestore();
   } catch(e){ console.warn(e); }
 
-  function todayISO(){
-    const d = new Date();
-    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  }
-  function setStatus(m){ const el=document.getElementById('sync-status'); if(el) el.textContent=m||''; }
-  function loadLocal(){
-    try {
-      const r = localStorage.getItem(LS);
-      if(r){ const p=JSON.parse(r); if(p&&p.sessions) store=p; }
-    } catch(e){}
-    if(!store.sessions) store.sessions=[];
-  }
-  function saveLocal(){
-    store.updatedAt = Date.now();
-    try { localStorage.setItem(LS, JSON.stringify(store)); } catch(e){}
-  }
