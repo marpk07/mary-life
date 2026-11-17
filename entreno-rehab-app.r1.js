@@ -3,8 +3,14 @@
     if(!logs.length) return '<div class="hist muted">Sin historial aún</div>';
     return '<div class="hist">'+logs.map(l=>{
       const top=l.sets.map(s=>{
-        if(s.weight) return s.weight+'×'+(s.reps||'?');
-        if(s.sec) return s.sec+'s';
+        var u=s.unit==='kg'?'kg':(s.unit==='bw'?'PC':'lb');
+        if(s.unit==='bw'||s.weight){
+          var wpart = s.unit==='bw' ? 'PC' : ((s.weight||'?')+u);
+          var extra = s.reps ? ('×'+(s.reps||'?')) : '';
+          if(s.sec) extra += (extra?' ':'')+s.sec+'s';
+          return wpart+extra;
+        }
+        if(s.sec) return s.sec+'s'+(s.reps?(' ×'+s.reps):'');
         return (s.reps||'?')+' reps';
       }).join(', ');
       return '<span>'+l.date.slice(5)+': '+top+'</span>';
@@ -35,18 +41,34 @@
         h+='<button type="button" class="btn btn-ghost" onclick="startTimer(\''+ex.id+'\', document.getElementById(\'tim-'+ei+'\').value)">▶</button></div>';
 
         ex.sets.forEach((set,si)=>{
-          h+='<div class="set-row">';
+          if(!set.unit) set.unit='lb';
+          h+='<div class="set-row" style="flex-wrap:wrap">';
           h+='<span class="set-n">S'+(si+1)+'</span>';
-          if(ex.mode==='load'){
-            h+='<input type="number" step="0.5" placeholder="lb/kg" value="'+(set.weight||'')+'" onchange="updSet('+ei+','+si+',\'weight\',this.value)">';
-            h+='<input type="number" placeholder="reps" value="'+(set.reps||'')+'" onchange="updSet('+ei+','+si+',\'reps\',this.value)">';
+          if(ex.mode==='load' || ex.mode==='reps'){
+            var u=set.unit||'lb';
+            h+='<input type="number" step="0.5" placeholder="Peso" value="'+(set.weight||'')+'" onchange="updSet('+ei+','+si+',\'weight\',this.value)" style="min-width:4rem;flex:1">';
+            h+='<select onchange="updSet('+ei+','+si+',\'unit\',this.value)" style="width:auto;min-width:4.2rem;flex:0">';
+            h+='<option value="lb"'+(u==='lb'?' selected':'')+'>Lb</option>';
+            h+='<option value="kg"'+(u==='kg'?' selected':'')+'>Kg</option>';
+            h+='<option value="bw"'+(u==='bw'?' selected':'')+'>Peso libre</option>';
+            h+='</select>';
+            h+='<input type="number" placeholder="Reps" value="'+(set.reps||'')+'" onchange="updSet('+ei+','+si+',\'reps\',this.value)" style="min-width:3.5rem;flex:1">';
+            h+='<input type="number" placeholder="Seg" value="'+(set.sec||'')+'" onchange="updSet('+ei+','+si+',\'sec\',this.value)" style="min-width:3.5rem;flex:1" title="Opcional: segundos">';
           } else if(ex.mode==='time'||ex.mode==='iso'){
-            h+='<input type="number" placeholder="seg" value="'+(set.sec||'')+'" onchange="updSet('+ei+','+si+',\'sec\',this.value)">';
-            if(ex.mode==='iso') h+='<input type="number" placeholder="reps" value="'+(set.reps||'')+'" onchange="updSet('+ei+','+si+',\'reps\',this.value)">';
+            h+='<input type="number" placeholder="Seg" value="'+(set.sec||'')+'" onchange="updSet('+ei+','+si+',\'sec\',this.value)" style="min-width:4rem;flex:1">';
+            h+='<input type="number" placeholder="Reps" value="'+(set.reps||'')+'" onchange="updSet('+ei+','+si+',\'reps\',this.value)" style="min-width:3.5rem;flex:1">';
+            var u2=set.unit||'lb';
+            h+='<input type="number" step="0.5" placeholder="Peso" value="'+(set.weight||'')+'" onchange="updSet('+ei+','+si+',\'weight\',this.value)" style="min-width:3.5rem;flex:1">';
+            h+='<select onchange="updSet('+ei+','+si+',\'unit\',this.value)" style="width:auto;min-width:4.2rem;flex:0">';
+            h+='<option value="lb"'+(u2==='lb'?' selected':'')+'>Lb</option>';
+            h+='<option value="kg"'+(u2==='kg'?' selected':'')+'>Kg</option>';
+            h+='<option value="bw"'+(u2==='bw'?' selected':'')+'>Peso libre</option>';
+            h+='</select>';
           } else {
-            h+='<input type="number" placeholder="reps" value="'+(set.reps||'')+'" onchange="updSet('+ei+','+si+',\'reps\',this.value)">';
+            h+='<input type="number" placeholder="Reps" value="'+(set.reps||'')+'" onchange="updSet('+ei+','+si+',\'reps\',this.value)">';
+            h+='<input type="number" placeholder="Seg" value="'+(set.sec||'')+'" onchange="updSet('+ei+','+si+',\'sec\',this.value)">';
           }
-          h+='<input type="number" step="0.5" min="0" max="10" placeholder="RPE" value="'+(set.rpe||'')+'" onchange="updSet('+ei+','+si+',\'rpe\',this.value)" class="rpe">';
+          h+='<input type="number" step="0.5" min="0" max="10" placeholder="RPE" value="'+(set.rpe||'')+'" onchange="updSet('+ei+','+si+',\'rpe\',this.value)" style="min-width:3rem;flex:0.7">';
           h+='</div>';
         });
         h+='<button type="button" class="btn btn-ghost btn-sm" onclick="addSet('+ei+')">+ Serie</button>';
@@ -78,7 +100,7 @@
       h+='</select></div></div>';
     }
     h+='<label style="margin-top:.5rem">Nota de la sesión</label><textarea id="c-note" rows="2">'+(active.sessionNote||'')+'</textarea>';
-    h+='<button type="button" class="btn btn-pink" style="width:100%;margin-top:.75rem" onclick="saveActiveSession()">💾 Guardar sesión</button>';
+    h+='<button type="button" class="btn btn-pink" style="width:100%;margin-top:.75rem" onclick="saveActiveSession()">💾 Guardar / actualizar sesión</button>';
     h+='</div>';
     box.innerHTML=h;
   }
@@ -87,7 +109,7 @@
   window.updSet = function(ei,si,f,v){ active.exercises[ei].sets[si][f]=v; };
   window.updExNote = function(ei,v){ active.exercises[ei].note=v; };
   window.addSet = function(ei){
-    active.exercises[ei].sets.push({ reps:'', weight:'', sec:'', rpe:'' });
+    active.exercises[ei].sets.push({ reps:'', weight:'', unit:'lb', sec:'', rpe:'' });
     renderSession();
   };
 
@@ -128,9 +150,19 @@
   function renderHistory(){
     const box=document.getElementById('history-body');
     if(!box) return;
-    if(!store.sessions.length){ box.innerHTML='<p class="muted">Aún no hay sesiones.</p>'; return; }
+    const fromEl=document.getElementById('hist-from');
+    const toEl=document.getElementById('hist-to');
+    const from=(fromEl&&fromEl.value)||'';
+    const to=(toEl&&toEl.value)||'';
+    let list=(store.sessions||[]).slice();
+    if(from) list=list.filter(s=>s.date>=from);
+    if(to) list=list.filter(s=>s.date<=to);
+    if(!list.length){
+      box.innerHTML='<p class="muted">'+(store.sessions.length?'No hay sesiones en ese rango.':'Aún no hay sesiones.')+'</p>';
+      return;
+    }
     let h='';
-    store.sessions.slice(0,40).forEach(s=>{
+    list.slice(0,60).forEach(s=>{
       h+='<div class="glass pad hist-card">';
       h+='<div class="row-between"><b>'+s.title+'</b><span class="muted">'+s.date+'</span></div>';
       const bits=[];
@@ -140,11 +172,36 @@
       if(s.pain!==''&&s.pain!=null) bits.push('Dolor '+s.pain+'/10');
       if(bits.length) h+='<div class="muted">'+bits.join(' · ')+'</div>';
       if(s.sessionNote) h+='<div class="muted">'+s.sessionNote+'</div>';
-      h+='<button type="button" class="btn btn-ghost btn-sm" onclick="viewSession(\''+s.id+'\')">Ver detalle</button>';
-      h+='</div>';
+      h+='<div class="timer-row" style="margin-top:.4rem;gap:.35rem;flex-wrap:wrap">';
+      h+='<button type="button" class="btn btn-pink btn-sm" onclick="editSession(\''+s.id+'\')">✏️ Editar</button>';
+      h+='<button type="button" class="btn btn-ghost btn-sm" onclick="viewSession(\''+s.id+'\')">Ver</button>';
+      h+='<button type="button" class="btn btn-ghost btn-sm" onclick="deleteSession(\''+s.id+'\')">🗑 Borrar</button>';
+      h+='</div></div>';
     });
     box.innerHTML=h;
   }
+  window.refreshHistory = function(){ renderHistory(); };
+
+  window.editSession = function(id){
+    const s=store.sessions.find(x=>x.id===id);
+    if(!s){ alert('Sesión no encontrada'); return; }
+    active=JSON.parse(JSON.stringify(s));
+    (active.exercises||[]).forEach(ex=>{
+      (ex.sets||[]).forEach(set=>{ if(!set.unit) set.unit='lb'; });
+    });
+    stopTimer();
+    showTab('session');
+    renderSession();
+  };
+
+  window.deleteSession = function(id){
+    if(!confirm('¿Borrar esta sesión? No se puede deshacer.')) return;
+    store.sessions=(store.sessions||[]).filter(s=>s.id!==id);
+    saveLocal();
+    saveCloud();
+    if(active&&active.id===id){ active=null; showTab('history'); }
+    renderHistory();
+  };
 
   window.viewSession = function(id){
     const s=store.sessions.find(x=>x.id===id);
@@ -155,9 +212,11 @@
       t+=ex.name+'\n';
       (ex.sets||[]).forEach((set,i)=>{
         let line='  S'+(i+1)+': ';
-        if(set.weight) line+=set.weight+' × '+(set.reps||'?');
+        if(set.unit==='bw') line+='PC'+(set.reps?(' × '+set.reps):'');
+        else if(set.weight) line+=set.weight+(set.unit==='kg'?'kg':'lb')+' × '+(set.reps||'?');
         else if(set.sec) line+=set.sec+'s'+(set.reps?(' × '+set.reps):'');
         else line+=(set.reps||'?')+' reps';
+        if(set.sec && set.weight) line+=' · '+set.sec+'s';
         if(set.rpe) line+=' · RPE '+set.rpe;
         if(set.pr) line+=' · '+set.pr;
         t+=line+'\n';
@@ -166,6 +225,7 @@
     });
     if(s.pain) t+='\nDolor: '+s.pain+'/10 · '+(s.painWhere||'')+' · '+(s.painWhen||'');
     if(s.sessionNote) t+='\nSesión: '+s.sessionNote;
+    if(s.durationMin||s.kcal||s.hrAvg) t+='\nReloj: '+(s.durationMin||'—')+' min · '+(s.kcal||'—')+' kcal · FC '+(s.hrAvg||'—');
     alert(t);
   };
 
@@ -187,7 +247,9 @@
       if(s.pain!==''&&s.pain!=null) text+='  Dolor: '+s.pain+'/10 · '+(s.painWhere||'—')+' · cuándo: '+(s.painWhen||'—')+'\n';
       (s.exercises||[]).forEach(ex=>{
         if(ex.skipped){ text+='  · '+ex.name+': saltado\n'; return; }
-        const sets=(ex.sets||[]).filter(x=>x.reps||x.sec).map(x=>{
+        const sets=(ex.sets||[]).filter(x=>x.reps||x.sec||x.weight).map(x=>{
+          if(x.unit==='bw') return 'PC'+(x.reps?('×'+x.reps):'')+(x.sec?(' '+x.sec+'s'):'');
+          if(x.weight) return x.weight+(x.unit==='kg'?'kg':'lb')+(x.reps?('×'+x.reps):'')+(x.sec?(' '+x.sec+'s'):'');
           if(x.sec&&x.reps) return x.reps+'×'+x.sec+'s';
           if(x.sec) return x.sec+'s';
           return (x.reps||'?')+' reps';
