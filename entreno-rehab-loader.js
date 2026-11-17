@@ -6,13 +6,13 @@
   }
   function loadPatch(){
     var s=document.createElement('script');
-    s.src='entreno-rehab-hist-patch.js?v=7';
+    s.src='entreno-rehab-hist-patch.js?v=10';
     document.head.appendChild(s);
   }
   var files = [
     'entreno-rehab-app.p1.js?v=8',
-    'entreno-rehab-app.r0.js?v=9',
-    'entreno-rehab-app.r1.js?v=8'
+    'entreno-rehab-app.r0.js?v=10',
+    'entreno-rehab-app.r1.js?v=10'
   ];
   Promise.all(files.map(function(u){ return fetch(u).then(function(r){ return r.text(); }); }))
     .then(function(parts){

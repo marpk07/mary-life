@@ -118,7 +118,7 @@
         planSets: ex.sets||1,
         skipped: false,
         note: '',
-        sets: Array.from({length: ex.sets||1}, ()=>({ reps:'', weight:'', sec:'', rpe:'' }))
+        sets: Array.from({length: ex.sets||1}, ()=>({ reps:'', weight:'', unit:'lb', sec:'', rpe:'' }))
       })),
       pain: '', painWhere: '', painWhen: '',
       effort: '', durationMin: '', kcal: '', hrAvg: '', hrMax: '',
@@ -169,6 +169,7 @@
         ex.sets.forEach((s,i)=>{
           const src = last.sets[i] || last.sets[last.sets.length-1];
           if(src && src.weight) s.weight = src.weight;
+          if(src && src.unit) s.unit = src.unit;
         });
       }
     });
