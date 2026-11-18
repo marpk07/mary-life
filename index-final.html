@@ -2,87 +2,182 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>MARY · Life Suite</title>
-<link rel="stylesheet" href="mary-theme.css">
-<link rel="stylesheet" href="layout-fix.css?v=3">
-<style>
-:root{--bg:#0f0a14;--card:rgba(28,20,40,.95);--border:rgba(244,114,182,.22);--pink:#f472b6;--text:#f5eef8;--muted:#c4b5d4}
-*{box-sizing:border-box}
-html,body{margin:0;height:100%;font-family:system-ui,sans-serif;background:var(--bg);color:var(--text)}
-.shell{display:flex;height:100%;min-height:100vh;min-height:100dvh}
-.sidebar{width:260px;background:#1a1224;border-right:1px solid var(--border);padding:1rem .75rem;overflow-y:auto;flex-shrink:0}
-.sidebar h2{margin:0 0 1rem;font-size:1rem;background:linear-gradient(90deg,#f9a8d4,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
-.nav-item{display:flex;align-items:center;gap:0.55rem;padding:0.7rem 0.75rem;border-radius:12px;border:none;background:transparent;color:var(--muted);font-weight:700;font-size:0.88rem;cursor:pointer;width:100%;text-align:left;min-height:44px}
-.nav-item .emoji{font-size:1.1rem}
-.nav-item:hover,.nav-item.active{background:rgba(236,72,153,.22);color:#fff}
-.main{flex:1;display:flex;flex-direction:column;min-width:0}
-.topbar{display:flex;align-items:center;gap:.75rem;padding:.65rem 1rem;border-bottom:1px solid var(--border);background:rgba(15,10,20,.95);box-sizing:border-box;z-index:40}
-.topbar button#btn-menu{background:rgba(255,255,255,.08);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:.45rem .7rem;font-weight:700;cursor:pointer}
-#view-title{font-weight:800;font-size:1rem}
-.content{flex:1;position:relative;overflow:hidden}
-.view{display:none;height:100%;overflow:auto}
-.view.active{display:block}
-.module-frame{width:100%;height:100%;border:0;display:block;background:var(--bg)}
-.dashboard{padding:1.25rem;max-width:960px;margin:0 auto}
-.area-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem}
-.area-card{background:rgba(28,20,40,.9);border:1px solid var(--border);border-radius:16px;padding:1rem;cursor:pointer}
-.area-card h3{margin:.5rem 0 .25rem;font-size:.95rem}
-.area-card p{margin:0;font-size:.75rem;color:var(--muted)}
-.card-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.25rem}
-.enter-btn{margin-top:.65rem;border:none;border-radius:10px;padding:.35rem .65rem;background:rgba(236,72,153,.25);color:#fbcfe8;font-weight:700;font-size:.72rem;cursor:pointer}
-@media(max-width:800px){
-  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:50;transform:translateX(-105%);transition:transform .2s;padding-top:max(1rem,env(safe-area-inset-top,0px))}
-  .sidebar.open{transform:translateX(0)}
-}
-</style>
+<link rel="stylesheet" href="mary-ui.css?v=fase1">
 </head>
 <body>
 <div class="shell">
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
   <aside class="sidebar" id="sidebar">
-    <h2>MARY Life</h2>
-    <button type="button" class="nav-item" data-view="dashboard" onclick="navigateTo('dashboard')"><span class="emoji">🏠</span> Dashboard</button>
-    <button type="button" class="nav-item" data-view="poker" onclick="navigateTo('poker')"><span class="emoji">♠️</span> Póker</button>
-    <button type="button" class="nav-item" data-view="fitness" onclick="navigateTo('fitness')"><span class="emoji">💪</span> Fitness</button>
-    <button type="button" class="nav-item" data-view="entreno" onclick="navigateTo('entreno')"><span class="emoji">🩹</span> Entreno / rehab</button>
-    <button type="button" class="nav-item" data-view="espiritual" onclick="navigateTo('espiritual')"><span class="emoji">✝️</span> Espiritual</button>
-    <button type="button" class="nav-item" data-view="planner" onclick="navigateTo('planner')"><span class="emoji">📅</span> Daily Planner</button>
-    <button type="button" class="nav-item" data-view="pendientes" onclick="navigateTo('pendientes')"><span class="emoji">✅</span> Pendientes</button>
-    <button type="button" class="nav-item" data-view="calificaciones" onclick="navigateTo('calificaciones')"><span class="emoji">📊</span> Calificaciones</button>
-    <button type="button" class="nav-item" data-view="alimentacion" onclick="navigateTo('alimentacion')"><span class="emoji">🍽️</span> Alimentación</button>
-    <button type="button" class="nav-item" data-view="checklist" onclick="navigateTo('checklist')"><span class="emoji">☑️</span> Checklist</button>
-    <button type="button" class="nav-item" data-view="gastos" onclick="navigateTo('gastos')"><span class="emoji">💰</span> Gastos</button>
-    <button type="button" class="nav-item" data-view="metas" onclick="navigateTo('metas')"><span class="emoji">🎯</span> Metas</button>
-    <button type="button" class="nav-item" data-view="guia" onclick="navigateTo('guia')"><span class="emoji">📖</span> Guía</button>
-    <button type="button" class="nav-item" data-view="convicciones" onclick="navigateTo('convicciones')"><span class="emoji">✝️</span> Convicciones</button>
-    <button type="button" class="nav-item" data-view="cierre" onclick="navigateTo('cierre')"><span class="emoji">📋</span> Cierres</button>
-    <button type="button" class="nav-item" data-view="resumenes" onclick="navigateTo('resumenes')"><span class="emoji">📝</span> Resúmenes</button>
+    <div class="sidebar-brand">
+      <div class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 21s-7-4.35-7-10a4 4 0 0 1 7-2.65A4 4 0 0 1 19 11c0 5.65-7 10-7 10z" fill="#fff" stroke="none"/></svg>
+      </div>
+      <div>
+        <h2>Mary Life</h2>
+        <p class="sub">Suite personal</p>
+      </div>
+    </div>
+
+    <button type="button" class="nav-item active" data-view="dashboard" onclick="navigateTo('dashboard')">
+      <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
+      Inicio
+    </button>
+
+    <div class="nav-group">Vida</div>
+    <button type="button" class="nav-item" data-view="fitness" onclick="navigateTo('fitness')">
+      <svg viewBox="0 0 24 24"><path d="M6.5 6.5h11v11h-11z"/><path d="M4 10h2M18 10h2M4 14h2M18 14h2M10 4v2M14 4v2M10 18v2M14 18v2"/></svg>
+      Fitness
+    </button>
+    <button type="button" class="nav-item" data-view="entreno" onclick="navigateTo('entreno')">
+      <svg viewBox="0 0 24 24"><path d="M4 12h4l2-3 4 6 2-3h4"/><circle cx="12" cy="12" r="9"/></svg>
+      Entreno / rehab
+    </button>
+    <button type="button" class="nav-item" data-view="alimentacion" onclick="navigateTo('alimentacion')">
+      <svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M7 8c0-2.5 2.2-4 5-4s5 1.5 5 4-2.2 3-5 3-5 1.2-5 3 2.2 4 5 4 5-1.5 5-4"/></svg>
+      Alimentación
+    </button>
+    <button type="button" class="nav-item" data-view="espiritual" onclick="navigateTo('espiritual')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M9.5 10.5h5"/></svg>
+      Espiritual
+    </button>
+    <button type="button" class="nav-item" data-view="convicciones" onclick="navigateTo('convicciones')">
+      <svg viewBox="0 0 24 24"><path d="M12 3 4 7v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V7l-8-4z"/></svg>
+      Convicciones
+    </button>
+
+    <div class="nav-group">Trabajo</div>
+    <button type="button" class="nav-item" data-view="calificaciones" onclick="navigateTo('calificaciones')">
+      <svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16v-5"/><path d="M12 16V8"/><path d="M16 16v-3"/></svg>
+      Calificaciones
+    </button>
+    <button type="button" class="nav-item" data-view="checklist" onclick="navigateTo('checklist')">
+      <svg viewBox="0 0 24 24"><path d="M9 11 12 14 20 6"/><path d="M4 6h5"/><path d="M4 12h5"/><path d="M4 18h16"/></svg>
+      Checklist
+    </button>
+    <button type="button" class="nav-item" data-view="cierre" onclick="navigateTo('cierre')">
+      <svg viewBox="0 0 24 24"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>
+      Cierres
+    </button>
+    <button type="button" class="nav-item" data-view="resumenes" onclick="navigateTo('resumenes')">
+      <svg viewBox="0 0 24 24"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+      Resúmenes
+    </button>
+    <button type="button" class="nav-item" data-view="pendientes" onclick="navigateTo('pendientes')">
+      <svg viewBox="0 0 24 24"><path d="M9 11 12 14 20 6"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
+      Pendientes
+    </button>
+
+    <div class="nav-group">Finanzas y póker</div>
+    <button type="button" class="nav-item" data-view="poker" onclick="navigateTo('poker')">
+      <svg viewBox="0 0 24 24"><path d="M12 3 4 8v8l8 5 8-5V8l-8-5z"/><path d="M12 12 4 8"/><path d="M12 12v9"/><path d="m12 12 8-4"/></svg>
+      Póker
+    </button>
+    <button type="button" class="nav-item" data-view="gastos" onclick="navigateTo('gastos')">
+      <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      Gastos
+    </button>
+
+    <div class="nav-group">Planificación</div>
+    <button type="button" class="nav-item" data-view="planner" onclick="navigateTo('planner')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M3 11h18"/></svg>
+      Planner
+    </button>
+    <button type="button" class="nav-item" data-view="metas" onclick="navigateTo('metas')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>
+      Metas
+    </button>
+    <button type="button" class="nav-item" data-view="guia" onclick="navigateTo('guia')">
+      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Guía
+    </button>
   </aside>
+
   <div class="main">
     <div class="topbar">
-      <button type="button" id="btn-menu" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-      <span id="view-title">Dashboard</span>
+      <button type="button" id="btn-menu" onclick="openSidebar()" aria-label="Menú">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg>
+        Menú
+      </button>
+      <div id="view-title">Inicio</div>
     </div>
     <div class="content">
       <div id="view-dashboard" class="view active">
         <div class="dashboard">
-          <h2 style="margin-top:0">Áreas</h2>
+          <div class="dash-hero">
+            <h1>Hola, Mary</h1>
+            <p>Resumen del día · abre cualquier área cuando quieras</p>
+          </div>
+
+          <div class="summary-grid">
+            <div class="summary-card">
+              <div class="label">
+                <svg viewBox="0 0 24 24"><path d="M9 11 12 14 20 6"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg>
+                Pendientes abiertos
+              </div>
+              <div class="value" id="sum-pendientes">—</div>
+              <div class="hint" id="sum-pendientes-hint">Sin dato seguro en este shell</div>
+            </div>
+            <div class="summary-card">
+              <div class="label">
+                <svg viewBox="0 0 24 24"><path d="M9 11 12 14 20 6"/><path d="M4 6h5"/><path d="M4 12h5"/><path d="M4 18h16"/></svg>
+                Checklist del día
+              </div>
+              <div class="value" id="sum-checklist">—</div>
+              <div class="hint" id="sum-checklist-hint">Sin dato seguro en este shell</div>
+            </div>
+            <div class="summary-card">
+              <div class="label">
+                <svg viewBox="0 0 24 24"><path d="M4 12h4l2-3 4 6 2-3h4"/><circle cx="12" cy="12" r="9"/></svg>
+                Próximo entreno
+              </div>
+              <div class="value" id="sum-entreno" style="font-size:1.05rem">—</div>
+              <div class="hint" id="sum-entreno-hint">Si hay historial local, se muestra aquí</div>
+            </div>
+            <div class="summary-card">
+              <div class="label">
+                <svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M7 8c0-2.5 2.2-4 5-4s5 1.5 5 4-2.2 3-5 3-5 1.2-5 3 2.2 4 5 4 5-1.5 5-4"/></svg>
+                Macros de hoy
+              </div>
+              <div class="value" id="sum-macros">—</div>
+              <div class="hint" id="sum-macros-hint">Sin dato seguro en este shell</div>
+            </div>
+          </div>
+
+          <div class="section-title">Vida</div>
           <div class="area-grid">
-            <div class="area-card" onclick="navigateTo('poker')"><div class="card-icon" style="background:linear-gradient(135deg,#581c87,#c084fc);">♠️</div><h3>Póker</h3><p>Sesiones y bankroll</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('fitness')"><div class="card-icon" style="background:linear-gradient(135deg,#be123c,#fb7185);">💪</div><h3>Fitness</h3><p>Entrenamiento</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('entreno')"><div class="card-icon" style="background:linear-gradient(135deg,#9d174d,#f9a8d4);">🩹</div><h3>Entreno / rehab</h3><p>Rutina v3 · fisio · gym</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('alimentacion')"><div class="card-icon" style="background:linear-gradient(135deg,#b45309,#fcd34d);">🍽️</div><h3>Alimentación</h3><p>Macros y salsas</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('calificaciones')"><div class="card-icon" style="background:linear-gradient(135deg,#6d28d9,#c4b5fd);">📊</div><h3>Calificaciones</h3><p>Equipo y bonos</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('checklist')"><div class="card-icon" style="background:linear-gradient(135deg,#0e7490,#67e8f9);">☑️</div><h3>Checklist</h3><p>Operativa del día</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('planner')"><div class="card-icon" style="background:linear-gradient(135deg,#1d4ed8,#93c5fd);">📅</div><h3>Planner</h3><p>Día a día</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('pendientes')"><div class="card-icon" style="background:linear-gradient(135deg,#a21caf,#f0abfc);">✅</div><h3>Pendientes</h3><p>Tareas abiertas</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('gastos')"><div class="card-icon" style="background:linear-gradient(135deg,#047857,#6ee7b7);">💰</div><h3>Gastos</h3><p>Dinero</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('metas')"><div class="card-icon" style="background:linear-gradient(135deg,#1d4ed8,#93c5fd);">🎯</div><h3>Metas</h3><p>Objetivos y retos</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('espiritual')"><div class="card-icon" style="background:linear-gradient(135deg,#7c3aed,#f0abfc);">✝️</div><h3>Espiritual</h3><p>Devocional</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('convicciones')"><div class="card-icon" style="background:linear-gradient(135deg,#7c3aed,#f0abfc);">✝️</div><h3>Convicciones</h3><p>21 pilares</p><button type="button" class="enter-btn">Abrir</button></div>
+            <div class="area-card" onclick="navigateTo('fitness')"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M6.5 6.5h11v11h-11z"/><path d="M4 10h2M18 10h2M4 14h2M18 14h2M10 4v2M14 4v2M10 18v2M14 18v2"/></svg></div><h3>Fitness</h3><p>Peso, medidas, cardio</p><button type="button" class="enter-btn">Abrir</button></div>
+            <div class="area-card" onclick="navigateTo('entreno')"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M4 12h4l2-3 4 6 2-3h4"/><circle cx="12" cy="12" r="9"/></svg></div><h3>Entreno / rehab</h3><p>Rutinas y registro</p><button type="button" class="enter-btn">Abrir</button></div>
+            <div class="area-card" onclick="navigateTo('alimentacion')"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M7 8c0-2.5 2.2-4 5-4s5 1.5 5 4-2.2 3-5 3-5 1.2-5 3 2.2 4 5 4 5-1.5 5-4"/></svg></div><h3>Alimentación</h3><p>Macros y salsas</p><button type="button" class="enter-btn">Abrir</button></div>
+            <div class="area-card" onclick="navigateTo('espiritual')"><div class="card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M9.5 10.5h5"/></svg></div><h3>Espiritual</h3><p>Devocional</p><button type="button" class="enter-btn">Abrir</button></div>
+            <div class="area-card" onclick="navigateTo('convicciones')"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 3 4 7v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V7l-8-4z"/></svg></div><h3>Convicciones</h3><p>Pilares</p><button type="button" class="enter-btn">Abrir</button></div>
+          </div>
+
+          <div class="section-title">Trabajo</div>
+          <div class="area-grid">
+            <div class="area-card" onclick="navigateTo('calificaciones')"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16v-5"/><path d="M12 16V8"/><path d="M16 16v-3"/></svg></div><h3>Calificaciones</h3><p>Cierres y bonos</p><button type="button" class="enter-btn">Abrir</button></div>
+            <div class="area-card" onclick="navigateTo('checklist')"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M9 11 12 14 20 6"/><path d="M4 6h5"/><path d="M4 12h5"/><path d="M4 18h16"/></svg></div><h3>Checklist</h3><p>Oficina y verificación</p><button type="button" class="enter-btn">Abrir</button></div>
+            <div class="area-card" onclick="navigateTo('cierre')"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><h3>Cierres</h3><p>Cierre diario</p><button type="button" class="enter-btn">Abrir</button></div>
+            <div class="area-card" onclick="navigateTo('resumenes')"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/></svg></div><h3>Resúmenes</h3><p>Reportes</p><button type="button" class="enter-btn">Abrir</button></div>
+            <div class="area-card" onclick="navigateTo('pendientes')"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M9 11 12 14 20 6"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg></div><h3>Pendientes</h3><p>Seguimiento</p><button type="button" class="enter-btn">Abrir</button></div>
+          </div>
+
+          <div class="section-title">Finanzas y póker</div>
+          <div class="area-grid">
+            <div class="area-card" onclick="navigateTo('poker')"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 3 4 8v8l8 5 8-5V8l-8-5z"/></svg></div><h3>Póker</h3><p>Sesiones y bankroll</p><button type="button" class="enter-btn">Abrir</button></div>
+            <div class="area-card" onclick="navigateTo('gastos')"><div class="card-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></div><h3>Gastos</h3><p>Presupuesto</p><button type="button" class="enter-btn">Abrir</button></div>
+          </div>
+
+          <div class="section-title">Planificación</div>
+          <div class="area-grid">
+            <div class="area-card" onclick="navigateTo('planner')"><div class="card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M3 11h18"/></svg></div><h3>Planner</h3><p>Día a día</p><button type="button" class="enter-btn">Abrir</button></div>
+            <div class="area-card" onclick="navigateTo('metas')"><div class="card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></div><h3>Metas</h3><p>That Girl Challenge</p><button type="button" class="enter-btn">Abrir</button></div>
+            <div class="area-card" onclick="navigateTo('guia')"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><h3>Guía</h3><p>Referencia</p><button type="button" class="enter-btn">Abrir</button></div>
           </div>
         </div>
       </div>
+
       <div id="view-poker" class="view"><iframe class="module-frame" src="poker.html" title="Póker"></iframe></div>
       <div id="view-fitness" class="view"><iframe class="module-frame" src="fitness.html" title="Fitness"></iframe></div>
       <div id="view-entreno" class="view"><iframe class="module-frame" src="entreno-rehab.html" title="Entreno / rehab"></iframe></div>
@@ -101,22 +196,112 @@ html,body{margin:0;height:100%;font-family:system-ui,sans-serif;background:var(-
     </div>
   </div>
 </div>
+
+<nav class="bottom-nav" aria-label="Navegación principal">
+  <button type="button" class="active" data-view="dashboard" onclick="navigateTo('dashboard')">
+    <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+    Inicio
+  </button>
+  <button type="button" data-view="checklist" onclick="navigateTo('checklist')">
+    <svg viewBox="0 0 24 24"><path d="M9 11 12 14 20 6"/><path d="M4 6h5"/><path d="M4 12h5"/><path d="M4 18h16"/></svg>
+    Checklist
+  </button>
+  <button type="button" data-view="entreno" onclick="navigateTo('entreno')">
+    <svg viewBox="0 0 24 24"><path d="M4 12h4l2-3 4 6 2-3h4"/><circle cx="12" cy="12" r="9"/></svg>
+    Entreno
+  </button>
+  <button type="button" data-view="alimentacion" onclick="navigateTo('alimentacion')">
+    <svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M7 8c0-2.5 2.2-4 5-4s5 1.5 5 4-2.2 3-5 3-5 1.2-5 3 2.2 4 5 4 5-1.5 5-4"/></svg>
+    Comida
+  </button>
+  <button type="button" onclick="openMore()">
+    <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
+    Más
+  </button>
+</nav>
+
+<div class="more-sheet" id="more-sheet" onclick="if(event.target===this)closeMore()">
+  <div class="sheet">
+    <h3>Más secciones</h3>
+    <button type="button" class="nav-item" onclick="navigateTo('calificaciones');closeMore()">Calificaciones</button>
+    <button type="button" class="nav-item" onclick="navigateTo('pendientes');closeMore()">Pendientes</button>
+    <button type="button" class="nav-item" onclick="navigateTo('cierre');closeMore()">Cierres</button>
+    <button type="button" class="nav-item" onclick="navigateTo('resumenes');closeMore()">Resúmenes</button>
+    <button type="button" class="nav-item" onclick="navigateTo('fitness');closeMore()">Fitness</button>
+    <button type="button" class="nav-item" onclick="navigateTo('planner');closeMore()">Planner</button>
+    <button type="button" class="nav-item" onclick="navigateTo('metas');closeMore()">Metas</button>
+    <button type="button" class="nav-item" onclick="navigateTo('gastos');closeMore()">Gastos</button>
+    <button type="button" class="nav-item" onclick="navigateTo('poker');closeMore()">Póker</button>
+    <button type="button" class="nav-item" onclick="navigateTo('espiritual');closeMore()">Espiritual</button>
+    <button type="button" class="nav-item" onclick="navigateTo('convicciones');closeMore()">Convicciones</button>
+    <button type="button" class="nav-item" onclick="navigateTo('guia');closeMore()">Guía</button>
+  </div>
+</div>
+
 <script>
+var TITLES = {
+  dashboard:'Inicio', poker:'Póker', fitness:'Fitness', entreno:'Entreno / rehab',
+  espiritual:'Espiritual', planner:'Daily Planner', pendientes:'Pendientes',
+  calificaciones:'Calificaciones', alimentacion:'Alimentación', checklist:'Checklist',
+  gastos:'Gastos', metas:'Metas', guia:'Guía', convicciones:'Convicciones',
+  cierre:'Cierres', resumenes:'Resúmenes'
+};
+
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-backdrop').classList.add('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-backdrop').classList.remove('open');
+}
+function openMore(){ document.getElementById('more-sheet').classList.add('open'); }
+function closeMore(){ document.getElementById('more-sheet').classList.remove('open'); }
+
 function navigateTo(view){
   document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
-  document.querySelectorAll('.nav-item').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-view')===view); });
+  document.querySelectorAll('.nav-item').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-view')===view);
+  });
+  document.querySelectorAll('.bottom-nav button[data-view]').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-view')===view);
+  });
   var el = document.getElementById('view-'+view);
   if(el) el.classList.add('active');
-  var titles = {
-    dashboard:'Dashboard', poker:'Póker', fitness:'Fitness', entreno:'Entreno / rehab',
-    espiritual:'Espiritual', planner:'Daily Planner', pendientes:'Pendientes',
-    calificaciones:'Calificaciones', alimentacion:'Alimentación', checklist:'Checklist',
-    gastos:'Gastos', metas:'Metas', guia:'Guía', convicciones:'Convicciones',
-    cierre:'Cierres', resumenes:'Resúmenes'
-  };
-  document.getElementById('view-title').textContent = titles[view] || view;
-  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('view-title').textContent = TITLES[view] || view;
+  closeSidebar();
+  closeMore();
+  if(view==='dashboard') refreshSummary();
 }
+
+function todayISO(){
+  var d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+/** Solo lee localStorage de este origen. No inventa datos de Firebase ni de iframes. */
+function refreshSummary(){
+  try {
+    var raw = localStorage.getItem('mary_entreno_rehab_v1');
+    var data = raw ? JSON.parse(raw) : null;
+    var sessions = (data && data.sessions) ? data.sessions : [];
+    if(sessions.length){
+      var s = sessions[0];
+      document.getElementById('sum-entreno').textContent = (s.title || 'Sesión') + '';
+      document.getElementById('sum-entreno-hint').textContent = (s.date || '') + (s.durationMin ? (' · '+s.durationMin+' min') : '');
+    } else {
+      document.getElementById('sum-entreno').textContent = '—';
+      document.getElementById('sum-entreno-hint').textContent = 'Sin sesiones en este dispositivo';
+    }
+  } catch(e) {
+    document.getElementById('sum-entreno').textContent = '—';
+  }
+  document.getElementById('sum-pendientes').textContent = '—';
+  document.getElementById('sum-checklist').textContent = '—';
+  document.getElementById('sum-macros').textContent = '—';
+}
+
+refreshSummary();
 </script>
 </body>
 </html>
