@@ -48,6 +48,8 @@ textarea{min-height:80px;resize:vertical}
 .toast.show{transform:translateX(-50%) translateY(0)}
 input[type=range]{accent-color:#ec4899;background:transparent}
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -55,6 +57,7 @@ input[type=range]{accent-color:#ec4899;background:transparent}
     <div>
       <h1>📅 Daily Planner</h1>
       <p class="muted" style="margin:0.2rem 0 0">Métricas · planner · reflexión · nube</p>
+      <p id="sync-status" class="muted" style="margin:0.15rem 0 0;font-size:0.68rem">Sincronizando…</p>
     </div>
     <input type="date" id="day" style="width:auto;min-width:140px">
   </div>
@@ -133,11 +136,71 @@ input[type=range]{accent-color:#ec4899;background:transparent}
   const LS='mary_planner_v1';
   const MOODS=['Motivada','Enfocada','Tranquila','Alegre','Agradecida','Cansada','Ansiosa','Bajoneada','Irritable','Insegura','Ilusionada','Contenta','Neutral','Pensativa','Apática','Desmotivada','Emocionada','Serena'];
   const SYMP=['Dolor de cabeza','Cólicos','Hinchazón','Antojo','Fatiga','Insomnio','Dolor de espalda','Náusea','Irritabilidad física','Acné','Ninguno'];
-  let store={days:{}};
+  let store={days:{}, updatedAt:0};
   try{const r=localStorage.getItem(LS);if(r)store=JSON.parse(r);if(!store.days)store.days={};}catch(e){}
+
+  var db=null;
+  try{
+    if(!firebase.apps.length){
+      firebase.initializeApp({
+        apiKey:"AIzaSyCnhvfyXpwJdYOQFCvsyHDhgW9F3X7ARR4",
+        authDomain:"marpk-816dd.firebaseapp.com",
+        projectId:"marpk-816dd",
+        storageBucket:"marpk-816dd.firebasestorage.app",
+        messagingSenderId:"189644122232",
+        appId:"1:189644122232:web:ed7894f1510a373d44658d"
+      });
+    }
+    db=firebase.firestore();
+  }catch(e){ console.warn(e); }
+
+  function setSync(m){ var el=document.getElementById('sync-status'); if(el) el.textContent=m||''; }
+  function saveLocal(){ try{ localStorage.setItem(LS, JSON.stringify(store)); }catch(e){} }
+  function mergePlanner(local, remote){
+    if(!remote) return local||{days:{},updatedAt:0};
+    if(!local) return remote;
+    var out={days:{}, updatedAt: Math.max(local.updatedAt||0, remote.updatedAt||0)};
+    var keys={};
+    Object.keys(local.days||{}).forEach(function(k){ keys[k]=1; });
+    Object.keys(remote.days||{}).forEach(function(k){ keys[k]=1; });
+    Object.keys(keys).forEach(function(k){
+      var a=(local.days||{})[k], b=(remote.days||{})[k];
+      if(a && b) out.days[k] = ((a.updatedAt||0) >= (b.updatedAt||0)) ? a : b;
+      else out.days[k] = a || b;
+    });
+    return out;
+  }
+  async function loadCloud(){
+    if(!db){ setSync('Solo local (sin nube)'); return; }
+    try{
+      setSync('Sincronizando…');
+      var snap=await db.collection('mary_planner').doc('data').get();
+      if(snap.exists){
+        store=mergePlanner(store, snap.data()||{});
+        saveLocal();
+      }
+      setSync('☁ Firebase listo · celular ↔ PC');
+    }catch(e){
+      console.warn(e);
+      setSync('Local (error al sincronizar)');
+    }
+  }
+  async function saveCloud(){
+    store.updatedAt=Date.now();
+    saveLocal();
+    if(!db){ setSync('Guardado solo local'); return; }
+    try{
+      await db.collection('mary_planner').doc('data').set({ days: store.days||{}, updatedAt: store.updatedAt }, {merge:true});
+      setSync('☁ Guardado · '+new Date().toLocaleTimeString());
+    }catch(e){
+      console.warn(e);
+      setSync('Guardado local (error nube)');
+    }
+  }
+
   function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
   function toast(m){const t=document.getElementById('toast');t.textContent=m||'Guardado ✓';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
-  function empty(){return{moods:[],symptoms:[],enAct:5,enRest:5,sleepH:'',sleepQ:5,steps:'',water:'',creatina:'No',magnesio:'No',dulce:'No',bible:'',todos:[],habits:[],grat:'',best:'',improve:'',notes:''};}
+  function empty(){return{updatedAt:0,moods:[],symptoms:[],enAct:5,enRest:5,sleepH:'',sleepQ:5,steps:'',water:'',creatina:'No',magnesio:'No',dulce:'No',bible:'',todos:[],habits:[],grat:'',best:'',improve:'',notes:''};}
   function getDay(){const day=document.getElementById('day').value||today();if(!store.days[day])store.days[day]=empty();return store.days[day];}
   window.showT=function(t){
     document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
@@ -208,7 +271,12 @@ input[type=range]{accent-color:#ec4899;background:transparent}
     d.improve=document.getElementById('improve').value;
     d.notes=document.getElementById('notes').value;
   }
-  window.saveDay=function(){collect();try{localStorage.setItem(LS,JSON.stringify(store));}catch(e){}toast('💾 Día guardado');};
+  window.saveDay=function(){
+    collect();
+    var d=getDay();
+    d.updatedAt=Date.now();
+    saveCloud().then(function(){ toast('💾 Día guardado · nube'); });
+  };
   window.addTodo=function(){const v=document.getElementById('newTodo').value.trim();if(!v)return;getDay().todos.push({text:v,done:false});document.getElementById('newTodo').value='';renderLists();};
   window.addHabit=function(){const v=document.getElementById('newHabit').value.trim();if(!v)return;getDay().habits.push({name:v,done:false});document.getElementById('newHabit').value='';renderLists();};
   window.copySum=function(){
@@ -226,6 +294,7 @@ input[type=range]{accent-color:#ec4899;background:transparent}
   document.getElementById('day').value=today();
   document.getElementById('day').addEventListener('change',function(){fillForm();});
   fillForm();
+  loadCloud().then(function(){ fillForm(); });
 })();
 </script>
 </body>
