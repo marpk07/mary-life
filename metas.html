@@ -10,9 +10,125 @@
 <div id="boot" style="padding:1.5rem;text-align:center;color:#c4b5d4">Cargando That Girl Challenge…</div>
 <script>
 (function(){
-  fetch('metas-full.html?v=cloud1')
+  var DARK = '<link rel="stylesheet" href="mary-theme.css">'
+    + '<style id="mary-metas-dark">'
+    + 'html,body{background:#0f0a14!important;color:#f5eef8!important;color-scheme:dark!important}'
+    + 'body{background:radial-gradient(circle at 15% 10%,rgba(244,114,182,.12),transparent 42%),radial-gradient(circle at 90% 90%,rgba(167,139,250,.1),transparent 42%),#0f0a14!important;color:#f5eef8!important}'
+    + '.glass,.card,.goal-card,[class*="rounded-xl"],[class*="rounded-2xl"]{background:rgba(28,20,40,.95)!important;color:#f5eef8!important;border:1px solid rgba(244,114,182,.18)!important;box-shadow:0 8px 28px rgba(0,0,0,.35)!important}'
+    + '.bg-white,.bg-pink-50,.bg-amber-50,.bg-emerald-50,.bg-slate-50,.bg-gray-50,.bg-fuchsia-50{background:rgba(36,27,50,.95)!important;color:#f5eef8!important}'
+    + '.text-pink-800,.text-pink-900,.text-stone-500,.text-stone-600,.text-gray-500,.text-gray-600,.muted{color:#c4b5d4!important}'
+    + '.text-pink-700{color:#f9a8d4!important}.text-amber-700{color:#fbbf24!important}.text-emerald-700{color:#6ee7b7!important}'
+    + 'input,textarea,select{background:#241b32!important;color:#f5eef8!important;border:1px solid rgba(244,114,182,.28)!important}'
+    + 'input::placeholder,textarea::placeholder{color:#a89bb5!important}'
+    + '.bar{background:rgba(255,255,255,.08)!important}.bar-obj i,.bar>i{background:linear-gradient(90deg,#ec4899,#a78bfa)!important}'
+    + '.tab{background:rgba(255,255,255,.06)!important;color:#c4b5d4!important;border:1px solid transparent!important}'
+    + '.tab.on{background:rgba(236,72,153,.28)!important;color:#fff!important;border-color:rgba(244,114,182,.4)!important}'
+    + '.btn,.btn-main{background:linear-gradient(135deg,#ec4899,#a78bfa)!important;color:#fff!important;border:none!important}'
+    + '.btn-ghost{background:rgba(255,255,255,.06)!important;color:#f5eef8!important;border:1px solid rgba(244,114,182,.22)!important}'
+    + 'label,.lbl{color:#c4b5d4!important}h1,h2,h3,h4,.num{color:#f5eef8!important}'
+    + '.modal{background:rgba(28,20,40,.98)!important;color:#f5eef8!important;border:1px solid rgba(244,114,182,.25)!important}'
+    + '.goal-card .font-black,.goal-card b,.font-black{color:#f5eef8!important}'
+    + '</style>'
+    + '<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"><\/script>'
+    + '<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"><\/script>';
+
+  var CLOUD = "\n"
+    + "  var db=null;\n"
+    + "  try{\n"
+    + "    if(!firebase.apps.length){\n"
+    + "      firebase.initializeApp({\n"
+    + "        apiKey:'AIzaSyCnhvfyXpwJdYOQFCvsyHDhgW9F3X7ARR4',\n"
+    + "        authDomain:'marpk-816dd.firebaseapp.com',\n"
+    + "        projectId:'marpk-816dd',\n"
+    + "        storageBucket:'marpk-816dd.firebasestorage.app',\n"
+    + "        messagingSenderId:'189644122232',\n"
+    + "        appId:'1:189644122232:web:ed7894f1510a373d44658d'\n"
+    + "      });\n"
+    + "    }\n"
+    + "    db=firebase.firestore();\n"
+    + "  }catch(e){ console.warn(e); }\n"
+    + "  function setSync(m){ var el=document.getElementById('sync-status'); if(el) el.textContent=m||''; }\n"
+    + "  function mergeMetas(local, remote){\n"
+    + "    if(!remote) return local||{goals:[],days:{},reflexiones:{},updatedAt:0};\n"
+    + "    if(!local) return remote;\n"
+    + "    var out = Object.assign({}, remote, local);\n"
+    + "    out.updatedAt = Math.max(local.updatedAt||0, remote.updatedAt||0);\n"
+    + "    out.days = Object.assign({}, remote.days||{}, local.days||{});\n"
+    + "    var keys={}; Object.keys(remote.days||{}).forEach(function(k){keys[k]=1;}); Object.keys(local.days||{}).forEach(function(k){keys[k]=1;});\n"
+    + "    Object.keys(keys).forEach(function(k){\n"
+    + "      var a=(local.days||{})[k], b=(remote.days||{})[k];\n"
+    + "      if(a && b && typeof a==='object' && typeof b==='object'){\n"
+    + "        out.days[k] = ((a.updatedAt||0)>=(b.updatedAt||0)) ? Object.assign({}, b, a) : Object.assign({}, a, b);\n"
+    + "      } else out.days[k] = a||b;\n"
+    + "    });\n"
+    + "    var gmap={};\n"
+    + "    (remote.goals||[]).forEach(function(g){ if(g&&g.id) gmap[g.id]=g; });\n"
+    + "    (local.goals||[]).forEach(function(g){ if(g&&g.id) gmap[g.id]=g; });\n"
+    + "    out.goals = Object.keys(gmap).map(function(k){ return gmap[k]; });\n"
+    + "    out.reflexiones = Object.assign({}, remote.reflexiones||{}, local.reflexiones||{});\n"
+    + "    return out;\n"
+    + "  }\n"
+    + "  async function loadCloud(){\n"
+    + "    if(!db){ setSync('Solo local (sin nube)'); return; }\n"
+    + "    try{\n"
+    + "      setSync('Sincronizando…');\n"
+    + "      var snap=await db.collection('mary_metas').doc('data').get();\n"
+    + "      if(snap.exists){\n"
+    + "        store=mergeMetas(store, snap.data()||{});\n"
+    + "        try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){}\n"
+    + "      }\n"
+    + "      setSync('☁ Firebase listo · celular ↔ PC');\n"
+    + "    }catch(e){\n"
+    + "      console.warn(e);\n"
+    + "      setSync('Local (error al sincronizar)');\n"
+    + "    }\n"
+    + "  }\n"
+    + "  async function saveCloud(){\n"
+    + "    if(!store) return;\n"
+    + "    store.updatedAt=Date.now();\n"
+    + "    try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){}\n"
+    + "    if(!db){ setSync('Guardado solo local'); return; }\n"
+    + "    try{\n"
+    + "      await db.collection('mary_metas').doc('data').set(JSON.parse(JSON.stringify(store)), {merge:true});\n"
+    + "      setSync('☁ Guardado · '+new Date().toLocaleTimeString());\n"
+    + "    }catch(e){\n"
+    + "      console.warn(e);\n"
+    + "      setSync('Guardado local (error nube)');\n"
+    + "    }\n"
+    + "  }\n";
+
+  fetch('https://cdn.jsdelivr.net/gh/marpk07/mary-life@0cf6fb1173f6f5a901f35db7d4b352b24f2e0311/metas.html')
     .then(function(r){ return r.text(); })
     .then(function(html){
+      html = html.replace(/body\{[^}]+\}/,'body{font-family:Plus Jakarta Sans,system-ui,sans-serif;margin:0;min-height:100vh;color:#f5eef8;background:#0f0a14}');
+      if(html.indexOf('mary-metas-dark')<0){
+        html = html.replace('</title>','</title>'+DARK);
+      } else if(html.indexOf('firebase-app-compat')<0){
+        html = html.replace('</head>', DARK.replace(/<link[^>]+>/,'') + '</head>');
+      }
+      // status line
+      if(html.indexOf('sync-status')<0){
+        html = html.replace(/<h1[^>]*>[\s\S]*?<\/h1>/, function(m){
+          return m + '<p id="sync-status" class="muted" style="margin:.25rem 0 0;font-size:.68rem;color:#c4b5d4">Sincronizando…</p>';
+        });
+      }
+      // inject cloud helpers after KEY var
+      if(html.indexOf('mary_metas')<0){
+        html = html.replace(
+          "var KEY='MARY_METAS_V2', CH='tgc_nov26', MONTH='2026-11', weekOffset=0, store=null;",
+          "var KEY='MARY_METAS_V2', CH='tgc_nov26', MONTH='2026-11', weekOffset=0, store=null;" + CLOUD
+        );
+      }
+      // save -> cloud
+      html = html.replace(
+        "function save(){localStorage.setItem(KEY,JSON.stringify(store));}",
+        "function save(){ saveCloud(); }"
+      );
+      // boot loadCloud
+      html = html.replace(
+        "seedChallenge(true);\n  showTab('dash');",
+        "seedChallenge(true);\n  showTab('dash');\n  loadCloud().then(function(){ try{ seedChallenge(false); }catch(e){} if(typeof renderAll==='function') renderAll(); });"
+      );
       document.open();
       document.write(html);
       document.close();
