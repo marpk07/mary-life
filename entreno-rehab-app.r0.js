@@ -1,4 +1,4 @@
-  function todayISO(){
+   function todayISO(){
     const d = new Date();
     return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   }
@@ -118,7 +118,7 @@
         planSets: ex.sets||1,
         skipped: false,
         note: '',
-        sets: Array.from({length: ex.sets||1}, ()=>({ reps:'', weight:'', unit:'lb', sec:'', rpe:'' }))
+        sets: Array.from({length: ex.sets||1}, ()=>({ reps:'', weight:'', unit:(t.kind==='gym'?'lb':'bw'), sec:'', rpe:'' }))
       })),
       pain: '', painWhere: '', painWhen: '',
       effort: '', durationMin: '', kcal: '', hrAvg: '', hrMax: '',
