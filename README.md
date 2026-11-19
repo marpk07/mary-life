@@ -12,7 +12,7 @@ Aplicación unificada que reúne las 4 áreas de tu vida:
 
 ## Diseño
 - Menú **lateral** (sidebar)
-- Colores unificados **rosado + morado**
+- Tema claro y femenino: **rosa, lila y morado suave**
 - Icono de **corazón** para el celular (PWA)
 
 ## Cómo desplegar en Vercel

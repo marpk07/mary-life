@@ -4,7 +4,7 @@
     var s = document.createElement('style');
     s.id = 'cl-mk-css';
     s.textContent =
-      '.item-row{display:grid;grid-template-columns:1fr auto;gap:.35rem;align-items:center;padding:.45rem .35rem;border-bottom:1px solid rgba(244,114,182,.1)}' +
+      '.item-row{display:grid;grid-template-columns:1fr auto;gap:.35rem;align-items:center;padding:.45rem .35rem;border-bottom:1px solid rgba(214,140,190,.1)}' +
       '.item-row:last-child{border-bottom:none}' +
       '.item-name{font-size:.82rem;line-height:1.3}' +
       '.marks{display:flex;gap:.25rem}' +
@@ -14,15 +14,15 @@
       '.mk.on-martin{background:rgba(167,139,250,.25);border-color:rgba(167,139,250,.5)}' +
       '.mk.on-post{background:rgba(251,191,36,.2);border-color:rgba(251,191,36,.45)}' +
       '.person-lbl{font-size:.58rem;font-weight:800;color:var(--muted);text-align:center;margin-bottom:.15rem}' +
-      '.group{border:1px solid var(--border);border-radius:14px;margin-bottom:.55rem;overflow:hidden;background:rgba(15,10,20,.3)}' +
+      '.group{border:1px solid var(--border);border-radius:14px;margin-bottom:.55rem;overflow:hidden;background:rgba(253,247,252,.3)}' +
       '.group-h{display:flex;align-items:center;justify-content:space-between;gap:.4rem;padding:.65rem .75rem;background:rgba(124,58,160,.25);cursor:pointer}' +
       '.group-h b{font-size:.85rem}' +
       '.group-body{padding:.35rem .55rem .55rem}' +
-      '.sub-list{margin:.2rem 0 .35rem;padding-left:.5rem;border-left:2px solid rgba(244,114,182,.25)}' +
+      '.sub-list{margin:.2rem 0 .35rem;padding-left:.5rem;border-left:2px solid rgba(214,140,190,.25)}' +
       '.sub-item{font-size:.78rem;padding:.3rem 0;display:flex;justify-content:space-between;align-items:center;gap:.3rem}' +
       '.sub-toggle{font-size:.72rem;color:var(--muted);cursor:pointer}' +
-      '.tpl-card{border:1px solid var(--border);border-radius:14px;padding:.7rem;margin-bottom:.45rem;background:rgba(15,10,20,.35);cursor:pointer}' +
-      '.tpl-card.on{border-color:rgba(244,114,182,.55);background:rgba(236,72,153,.12)}' +
+      '.tpl-card{border:1px solid var(--border);border-radius:14px;padding:.7rem;margin-bottom:.45rem;background:rgba(253,247,252,.35);cursor:pointer}' +
+      '.tpl-card.on{border-color:rgba(214,140,190,.55);background:rgba(236,72,153,.12)}' +
       '.tpl-card b{display:block;font-size:.88rem}' +
       '.sug{padding:.35rem 0}' +
       '@media(max-width:560px){.mk{width:32px;height:32px;font-size:.9rem}}';

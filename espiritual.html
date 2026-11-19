@@ -36,14 +36,14 @@
     .glass-card {
       background: rgba(255, 255, 255, 0.88);
       backdrop-filter: blur(16px);
-      border: 1px solid rgba(244, 114, 182, 0.4);
+      border: 1px solid rgba(214,140,190, 0.4);
       box-shadow: 0 15px 35px rgba(219, 39, 119, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
     }
 
     .glass-card-solid {
       background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(16px);
-      border: 1px solid rgba(244, 114, 182, 0.5);
+      border: 1px solid rgba(214,140,190, 0.5);
       box-shadow: 0 20px 40px rgba(219, 39, 119, 0.12), inset 0 1px 0 rgba(255, 255, 255, 1);
     }
 
@@ -64,6 +64,7 @@
       z-index: 99999 !important;
     }
   </style>
+<link rel="stylesheet" href="mary-theme.css">
 </head>
 <body class="min-h-screen flex flex-col antialiased">
 
@@ -843,7 +844,7 @@
           let booksHtml = '';
           BIBLE_CATEGORIES[testamento][catName].forEach(book => {
             const color = appData.bibleProgress[book] || '';
-            const style = color ? `background-color: ${color}; border-color: ${color}; color: #50233b; font-weight: 800;` : 'background-color: white; border-color: #fbcfe8; color: #831843;';
+            const style = color ? `background-color: ${color}; border-color: ${color}; color: #50233b; font-weight: 800;` : 'background-color: white; border-color: #b04a86; color: #831843;';
             
             booksHtml += `
               <button onclick="colorBook('${book}')" style="${style}" class="px-2.5 py-1.5 rounded-xl border text-[11px] font-bold shadow-xs transition hover:scale-105 text-center truncate">

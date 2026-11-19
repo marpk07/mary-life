@@ -2,121 +2,112 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fdf7fc">
 <title>MARY · Life Suite</title>
 <link rel="stylesheet" href="mary-theme.css">
-<link rel="stylesheet" href="layout-fix.css?v=3">
 <style>
-:root{--bg:#0f0a14;--card:rgba(28,20,40,.95);--border:rgba(244,114,182,.22);--pink:#f472b6;--text:#f5eef8;--muted:#c4b5d4}
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;font-family:system-ui,sans-serif;background:var(--bg);color:var(--text)}
-.shell{display:flex;height:100%;min-height:100vh;min-height:100dvh}
-.sidebar{width:260px;background:#1a1224;border-right:1px solid var(--border);padding:1rem .75rem;overflow-y:auto;flex-shrink:0}
-.sidebar h2{margin:0 0 1rem;font-size:1rem;background:linear-gradient(90deg,#f9a8d4,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent}
-.nav-item{display:flex;align-items:center;gap:0.55rem;padding:0.7rem 0.75rem;border-radius:12px;border:none;background:transparent;color:var(--muted);font-weight:700;font-size:0.88rem;cursor:pointer;width:100%;text-align:left;min-height:44px}
-.nav-item .emoji{font-size:1.1rem}
-.nav-item:hover,.nav-item.active{background:rgba(236,72,153,.22);color:#fff}
-.main{flex:1;display:flex;flex-direction:column;min-width:0}
-.topbar{display:flex;align-items:center;gap:.75rem;padding:.65rem 1rem;border-bottom:1px solid var(--border);background:rgba(15,10,20,.95);box-sizing:border-box;z-index:40}
-.topbar button#btn-menu{background:rgba(255,255,255,.08);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:.45rem .7rem;font-weight:700;cursor:pointer}
-#view-title{font-weight:800;font-size:1rem}
+html,body{margin:0;height:100%}
+.shell{display:flex;height:100%}
+.sidebar{width:250px;flex-shrink:0;background:rgba(255,255,255,.85);border-right:1px solid var(--border);padding:1.1rem .8rem;overflow-y:auto;backdrop-filter:blur(8px)}
+.brand{font-weight:800;font-size:1.15rem;margin:0 .4rem 1rem;background:linear-gradient(90deg,#e0589a,#8b6fc4);-webkit-background-clip:text;background-clip:text;color:transparent}
+.grp{font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#b3a4c6;margin:1rem .6rem .3rem}
+.nav-item{display:flex;align-items:center;gap:.6rem;width:100%;min-height:42px;padding:.5rem .7rem;border:0;border-radius:14px;background:transparent;color:var(--muted);font:700 .88rem inherit;font-family:inherit;cursor:pointer;text-align:left}
+.nav-item:hover{background:#f6effa}
+.nav-item.active{background:linear-gradient(135deg,#fbe4f0,#ede4fa);color:#b04a86}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;gap:.7rem;padding:calc(.6rem + env(safe-area-inset-top,0px)) 1rem .6rem;border-bottom:1px solid var(--border);background:rgba(253,247,252,.92);backdrop-filter:blur(8px)}
+#btn-menu{display:none;border:1px solid var(--border);background:#fff;color:var(--text);border-radius:12px;padding:.4rem .7rem;font-size:1rem;cursor:pointer}
+#view-title{font-weight:800}
 .content{flex:1;position:relative;overflow:hidden}
-.view{display:none;height:100%;overflow:auto}
-.view.active{display:block}
+.view{display:none;height:100%;overflow:auto}.view.active{display:block}
 .module-frame{width:100%;height:100%;border:0;display:block;background:var(--bg)}
-.dashboard{padding:1.25rem;max-width:960px;margin:0 auto}
-.area-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem}
-.area-card{background:rgba(28,20,40,.9);border:1px solid var(--border);border-radius:16px;padding:1rem;cursor:pointer}
-.area-card h3{margin:.5rem 0 .25rem;font-size:.95rem}
-.area-card p{margin:0;font-size:.75rem;color:var(--muted)}
-.card-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.25rem}
-.enter-btn{margin-top:.65rem;border:none;border-radius:10px;padding:.35rem .65rem;background:rgba(236,72,153,.25);color:#fbcfe8;font-weight:700;font-size:.72rem;cursor:pointer}
+.dash{max-width:960px;margin:0 auto;padding:1.3rem 1.2rem 3rem}
+.hero{border-radius:28px;padding:1.7rem;background:linear-gradient(135deg,#f48fb9 0%,#c08be6 60%,#9b7fd6 100%);box-shadow:0 14px 34px rgba(155,127,214,.35);color:#fff;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.16)}
+.hero small{font-weight:700;text-transform:capitalize;opacity:.9}
+.hero h1{margin:.2rem 0 .5rem;font-size:1.8rem;color:#fff}
+.hero p{margin:0;font-size:.95rem;max-width:34ch;line-height:1.45;opacity:.96;position:relative;z-index:1}
+.dash h2{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:#a58bc4;margin:1.7rem .3rem .7rem}
+.quick{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.9rem}
+.qcard{border:0;border-radius:24px;padding:1.2rem;color:#fff;text-align:left;font-family:inherit;cursor:pointer;min-height:118px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 10px 24px rgba(155,127,214,.3);transition:transform .15s}
+.qcard:hover{transform:translateY(-3px)}
+.qcard .e{font-size:1.9rem}.qcard b{font-size:1.05rem;display:block}.qcard span{font-size:.78rem;opacity:.92}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:1rem}
+.panel{background:#fff;border:1px solid var(--border);border-radius:24px;padding:.5rem .5rem .6rem;box-shadow:0 8px 22px rgba(167,139,218,.13)}
+.panel h3{margin:.7rem .8rem .4rem;font-size:.8rem;letter-spacing:.07em;text-transform:uppercase;color:#a07bc8;display:flex;align-items:center;gap:.5rem}
+.panel h3:before{content:"";width:9px;height:9px;border-radius:50%;background:linear-gradient(135deg,#f48fb9,#9b7fd6)}
+.row{display:flex;align-items:center;gap:.8rem;width:100%;border:0;background:transparent;padding:.55rem .6rem;border-radius:16px;cursor:pointer;font-family:inherit;color:inherit;text-align:left}
+.row:hover{background:#f8eefb}
+.ico{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;box-shadow:0 4px 10px rgba(155,127,214,.28)}
+.row div{flex:1;min-width:0}.row b{display:block;font-size:.92rem}.row span{font-size:.75rem;color:var(--muted)}
+.row:after{content:"›";font-size:1.4rem;color:#c3a9dd}
 @media(max-width:800px){
-  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:50;transform:translateX(-105%);transition:transform .2s;padding-top:max(1rem,env(safe-area-inset-top,0px))}
-  .sidebar.open{transform:translateX(0)}
+  #btn-menu{display:block}
+  .sidebar{position:fixed;inset:0 auto 0 0;z-index:50;transform:translateX(-105%);transition:transform .22s;box-shadow:8px 0 30px rgba(120,80,160,.18);padding-top:calc(1rem + env(safe-area-inset-top,0px))}
+  .sidebar.open{transform:none}
 }
 </style>
 </head>
 <body>
 <div class="shell">
-  <aside class="sidebar" id="sidebar">
-    <h2>MARY Life</h2>
-    <button type="button" class="nav-item" data-view="dashboard" onclick="navigateTo('dashboard')"><span class="emoji">🏠</span> Dashboard</button>
-    <button type="button" class="nav-item" data-view="poker" onclick="navigateTo('poker')"><span class="emoji">♠️</span> Póker</button>
-    <button type="button" class="nav-item" data-view="fitness" onclick="navigateTo('fitness')"><span class="emoji">💪</span> Fitness</button>
-    <button type="button" class="nav-item" data-view="entreno" onclick="navigateTo('entreno')"><span class="emoji">🩹</span> Entreno / rehab</button>
-    <button type="button" class="nav-item" data-view="espiritual" onclick="navigateTo('espiritual')"><span class="emoji">✝️</span> Espiritual</button>
-    <button type="button" class="nav-item" data-view="planner" onclick="navigateTo('planner')"><span class="emoji">📅</span> Daily Planner</button>
-    <button type="button" class="nav-item" data-view="pendientes" onclick="navigateTo('pendientes')"><span class="emoji">✅</span> Pendientes</button>
-    <button type="button" class="nav-item" data-view="calificaciones" onclick="navigateTo('calificaciones')"><span class="emoji">📊</span> Calificaciones</button>
-    <button type="button" class="nav-item" data-view="alimentacion" onclick="navigateTo('alimentacion')"><span class="emoji">🍽️</span> Alimentación</button>
-    <button type="button" class="nav-item" data-view="checklist" onclick="navigateTo('checklist')"><span class="emoji">☑️</span> Checklist</button>
-    <button type="button" class="nav-item" data-view="gastos" onclick="navigateTo('gastos')"><span class="emoji">💰</span> Gastos</button>
-    <button type="button" class="nav-item" data-view="metas" onclick="navigateTo('metas')"><span class="emoji">🎯</span> Metas</button>
-    <button type="button" class="nav-item" data-view="guia" onclick="navigateTo('guia')"><span class="emoji">📖</span> Guía</button>
-    <button type="button" class="nav-item" data-view="convicciones" onclick="navigateTo('convicciones')"><span class="emoji">✝️</span> Convicciones</button>
-    <button type="button" class="nav-item" data-view="cierre" onclick="navigateTo('cierre')"><span class="emoji">📋</span> Cierres</button>
-    <button type="button" class="nav-item" data-view="resumenes" onclick="navigateTo('resumenes')"><span class="emoji">📝</span> Resúmenes</button>
-  </aside>
+  <aside class="sidebar" id="sidebar"><div class="brand">MARY Life 💗</div><div id="nav"></div></aside>
   <div class="main">
-    <div class="topbar">
-      <button type="button" id="btn-menu" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-      <span id="view-title">Dashboard</span>
-    </div>
-    <div class="content">
-      <div id="view-dashboard" class="view active">
-        <div class="dashboard">
-          <h2 style="margin-top:0">Áreas</h2>
-          <div class="area-grid">
-            <div class="area-card" onclick="navigateTo('poker')"><div class="card-icon" style="background:linear-gradient(135deg,#581c87,#c084fc);">♠️</div><h3>Póker</h3><p>Sesiones y bankroll</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('fitness')"><div class="card-icon" style="background:linear-gradient(135deg,#be123c,#fb7185);">💪</div><h3>Fitness</h3><p>Entrenamiento</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('entreno')"><div class="card-icon" style="background:linear-gradient(135deg,#9d174d,#f9a8d4);">🩹</div><h3>Entreno / rehab</h3><p>Rutina v3 · fisio · gym</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('alimentacion')"><div class="card-icon" style="background:linear-gradient(135deg,#b45309,#fcd34d);">🍽️</div><h3>Alimentación</h3><p>Macros y salsas</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('calificaciones')"><div class="card-icon" style="background:linear-gradient(135deg,#6d28d9,#c4b5fd);">📊</div><h3>Calificaciones</h3><p>Equipo y bonos</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('checklist')"><div class="card-icon" style="background:linear-gradient(135deg,#0e7490,#67e8f9);">☑️</div><h3>Checklist</h3><p>Operativa del día</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('planner')"><div class="card-icon" style="background:linear-gradient(135deg,#1d4ed8,#93c5fd);">📅</div><h3>Planner</h3><p>Día a día</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('pendientes')"><div class="card-icon" style="background:linear-gradient(135deg,#a21caf,#f0abfc);">✅</div><h3>Pendientes</h3><p>Tareas abiertas</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('gastos')"><div class="card-icon" style="background:linear-gradient(135deg,#047857,#6ee7b7);">💰</div><h3>Gastos</h3><p>Dinero</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('metas')"><div class="card-icon" style="background:linear-gradient(135deg,#1d4ed8,#93c5fd);">🎯</div><h3>Metas</h3><p>Objetivos y retos</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('espiritual')"><div class="card-icon" style="background:linear-gradient(135deg,#7c3aed,#f0abfc);">✝️</div><h3>Espiritual</h3><p>Devocional</p><button type="button" class="enter-btn">Abrir</button></div>
-            <div class="area-card" onclick="navigateTo('convicciones')"><div class="card-icon" style="background:linear-gradient(135deg,#7c3aed,#f0abfc);">✝️</div><h3>Convicciones</h3><p>21 pilares</p><button type="button" class="enter-btn">Abrir</button></div>
-          </div>
-        </div>
-      </div>
-      <div id="view-poker" class="view"><iframe class="module-frame" src="poker.html" title="Póker"></iframe></div>
-      <div id="view-fitness" class="view"><iframe class="module-frame" src="fitness.html" title="Fitness"></iframe></div>
-      <div id="view-entreno" class="view"><iframe class="module-frame" src="entreno-rehab.html" title="Entreno / rehab"></iframe></div>
-      <div id="view-espiritual" class="view"><iframe class="module-frame" src="espiritual.html" title="Espiritual"></iframe></div>
-      <div id="view-planner" class="view"><iframe class="module-frame" src="planner.html" title="Planner"></iframe></div>
-      <div id="view-pendientes" class="view"><iframe class="module-frame" src="pendientes.html" title="Pendientes"></iframe></div>
-      <div id="view-calificaciones" class="view"><iframe class="module-frame" src="calificaciones.html" title="Calificaciones"></iframe></div>
-      <div id="view-alimentacion" class="view"><iframe class="module-frame" src="alimentacion.html" title="Alimentación"></iframe></div>
-      <div id="view-checklist" class="view"><iframe class="module-frame" src="checklist.html" title="Checklist"></iframe></div>
-      <div id="view-gastos" class="view"><iframe class="module-frame" src="gastos.html" title="Gastos"></iframe></div>
-      <div id="view-metas" class="view"><iframe class="module-frame" src="metas.html" title="Metas"></iframe></div>
-      <div id="view-guia" class="view"><iframe class="module-frame" src="guia.html" title="Guía"></iframe></div>
-      <div id="view-convicciones" class="view"><iframe class="module-frame" src="convicciones.html" title="Convicciones"></iframe></div>
-      <div id="view-cierre" class="view"><iframe class="module-frame" src="cierre.html" title="Cierres"></iframe></div>
-      <div id="view-resumenes" class="view"><iframe class="module-frame" src="resumenes.html" title="Resúmenes"></iframe></div>
+    <div class="topbar"><button id="btn-menu" type="button" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button><span id="view-title">Inicio</span></div>
+    <div class="content" id="content">
+      <div id="view-home" class="view active"><div class="dash">
+        <div class="hero"><small id="today"></small><h1 id="hello">Hola, Mary</h1><p id="phrase"></p></div>
+        <h2>Para hoy</h2><div class="quick" id="quick"></div>
+        <h2>Todas tus áreas</h2><div class="panels" id="areas"></div>
+      </div></div>
     </div>
   </div>
 </div>
 <script>
-function navigateTo(view){
-  document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
-  document.querySelectorAll('.nav-item').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-view')===view); });
-  var el = document.getElementById('view-'+view);
-  if(el) el.classList.add('active');
-  var titles = {
-    dashboard:'Dashboard', poker:'Póker', fitness:'Fitness', entreno:'Entreno / rehab',
-    espiritual:'Espiritual', planner:'Daily Planner', pendientes:'Pendientes',
-    calificaciones:'Calificaciones', alimentacion:'Alimentación', checklist:'Checklist',
-    gastos:'Gastos', metas:'Metas', guia:'Guía', convicciones:'Convicciones',
-    cierre:'Cierres', resumenes:'Resúmenes'
-  };
-  document.getElementById('view-title').textContent = titles[view] || view;
+// Una sola lista alimenta el menú, las tarjetas y las pantallas
+var GROUPS=[
+ ['Trabajo',[['poker','♠️','Póker','Sesiones y bankroll','poker.html','#f3e3fb'],['calificaciones','📊','Calificaciones','Equipo y bonos','calificaciones.html','#fbe4f0'],['checklist','☑️','Checklist','Operativa del día','checklist.html','#ede4fa']]],
+ ['Salud',[['fitness','💪','Fitness','Entrenamiento','fitness.html','#fbe4f0'],['entreno','🩹','Entreno / rehab','Rutina · fisio · gym','entreno-rehab.html','#f3e3fb'],['alimentacion','🍽️','Alimentación','Macros y salsas','alimentacion.html','#ede4fa']]],
+ ['Mi día',[['planner','📅','Planner','Día a día','planner.html','#ede4fa'],['pendientes','✅','Pendientes','Tareas abiertas','pendientes.html','#fbe4f0'],['gastos','💰','Gastos','Dinero','gastos.html','#f3e3fb'],['metas','🎯','Metas','Objetivos y retos','metas.html','#fbe4f0']]],
+ ['Fe',[['espiritual','🕊️','Espiritual','Devocional','espiritual.html','#ede4fa'],['convicciones','✝️','Convicciones','21 pilares','convicciones.html','#f3e3fb']]],
+ ['Más',[['guia','📖','Guía','Cómo usar MARY','guia.html','#fbe4f0'],['cierre','📋','Cierres','Cierre del día','cierre.html','#ede4fa'],['resumenes','📝','Resúmenes','Resumen semanal','resumenes.html','#f3e3fb']]]
+];
+var nav=document.getElementById('nav'),areas=document.getElementById('areas'),content=document.getElementById('content');
+var G=['linear-gradient(135deg,#f48fb9,#e8629f)','linear-gradient(135deg,#b9a0ec,#9577d8)','linear-gradient(135deg,#d3a6f0,#b57fe0)','linear-gradient(135deg,#f7a8cb,#c993e8)'];
+var TITLES={home:'Inicio'},n=0,ALL={};
+nav.innerHTML='<button class="nav-item active" data-view="home" onclick="go(\'home\')">🏠 Inicio</button>';
+GROUPS.forEach(function(g){
+  nav.insertAdjacentHTML('beforeend','<div class="grp">'+g[0]+'</div>');
+  var rows='';
+  g[1].forEach(function(a,i){
+    TITLES[a[0]]=a[2];ALL[a[0]]=a;
+    nav.insertAdjacentHTML('beforeend','<button class="nav-item" data-view="'+a[0]+'" onclick="go(\''+a[0]+'\')">'+a[1]+' '+a[2]+'</button>');
+    rows+='<button class="row" onclick="go(\''+a[0]+'\')"><div class="ico" style="background:'+G[n++%4]+'">'+a[1]+'</div><div><b>'+a[2]+'</b><span>'+a[3]+'</span></div></button>';
+    content.insertAdjacentHTML('beforeend','<div id="view-'+a[0]+'" class="view" data-src="'+a[4]+'"></div>');
+  });
+  areas.insertAdjacentHTML('beforeend','<div class="panel"><h3>'+g[0]+'</h3>'+rows+'</div>');
+});
+['planner','pendientes','checklist'].forEach(function(id,i){
+  var a=ALL[id];
+  document.getElementById('quick').insertAdjacentHTML('beforeend','<button class="qcard" style="background:'+G[[0,1,2][i]]+'" onclick="go(\''+id+'\')"><span class="e">'+a[1]+'</span><div><b>'+a[2]+'</b><span>'+a[3]+'</span></div></button>');
+});
+var PHRASES=['Un día a la vez, con calma y con cariño.','Hoy hazlo con amor, aunque sea poquito.','Tu ritmo también es avanzar.','Descansar también es parte del plan.','Pequeños pasos, grandes cambios.','Eres más fuerte de lo que crees.','Respira, agradece y sigue.'];
+document.getElementById('phrase').textContent=PHRASES[new Date().getDay()];
+function go(v){
+  document.querySelectorAll('.view').forEach(function(e){e.classList.remove('active')});
+  document.querySelectorAll('.nav-item').forEach(function(b){b.classList.toggle('active',b.dataset.view===v)});
+  var el=document.getElementById('view-'+v);
+  if(el.dataset.src&&!el.firstChild){el.innerHTML='<iframe class="module-frame" title="'+TITLES[v]+'" src="'+el.dataset.src+'"></iframe>'}
+  el.classList.add('active');
+  document.getElementById('view-title').textContent=TITLES[v];
   document.getElementById('sidebar').classList.remove('open');
+  if(history.replaceState)history.replaceState(null,'','#'+v);
 }
+var h=new Date().getHours();
+document.getElementById('hello').textContent=(h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches')+', Mary 💗';
+document.getElementById('today').textContent=new Date().toLocaleDateString('es',{weekday:'long',day:'numeric',month:'long'});
+var start=location.hash.slice(1);if(start&&TITLES[start])go(start);
 </script>
 </body>
 </html>

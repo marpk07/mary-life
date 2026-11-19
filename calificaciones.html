@@ -13,48 +13,48 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
   :root {
-    --bg:#0f0a14; --card:#1c1428; --border:rgba(244,114,182,0.18);
+    --bg:#fdf7fc; --card:#ffffff; --border:rgba(214,140,190,0.18);
     --pink:#f472b6; --pink2:#ec4899; --purple:#a78bfa;
-    --text:#f5eef8; --muted:#a89bb5;
+    --text:#4a3560; --muted:#a99bc0;
   }
   * { box-sizing:border-box; font-family:'Plus Jakarta Sans',system-ui,sans-serif; -webkit-tap-highlight-color:transparent; }
   body {
     margin:0; min-height:100vh; color:var(--text);
-    background: radial-gradient(circle at 15% 10%, rgba(244,114,182,0.12), transparent 42%),
+    background: radial-gradient(circle at 15% 10%, rgba(214,140,190,0.12), transparent 42%),
                 radial-gradient(circle at 90% 90%, rgba(167,139,250,0.1), transparent 42%), var(--bg);
     padding: max(0.75rem, env(safe-area-inset-top)) 0.85rem 2.5rem;
   }
-  .glass { background:rgba(28,20,40,0.88); border:1px solid var(--border); border-radius:18px; }
+  .glass { background:rgba(255,255,255,0.88); border:1px solid var(--border); border-radius:18px; }
   .btn { border:none; border-radius:12px; padding:0.55rem 0.95rem; font-weight:700; font-size:0.78rem; cursor:pointer; touch-action:manipulation; }
   .btn-pink { background:linear-gradient(135deg,#ec4899,#a78bfa); color:#fff; }
-  .btn-ghost { background:rgba(255,255,255,0.06); color:var(--text); border:1px solid var(--border); }
+  .btn-ghost { background:rgba(237,228,250,.6); color:var(--text); border:1px solid var(--border); }
   .btn:active { transform:scale(0.97); }
   .tab { padding:0.5rem 0.9rem; border-radius:999px; font-size:0.78rem; font-weight:700; border:1px solid transparent;
          cursor:pointer; color:var(--muted); background:transparent; min-height:40px; }
-  .tab.active { background:rgba(236,72,153,0.25); color:#fff; border-color:rgba(244,114,182,0.35); }
+  .tab.active { background:linear-gradient(135deg,#f08cbb,#b498e8);color:#fff; border-color:rgba(214,140,190,0.35); }
   label { display:block; font-size:0.65rem; font-weight:800; color:var(--muted); margin-bottom:0.2rem; text-transform:uppercase; letter-spacing:0.04em; }
   input, textarea, select {
-    width:100%; background:#241b32; border:1px solid var(--border); border-radius:12px;
+    width:100%; background:#f6effa; border:1px solid var(--border); border-radius:12px;
     color:var(--text); padding:0.6rem 0.75rem; font-size:0.88rem;
   }
   textarea { min-height:70px; resize:vertical; }
-  .sec { font-size:0.72rem; font-weight:800; color:#f9a8d4; margin:0.85rem 0 0.4rem; letter-spacing:0.03em; }
+  .sec { font-size:0.72rem; font-weight:800; color:#c0568f; margin:0.85rem 0 0.4rem; letter-spacing:0.03em; }
   .muted { color:var(--muted); font-size:0.75rem; }
   .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; }
   .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:0.5rem; }
   @media (max-width:720px){ .grid2,.grid3{ grid-template-columns:1fr; } }
-  .person-card { padding:0.85rem; border:1px solid var(--border); border-radius:14px; background:rgba(15,10,20,0.45); margin-bottom:0.65rem; }
-  .kpi { background:rgba(15,10,20,0.55); border:1px solid var(--border); border-radius:14px; padding:0.75rem; text-align:center; }
-  .kpi .v { font-size:1.2rem; font-weight:800; color:#f9a8d4; }
+  .person-card { padding:0.85rem; border:1px solid var(--border); border-radius:14px; background:rgba(253,247,252,0.45); margin-bottom:0.65rem; }
+  .kpi { background:rgba(253,247,252,0.55); border:1px solid var(--border); border-radius:14px; padding:0.75rem; text-align:center; }
+  .kpi .v { font-size:1.2rem; font-weight:800; color:#c0568f; }
   .kpi .l { font-size:0.68rem; color:var(--muted); margin-top:0.15rem; }
   table { width:100%; border-collapse:collapse; font-size:0.78rem; }
-  th, td { padding:0.4rem 0.35rem; border-bottom:1px solid rgba(255,255,255,0.06); text-align:left; }
-  th { color:#f9a8d4; font-size:0.7rem; }
+  th, td { padding:0.4rem 0.35rem; border-bottom:1px solid rgba(237,228,250,.6); text-align:left; }
+  th { color:#c0568f; font-size:0.7rem; }
   .disc-row { display:flex; gap:0.4rem; margin-bottom:0.35rem; align-items:center; }
   .disc-row input:first-child { max-width:90px; }
   .btn-row { display:flex; gap:0.45rem; flex-wrap:wrap; margin-top:0.55rem; }
-  canvas { width:100%; max-height:220px; background:rgba(15,10,20,0.5); border-radius:12px; border:1px solid var(--border); }
-  .score { font-weight:800; color:#f9a8d4; }
+  canvas { width:100%; max-height:220px; background:rgba(253,247,252,0.5); border-radius:12px; border:1px solid var(--border); }
+  .score { font-weight:800; color:#c0568f; }
 </style>
 </head>
 <body>
@@ -62,7 +62,7 @@
   <div class="glass" style="padding:1rem;margin-bottom:1rem;">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.75rem;flex-wrap:wrap;">
       <div>
-        <div style="font-size:1.15rem;font-weight:800;background:linear-gradient(90deg,#f9a8d4,#c4b5fd);-webkit-background-clip:text;background-clip:text;color:transparent;">Calificaciones</div>
+        <div style="font-size:1.15rem;font-weight:800;background:linear-gradient(90deg,#c0568f,#8b6fc4);-webkit-background-clip:text;background-clip:text;color:transparent;">Calificaciones</div>
         <p class="muted" style="margin:0.2rem 0 0;">Mary · Laura · Valery · cierres · bonos</p>
         <p id="sync-status" class="muted" style="margin:0.15rem 0 0;font-size:0.68rem;">Sincronizando…</p>
       </div>

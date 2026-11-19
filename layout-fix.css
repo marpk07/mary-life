@@ -14,7 +14,7 @@
     box-sizing: border-box !important;
     padding-top: max(0.55rem, env(safe-area-inset-top, 0px)) !important;
     padding-bottom: 0.55rem !important;
-    background: rgba(15, 10, 20, 0.97) !important;
+    background: rgba(253,247,252, 0.97) !important;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
@@ -34,7 +34,7 @@
   }
 }
 .module-frame {
-  background: #0f0a14 !important;
+  background: #fdf7fc !important;
 }
 @supports (padding: max(0px)) {
   body {
