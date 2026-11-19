@@ -11,8 +11,8 @@
   }
   var files = [
     'entreno-rehab-app.p1.js?v=8',
-    'entreno-rehab-app.r0.js?v=10',
-    'entreno-rehab-app.r1.js?v=10'
+    'entreno-rehab-app.r0.js?v=11',
+    'entreno-rehab-app.r1.js?v=11'
   ];
   Promise.all(files.map(function(u){ return fetch(u).then(function(r){ return r.text(); }); }))
     .then(function(parts){
