@@ -44,6 +44,18 @@ input[type=checkbox]{width:auto}
 .modal{position:fixed;inset:0;background:rgba(74,53,96,.4);display:none;align-items:flex-end;justify-content:center;z-index:80;padding:12px}
 .modal.open{display:flex}.sheet{background:#fff;border-radius:24px;padding:16px;width:100%;max-width:480px;max-height:90vh;overflow:auto}
 .sheet h3{margin:0 0 4px}
+#hm{width:100%;border-collapse:separate;border-spacing:0 3px}
+.hs{overflow-x:auto;padding-bottom:4px}
+#hm th{font-size:10px;font-weight:800;color:#a07bc8;padding:2px 0;text-align:center;min-width:31px}
+#hm th.td{color:#c0568f}
+#hm td.nm{position:sticky;left:0;background:#fff;z-index:2;font-size:12px;font-weight:800;padding:4px 8px 4px 0;min-width:100px;max-width:100px;line-height:1.15}
+#hm td.nm small{display:block;font-size:10px;color:#8b7aa3;font-weight:700}
+.cl{width:30px;height:30px;margin:0 auto;border-radius:10px;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font:800 15px inherit;cursor:pointer;line-height:1;padding:0}
+.cl small{font-size:8px;font-weight:700;margin-top:1px}
+.cl.ok{background:#dcf5e8;color:#2f7d5b}.cl.mn{background:#fdeccd;color:#9a6a1e}.cl.no{background:#fde1e6;color:#b0405a}.cl.cd{background:#e8defa;color:#7a4fc0;font-size:14px}
+.cl.em{background:#faf3fd;color:#c9b6de;border:1.5px dashed #e2d0f0}.cl.fu{background:transparent;color:#e2d0f0;cursor:default}
+.lg{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:11px;font-weight:700;color:#8b7aa3;margin-top:8px}
+.tg{display:flex;gap:6px}.tg button{flex:1}
 #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:linear-gradient(135deg,#ec6aa5,#a47fe0);color:#fff;font-weight:800;font-size:12px;padding:12px 18px;border-radius:999px;z-index:99;display:none}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -53,7 +65,7 @@ input[type=checkbox]{width:auto}
 <header class="hd"><div class="w">
   <div class="top"><div><small>That Girl Challenge</small><h1>Mis metas 🎯</h1><div style="font-size:11px">Nov – Dic 2026 · y todo lo que tú agregues</div><div class="sync" id="sync-status">Sincronizando…</div></div>
   <div style="display:flex;gap:5px"><button class="rep" onclick="copyWeekReport()">📋 Semana</button><button class="rep" onclick="copyDayReport()">📋 Día</button></div></div>
-  <div class="tabs"><button class="tab on" data-tab="dash" onclick="showTab('dash')">Dashboard</button><button class="tab" data-tab="diario" onclick="showTab('diario')">Tracker diario</button><button class="tab" data-tab="semana" onclick="showTab('semana')">Semana</button><button class="tab" data-tab="metas" onclick="showTab('metas')">Todas las metas</button></div>
+  <div class="tabs"><button class="tab on" data-tab="dash" onclick="showTab('dash')">Dashboard</button><button class="tab" data-tab="habitos" onclick="showTab('habitos')">Hábitos ✓</button><button class="tab" data-tab="diario" onclick="showTab('diario')">Tracker diario</button><button class="tab" data-tab="semana" onclick="showTab('semana')">Semana</button><button class="tab" data-tab="metas" onclick="showTab('metas')">Todas las metas</button></div>
 </div></header>
 <main class="w">
   <section id="tab-dash">
@@ -61,6 +73,13 @@ input[type=checkbox]{width:auto}
     <div class="bar"><i id="dash-bar" style="width:0%"></i></div>
     <div class="kp"><div style="background:#fbe4f0">OBJETIVO<b id="kpi-obj" style="color:#c0568f">0</b></div><div style="background:#fdeccd">SÓLO MÍNIMO<b id="kpi-min" style="color:#9a6a1e">0</b></div><div style="background:#dcf5e8">SUPERADO<b id="kpi-extra" style="color:#2f7d5b">0</b></div></div></div>
     <div id="dash-cats"></div>
+  </section>
+  <section id="tab-habitos" class="hide">
+    <div class="c row" style="margin-bottom:0"><button class="btn gh" onclick="shiftH(-1)" style="margin:0">←</button><div style="text-align:center"><b id="h-label"></b><div class="mu" style="margin:0" id="h-sum"></div></div><button class="btn gh" onclick="shiftH(1)" style="margin:0">→</button></div>
+    <div class="tg" style="margin-top:10px"><button class="btn" id="hm-w" onclick="setHMode('w')" style="margin:0">Semana</button><button class="btn gh" id="hm-m" onclick="setHMode('m')" style="margin:0">Mes</button></div>
+    <div class="c"><div class="hs" id="h-grid"></div>
+      <div class="lg"><span>✓ cumplí</span><span style="color:#9a6a1e">✓ solo mínimo</span><span style="color:#b0405a">✗ no cumplí</span><span style="color:#7a4fc0">🎟️ tarjeta</span><span>○ pendiente</span></div>
+      <div class="mu">Toca cualquier casilla para marcarla, cambiar el valor o usar tarjeta.</div></div>
   </section>
   <section id="tab-diario" class="hide">
     <div class="c"><label class="l" style="margin-top:0">Día</label><div class="g2"><input type="date" id="day-date"><button class="btn gh" onclick="saveDiario()" style="margin:0">💾 Guardar día</button></div><div class="mu">Escribe el valor real; el estado se calcula solo.</div></div>
@@ -97,6 +116,14 @@ input[type=checkbox]{width:auto}
   <input type="hidden" id="av-id"><div class="g2"><div><label class="l">Cantidad</label><input type="number" id="av-val" step="any" placeholder="Ej. 150"></div><div><label class="l">Fecha</label><input type="date" id="av-date"></div></div>
   <div class="mu">Para corregir un error, registra un número negativo.</div>
   <button class="btn full" onclick="saveAv()">Guardar avance</button>
+</div></div>
+<div class="modal" id="modal-cell"><div class="sheet">
+  <div class="row"><div><h3 id="cell-title"></h3><div class="mu" id="cell-sub" style="margin:0"></div></div><button class="btn gh" style="margin:0" onclick="closeCell()">Cerrar</button></div>
+  <input type="hidden" id="cell-id"><input type="hidden" id="cell-ds">
+  <button class="btn full" onclick="cellOk()">✓ Cumplí el objetivo</button>
+  <label class="l">O escribe el valor real</label><div class="g2"><input type="number" id="cell-val" step="any" placeholder="Valor"><button class="btn gh" style="margin:0" onclick="cellSave()">Guardar valor</button></div>
+  <div class="g2" style="margin-top:10px"><button class="btn gh" style="margin:0;color:#7a4fc0!important" onclick="cellCard()">🎟️ Usar tarjeta</button><button class="btn gh" style="margin:0;color:#b0405a!important" onclick="cellNo()">✗ No cumplí</button></div>
+  <button class="btn gh full" style="margin-top:8px" onclick="cellClear()">Borrar casilla</button>
 </div></div>
 <div id="toast"></div>
 <script>
@@ -176,11 +203,12 @@ function restoreCh(){if(confirm('Esto vuelve las metas del Challenge a sus valor
 function dayEntry(ds,id){var d=store.days[ds]||{};return d[id]}
 function setDayEntry(ds,id,e){if(!store.days[ds])store.days[ds]={};if(e==null)delete store.days[ds][id];else store.days[ds][id]=e}
 function classify(g,value){if(value==null||value==='')return null;var v=Number(value);if(isNaN(v))return null;var o=objOf(g),m=g.minExcepcional!=null&&g.minExcepcional!==''?Number(g.minExcepcional):null;if(!isNaN(o)&&v>=o)return v>o?'extra':'obj';if(m!=null&&!isNaN(m)&&v>=m)return 'min';return 'fail'}
-function statusLabel(s){return s==='obj'?{t:'Objetivo',c:'ok'}:s==='extra'?{t:'Superado',c:'ex'}:s==='min'?{t:'Mínimo cumplido',c:'mn'}:s==='fail'?{t:'No cumplido',c:'ms'}:{t:'Sin dato',c:'no'}}
-function sumRange(g,days){var sum=0,n=0;days.forEach(function(ds){var e=dayEntry(ds,g.id);if(e==null||e==='')return;var v=typeof e==='object'?e.v:e;if(v===true)v=objOf(g)||1;if(v===false)v=0;v=Number(v);if(isNaN(v))return;sum+=v;n++});return{sum:sum,n:n}}
+function statusLabel(s){return s==='card'?{t:'Tarjeta 🎟️',c:'ex'}:s==='obj'?{t:'Objetivo',c:'ok'}:s==='extra'?{t:'Superado',c:'ex'}:s==='min'?{t:'Mínimo cumplido',c:'mn'}:s==='fail'?{t:'No cumplido',c:'ms'}:{t:'Sin dato',c:'no'}}
+function sumRange(g,days){var sum=0,n=0;days.forEach(function(ds){var e=dayEntry(ds,g.id);if(e==null||e==='')return;if(e&&e.status==='card'&&(e.v==null||e.v===''))return;var v=typeof e==='object'?e.v:e;if(v===true)v=objOf(g)||1;if(v===false)v=0;v=Number(v);if(isNaN(v))return;sum+=v;n++});return{sum:sum,n:n}}
 function weekProgress(g,days){var s=sumRange(g,days),t=g.weekTarget!=null?Number(g.weekTarget):(g.freq==='weekly'?objOf(g):objOf(g)*7);if(isNaN(t)||t<=0)t=objOf(g)||1;return{sum:s.sum,n:s.n,target:t,pct:Math.min(100,Math.round(s.sum/t*100))}}
+function cards(g,days){return days.filter(function(d){var e=dayEntry(d,g.id);return e&&e.status==='card'}).length}
 function minWk(g){return g.minExcepcional==null||g.minExcepcional===''?null:Number(g.minExcepcional)*(g.freq==='daily'?7:1)}
-function streak(g){var n=0,d=new Date();for(var i=0;i<400;i++){var e=dayEntry(ymd(d),g.id);if(e==null||e===''){if(i===0){d.setDate(d.getDate()-1);continue}break}var v=typeof e==='object'?e.v:e,s=typeof e==='object'&&e.status?e.status:classify(g,v);if(s==='fail'||s==null)break;n++;d.setDate(d.getDate()-1)}return n}
+function streak(g){var n=0,d=new Date();for(var i=0;i<400;i++){var e=dayEntry(ymd(d),g.id);if(e==null||e===''){if(i===0){d.setDate(d.getDate()-1);continue}break}var v=typeof e==='object'?e.v:e,s=typeof e==='object'&&e.status?e.status:classify(g,v);if(s==='card'){d.setDate(d.getDate()-1);continue}if(s==='fail'||s==null)break;n++;d.setDate(d.getDate()-1)}return n}
 function bigInfo(g){var cur=(g.log||[]).reduce(function(s,x){return s+Number(x.v||0)},0),t=objOf(g),left=Math.max(0,t-cur),dl=null,pace=null;
   if(g.deadline){dl=Math.ceil((new Date(g.deadline+'T23:59:59')-new Date())/864e5);if(dl>0&&left>0)pace=left/dl}
   return{cur:cur,t:t,pct:t?Math.min(100,Math.round(cur/t*100)):0,left:left,dl:dl,pace:pace}}
@@ -189,19 +217,19 @@ function bigCard(g,edit){var i=bigInfo(g),done=i.pct>=100,u=esc(g.unit||'');
   +(g.deadline&&!done?'<div class="mu">'+(i.dl>0?'⏳ '+i.dl+' días para el '+g.deadline+(i.pace?' · ≈ '+fmt(i.pace)+' '+u+' por día':''):'⏰ Venció el '+g.deadline)+'</div>':'')
   +'<div style="display:flex;gap:8px"><button class="btn" onclick="openAv(\''+g.id+'\')">+ Registrar avance</button>'+(edit?'<button class="btn gh" onclick="openGoalModal(\''+g.id+'\')">Editar</button>':'')+'</div></div>'}
 /* ---- pantallas ---- */
-function showTab(n){['dash','diario','semana','metas'].forEach(function(t){$('tab-'+t).classList.toggle('hide',t!==n)});document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-tab')===n)});
-  if(n==='dash')renderDash();if(n==='diario')renderDiario();if(n==='semana')renderSemana();if(n==='metas')renderMetas()}
+function showTab(n){['dash','habitos','diario','semana','metas'].forEach(function(t){$('tab-'+t).classList.toggle('hide',t!==n)});document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-tab')===n)});
+  if(n==='dash')renderDash();if(n==='habitos')renderHabitos();if(n==='diario')renderDiario();if(n==='semana')renderSemana();if(n==='metas')renderMetas()}
 function renderDash(){
   var days=periodDays().filter(function(d){return d<=todayStr()}),H=habits(),ob=0,mi=0,ex=0,pos=0;
   H.forEach(function(g){if(g.freq==='weekly'){var wp=weekProgress(g,days);pos++;if(wp.sum>=wp.target)ob++;else if(minWk(g)!=null&&wp.sum>=minWk(g))mi++}
-    else days.forEach(function(ds){var e=dayEntry(ds,g.id);if(e==null)return;pos++;var v=typeof e==='object'?e.v:e,s=typeof e==='object'&&e.status?e.status:classify(g,v);if(s==='obj')ob++;else if(s==='extra'){ob++;ex++}else if(s==='min')mi++})});
+    else days.forEach(function(ds){var e=dayEntry(ds,g.id);if(e==null)return;var v=typeof e==='object'?e.v:e,s=typeof e==='object'&&e.status?e.status:classify(g,v);if(s==='card')return;pos++;if(s==='obj')ob++;else if(s==='extra'){ob++;ex++}else if(s==='min')mi++})});
   var pct=pos?Math.round(ob/pos*100):0;$('dash-pct').textContent=pct+'%';$('dash-bar').style.width=pct+'%';$('kpi-obj').textContent=ob;$('kpi-min').textContent=mi;$('kpi-extra').textContent=ex;
   $('dash-range').textContent='Nov – Dic 2026 · hasta hoy';
   var h='',B=bigs();if(B.length){h+='<div class="sec">Mis metas grandes</div>';B.forEach(function(g){h+=bigCard(g,false)})}
   var by={};H.forEach(function(g){(by[g.area]=by[g.area]||[]).push(g)});
   Object.keys(by).forEach(function(a){h+='<div class="sec">'+(EMO[a]||'⭐')+' '+esc(a)+'</div><div class="c">';
     by[a].forEach(function(g){var wp=weekProgress(g,weekDays(0)),mn=minWk(g)!=null&&wp.sum>=minWk(g),left=Math.max(0,wp.target-wp.sum),st=g.freq==='daily'?streak(g):0,u=esc(g.unit||'');
-      h+='<div class="mb"><div class="row"><b>'+esc(g.name)+'</b><span class="pk">'+fmt(wp.sum)+' / '+fmt(wp.target)+' '+u+'</span></div><div class="bar '+(wp.pct>=100?'ok':mn?'min':'')+'"><i style="width:'+wp.pct+'%"></i></div><div class="mu">Esta semana · <b>'+wp.pct+'%</b>'+(left?' · te faltan <b>'+fmt(left)+'</b> '+u:' · ¡completa! ✨')+(st>1?' · 🔥 '+st+' días seguidos':'')+'</div></div>'});
+      h+='<div class="mb"><div class="row"><b>'+esc(g.name)+'</b><span class="pk">'+fmt(wp.sum)+' / '+fmt(wp.target)+' '+u+'</span></div><div class="bar '+(wp.pct>=100?'ok':mn?'min':'')+'"><i style="width:'+wp.pct+'%"></i></div><div class="mu">Esta semana · <b>'+wp.pct+'%</b>'+(left?' · te faltan <b>'+fmt(left)+'</b> '+u:' · ¡completa! ✨')+(st>1?' · 🔥 '+st+' días seguidos':'')+(cards(g,weekDays(0))?' · 🎟️ '+cards(g,weekDays(0))+' tarjeta':'')+'</div></div>'});
     h+='</div>'});
   $('dash-cats').innerHTML=h||'<p class="mu">Sin metas todavía</p>'}
 function renderDiario(){
@@ -210,11 +238,12 @@ function renderDiario(){
     by[a].forEach(function(g){var e=dayEntry(ds,g.id),v='',note='',imp=false,st=null;
       if(e!=null&&typeof e==='object'){v=e.v;note=e.note||'';imp=!!e.imprevisto;st=e.status}else if(e!=null)v=e;if(st==null&&v!==''&&v!=null)st=classify(g,v);var sl=statusLabel(st);
       h+='<div class="c"><div class="row"><b>'+esc(g.name)+'</b><span class="chip '+sl.c+'">'+sl.t+'</span></div><div class="mu" style="margin:0 0 6px">Objetivo: <b>'+objOf(g)+'</b> '+esc(g.unit||'')+(g.minExcepcional!=null&&g.minExcepcional!==''?' · Mín: <b>'+g.minExcepcional+'</b>':'')+'</div>'
-      +'<div class="g2"><div><label class="l" style="margin-top:0">Valor real</label><input type="number" step="any" data-gid="'+g.id+'" class="day-val" value="'+(v==null?'':v)+'"></div><div style="display:flex;align-items:flex-end"><label class="mu" style="display:flex;gap:6px;align-items:center;margin:0 0 12px"><input type="checkbox" class="day-imp" data-gid="'+g.id+'" '+(imp?'checked':'')+'> Imprevisto</label></div></div>'
+      +'<div class="g2"><div><label class="l" style="margin-top:0">Valor real</label><input type="number" step="any" data-gid="'+g.id+'" class="day-val" value="'+(v==null?'':v)+'"></div><div style="display:flex;align-items:flex-end"><label class="mu" style="display:flex;gap:6px;align-items:center;margin:0 0 12px"><input type="checkbox" class="day-imp" data-gid="'+g.id+'" '+(imp?'checked':'')+'> Imprevisto</label></div></div><label class="mu" style="display:flex;gap:6px;align-items:center;margin:0 0 6px"><input type="checkbox" class="day-card" data-gid="'+g.id+'" '+(st==='card'?'checked':'')+'> 🎟️ Usé tarjeta (hoy no cuenta ni suma ni resta)</label>'
       +'<label class="l">Nota</label><input data-gid="'+g.id+'" class="day-note" value="'+esc(note)+'" placeholder="Qué pasó…">'+(g.notes?'<div class="mu">'+esc(g.notes)+'</div>':'')+'</div>'})});
   $('diario-list').innerHTML=h}
 function saveDiario(){var ds=$('day-date').value;if(!ds){alert('Elige fecha');return}
-  document.querySelectorAll('.day-val').forEach(function(inp){var id=inp.getAttribute('data-gid'),raw=inp.value,ne=document.querySelector('.day-note[data-gid="'+id+'"]'),ie=document.querySelector('.day-imp[data-gid="'+id+'"]'),g=store.goals.find(function(x){return x.id===id});
+  document.querySelectorAll('.day-val').forEach(function(inp){var id=inp.getAttribute('data-gid'),raw=inp.value,ne=document.querySelector('.day-note[data-gid="'+id+'"]'),ie=document.querySelector('.day-imp[data-gid="'+id+'"]'),ce=document.querySelector('.day-card[data-gid="'+id+'"]'),g=store.goals.find(function(x){return x.id===id});
+    if(ce&&ce.checked){setDayEntry(ds,id,{v:raw===''?null:Number(raw),status:'card',note:ne?ne.value:'',imprevisto:ie?ie.checked:false,updatedAt:Date.now()});return}
     if(raw===''||raw==null){setDayEntry(ds,id,null);return}var v=Number(raw);setDayEntry(ds,id,{v:v,status:classify(g,v),note:ne?ne.value:'',imprevisto:ie?ie.checked:false,updatedAt:Date.now()})});
   save();toast('Día guardado ✓');renderDiario()}
 function shiftWeek(n){weekOffset+=n;renderSemana()}
@@ -232,7 +261,37 @@ function renderMetas(){var h='';
   bigs().forEach(function(g){h+=bigCard(g,true)});
   habits().forEach(function(g){h+='<div class="c row" style="margin-bottom:0"><div><b>'+(EMO[g.area]||'⭐')+' '+esc(g.name)+'</b><div class="mu" style="margin:2px 0 0">'+esc(g.area)+' · obj '+objOf(g)+' '+esc(g.unit||'')+(g.minExcepcional!=null?' · mín '+g.minExcepcional:'')+'</div></div><button class="btn gh" style="margin:0" onclick="openGoalModal(\''+g.id+'\')">Editar</button></div>'});
   $('metas-list').innerHTML=h||'<p class="mu">Sin metas</p>'}
-function renderAll(){renderDash();renderDiario();renderSemana();renderMetas()}
+var hOff=0,hMode='w',DL=['L','M','X','J','V','S','D'];
+function hDays(){if(hMode==='w')return weekDays(hOff);var d=new Date();d=new Date(d.getFullYear(),d.getMonth()+hOff,1);var a=[],m=d.getMonth();while(d.getMonth()===m){a.push(ymd(d));d.setDate(d.getDate()+1)}return a}
+function shiftH(n){hOff+=n;renderHabitos()}
+function setHMode(m){hMode=m;hOff=0;$('hm-w').className='btn'+(m==='w'?'':' gh');$('hm-m').className='btn'+(m==='m'?'':' gh');renderHabitos()}
+function cellOf(g,ds){var e=dayEntry(ds,g.id),t=todayStr(),has=e!=null&&e!=='',v=has?(typeof e==='object'?e.v:e):null,st=has?(typeof e==='object'&&e.status?e.status:classify(g,v)):null,wk=g.freq==='weekly';
+  if(has&&st==='card')return{c:'cd',s:'🎟️',v:v};
+  if(has&&wk&&Number(v)>0)return{c:'ok',s:'✓',v:v};
+  if(has&&!wk){if(st==='obj'||st==='extra')return{c:'ok',s:'✓',v:v};if(st==='min')return{c:'mn',s:'✓',v:v};if(st==='fail')return{c:'no',s:'✗',v:v}}
+  if(ds>t)return{c:'fu',s:'·'};if(ds===t||wk)return{c:'em',s:'○'};return{c:'no',s:'✗',faded:1}}
+function renderHabitos(){
+  var days=hDays(),t=todayStr(),H=habits(),h='<table id="hm"><tr><th></th>';
+  days.forEach(function(d){var dt=new Date(d+'T12:00:00');h+='<th class="'+(d===t?'td':'')+'">'+DL[(dt.getDay()+6)%7]+'<br>'+dt.getDate()+'</th>'});h+='<th>✓</th></tr>';
+  var okToday=0,totToday=0;
+  H.forEach(function(g){var n=0,tot=0;h+='<tr><td class="nm">'+(EMO[g.area]||'⭐')+' '+esc(g.name)+'<small>'+(g.freq==='weekly'?'semanal · ':'')+objOf(g)+' '+esc(g.unit||'')+'</small></td>';
+    days.forEach(function(d){var c=cellOf(g,d);if(c.c==='ok'||c.c==='mn')n++;if(d<=t&&c.c!=='cd')tot++;if(d===t&&g.freq!=='weekly'&&c.c!=='cd'){totToday++;if(c.c==='ok'||c.c==='mn')okToday++}
+      h+='<td><button class="cl '+c.c+'"'+(c.c==='fu'?'':' onclick="openCell(\''+g.id+'\',\''+d+'\')"')+(c.faded?' style="opacity:.45"':'')+'>'+c.s+(c.v!=null&&c.v!==''&&days.length<=7?'<small>'+fmt(c.v)+'</small>':'')+'</button></td>'});
+    h+='<td class="pk" style="text-align:center;font-size:11px">'+n+'</td></tr>'});
+  $('h-grid').innerHTML=h+'</table>';
+  $('h-label').textContent=hMode==='w'?days[0].slice(5)+' → '+days[6].slice(5):new Date(days[0]+'T12:00:00').toLocaleDateString('es',{month:'long',year:'numeric'});
+  $('h-sum').textContent=hOff===0?'Hoy: '+okToday+' de '+totToday+' hábitos diarios ✓':''}
+function openCell(id,ds){var g=store.goals.find(function(x){return x.id===id}),e=dayEntry(ds,id);if(!g)return;$('cell-id').value=id;$('cell-ds').value=ds;
+  $('cell-title').textContent=g.name;$('cell-sub').textContent=ds+' · objetivo '+objOf(g)+' '+(g.unit||'');$('cell-val').value=e&&typeof e==='object'&&e.v!=null?e.v:'';$('modal-cell').classList.add('open')}
+function closeCell(){$('modal-cell').classList.remove('open')}
+function cellPut(v,st){var id=$('cell-id').value,ds=$('cell-ds').value,old=dayEntry(ds,id),g=store.goals.find(function(x){return x.id===id});
+  setDayEntry(ds,id,{v:v,status:st==null?classify(g,v):st,note:old&&old.note||'',imprevisto:!!(old&&old.imprevisto),updatedAt:Date.now()});save();closeCell();renderAll();renderHabitos()}
+function cellOk(){var g=store.goals.find(function(x){return x.id===$('cell-id').value});cellPut(g.freq==='weekly'?1:objOf(g))}
+function cellSave(){var r=$('cell-val').value;if(r===''){alert('Escribe un valor');return}cellPut(Number(r))}
+function cellCard(){var r=$('cell-val').value;cellPut(r===''?null:Number(r),'card')}
+function cellNo(){cellPut(0,'fail')}
+function cellClear(){setDayEntry($('cell-ds').value,$('cell-id').value,null);save();closeCell();renderAll();renderHabitos()}
+function renderAll(){renderDash();renderDiario();renderSemana();renderMetas();renderHabitos()}
 /* ---- metas: crear / editar / avance ---- */
 function togType(){var t=$('goal-type').value==='total';['f-freq','f-min','f-week'].forEach(function(i){$(i).classList.toggle('hide',t)});$('f-dead').classList.toggle('hide',!t);$('lbl-obj').textContent=t?'Total a lograr':'Objetivo'}
 function openGoalModal(id){$('modal-goal').classList.add('open');$('btn-del-goal').style.display=id?'block':'none';
@@ -258,7 +317,7 @@ function copyText(text){if(!text)return;function fb(){var ta=document.createElem
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(function(){toast('📋 Copiado')}).catch(fb);else fb()}
 function copyDayReport(){var ds=$('day-date').value||todayStr(),L=['THAT GIRL CHALLENGE · '+ds,''];habits().forEach(function(g){var e=dayEntry(ds,g.id),v=e==null?'—':(typeof e==='object'?e.v:e),s=e&&typeof e==='object'?e.status:classify(g,v);L.push(g.name+': '+v+' '+(g.unit||'')+' · '+statusLabel(s).t)});copyText(L.join('\n'))}
 function copyWeekReport(){var d=weekDays(weekOffset),L=['THAT GIRL CHALLENGE · SEMANA '+d[0]+' → '+d[6],''];habits().forEach(function(g){var wp=weekProgress(g,d);L.push(g.name+': '+wp.sum+'/'+wp.target+' '+(g.unit||'')+' ('+wp.pct+'%)')});copyText(L.join('\n'))}
-['showTab','renderDiario','saveDiario','shiftWeek','saveReflexion','openGoalModal','closeGoalModal','saveGoalModal','deleteGoal','restoreCh','copyDayReport','copyWeekReport','openAv','closeAv','saveAv','togType'].forEach(function(n){window[n]=eval(n)});
+['showTab','renderDiario','saveDiario','shiftWeek','saveReflexion','openGoalModal','closeGoalModal','saveGoalModal','deleteGoal','restoreCh','copyDayReport','copyWeekReport','openAv','closeAv','saveAv','togType','shiftH','setHMode','openCell','closeCell','cellOk','cellSave','cellCard','cellNo','cellClear'].forEach(function(n){window[n]=eval(n)});
 /* ---- arranque: primero lee la nube, luego guarda (así no pisa datos del otro dispositivo) ---- */
 store=load();$('day-date').value=todayStr();$('day-date').onchange=renderDiario;renderAll();
 loadCloud().then(function(){ready=true;seedChallenge(false);renderAll()});
