@@ -46,7 +46,7 @@
           h+='<span class="set-n">S'+(si+1)+'</span>';
           if(ex.mode==='load' || ex.mode==='reps'){
             var u=set.unit||'lb';
-            h+='<input type="number" step="0.5" placeholder="Peso" value="'+(set.weight||'')+'" onchange="updSet('+ei+','+si+',\'weight\',this.value)" style="min-width:4rem;flex:1">';
+            if(u!=='bw') h+='<input type="number" step="0.5" placeholder="Peso" value="'+(set.weight||'')+'" onchange="updSet('+ei+','+si+',\'weight\',this.value)" style="min-width:4rem;flex:1">';
             h+='<select onchange="updSet('+ei+','+si+',\'unit\',this.value)" style="width:auto;min-width:4.2rem;flex:0">';
             h+='<option value="lb"'+(u==='lb'?' selected':'')+'>Lb</option>';
             h+='<option value="kg"'+(u==='kg'?' selected':'')+'>Kg</option>';
@@ -58,7 +58,7 @@
             h+='<input type="number" placeholder="Seg" value="'+(set.sec||'')+'" onchange="updSet('+ei+','+si+',\'sec\',this.value)" style="min-width:4rem;flex:1">';
             h+='<input type="number" placeholder="Reps" value="'+(set.reps||'')+'" onchange="updSet('+ei+','+si+',\'reps\',this.value)" style="min-width:3.5rem;flex:1">';
             var u2=set.unit||'lb';
-            h+='<input type="number" step="0.5" placeholder="Peso" value="'+(set.weight||'')+'" onchange="updSet('+ei+','+si+',\'weight\',this.value)" style="min-width:3.5rem;flex:1">';
+            if(u2!=='bw') h+='<input type="number" step="0.5" placeholder="Peso" value="'+(set.weight||'')+'" onchange="updSet('+ei+','+si+',\'weight\',this.value)" style="min-width:3.5rem;flex:1">';
             h+='<select onchange="updSet('+ei+','+si+',\'unit\',this.value)" style="width:auto;min-width:4.2rem;flex:0">';
             h+='<option value="lb"'+(u2==='lb'?' selected':'')+'>Lb</option>';
             h+='<option value="kg"'+(u2==='kg'?' selected':'')+'>Kg</option>';
@@ -69,6 +69,7 @@
             h+='<input type="number" placeholder="Seg" value="'+(set.sec||'')+'" onchange="updSet('+ei+','+si+',\'sec\',this.value)">';
           }
           h+='<input type="number" step="0.5" min="0" max="10" placeholder="RPE" value="'+(set.rpe||'')+'" onchange="updSet('+ei+','+si+',\'rpe\',this.value)" style="min-width:3rem;flex:0.7">';
+          h+='<button type="button" class="btn btn-ghost btn-sm" style="flex:0 0 auto;color:#b0405a" title="Quitar serie" onclick="removeSet('+ei+','+si+')">✕</button>';
           h+='</div>';
         });
         h+='<button type="button" class="btn btn-ghost btn-sm" onclick="addSet('+ei+')">+ Serie</button>';
@@ -106,11 +107,19 @@
   }
 
   window.toggleSkip = function(ei){ active.exercises[ei].skipped=!active.exercises[ei].skipped; renderSession(); };
-  window.updSet = function(ei,si,f,v){ active.exercises[ei].sets[si][f]=v; };
+  window.updSet = function(ei,si,f,v){ active.exercises[ei].sets[si][f]=v; if(f==='unit') renderSession(); };
   window.updExNote = function(ei,v){ active.exercises[ei].note=v; };
   window.addSet = function(ei){
-    active.exercises[ei].sets.push({ reps:'', weight:'', unit:'lb', sec:'', rpe:'' });
+    var ss=active.exercises[ei].sets, last=ss[ss.length-1];
+    ss.push({ reps:'', weight:'', unit:(last&&last.unit)||'lb', sec:'', rpe:'' });
     renderSession();
+  };
+  window.removeSet = function(ei,si){
+    var ex=active.exercises[ei];
+    if(ex.sets.length<=1){ alert('Cada ejercicio necesita al menos 1 serie. Si no lo hiciste, marca "Saltar".'); return; }
+    var s=ex.sets[si];
+    if((s.reps||s.weight||s.sec||s.rpe) && !confirm('¿Quitar la serie '+(si+1)+'? Tiene datos escritos.')) return;
+    ex.sets.splice(si,1); renderSession();
   };
 
   window.saveActiveSession = function(){
@@ -285,3 +294,4 @@
   showTab('home');
   loadCloud().then(function(){ renderHome(); });
 })();
+
